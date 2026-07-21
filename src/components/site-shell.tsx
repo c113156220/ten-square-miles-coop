@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { type ReactNode } from "react";
-import { useI18n, type Locale, type DictKey } from "@/lib/i18n";
+import { useI18n, type Locale } from "@/lib/i18n";
 
 const PUBLIC_NAV: { to: string; label: { zh: string; en: string } }[] = [
   { to: "/", label: { zh: "共同購買", en: "Shop" } },
