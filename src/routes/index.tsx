@@ -1,76 +1,25 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useI18n, type Locale, type DictKey } from "@/lib/i18n";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useI18n, type DictKey } from "@/lib/i18n";
+import { SiteShell } from "@/components/site-shell";
 import eggsImg from "@/assets/product-eggs.jpg";
 import soyImg from "@/assets/product-soysauce.jpg";
 import vegImg from "@/assets/product-veggies.jpg";
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "十圓方里 Ten Sq Miles — 共同購買 Shop" },
+      {
+        name: "description",
+        content:
+          "即時預購中的在地食材、透明供應與結餘回饋。Live pre-orders, transparent sourcing, member-first surplus sharing.",
+      },
+      { property: "og:title", content: "十圓方里 — 共同購買 Shop" },
+      { property: "og:description", content: "Live pre-orders and member-first surplus sharing." },
+    ],
+  }),
   component: Home,
 });
-
-function Nav() {
-  const { locale, setLocale, t } = useI18n();
-  return (
-    <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-        <div className="flex items-center gap-8">
-          <a href="/" className="flex flex-col leading-none">
-            <span className="text-xl font-extrabold tracking-tighter">十圓方里</span>
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-              Ten Sq Miles
-            </span>
-          </a>
-          <div className="hidden gap-6 text-sm font-medium md:flex">
-            {(["nav.shop", "nav.surveys", "nav.governance"] as DictKey[]).map((k) => (
-              <a key={k} href="#" className="transition-colors hover:text-primary">
-                {locale === "zh" ? (
-                  <>
-                    {t(k)}
-                    <span className="-mt-1 block font-mono text-[10px] text-muted-foreground">
-                      {k === "nav.shop" ? "Shop" : k === "nav.surveys" ? "Surveys" : "Governance"}
-                    </span>
-                  </>
-                ) : (
-                  <>{t(k)}</>
-                )}
-              </a>
-            ))}
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <LangSwitch locale={locale} setLocale={setLocale} />
-          <div className="h-4 w-px bg-border" />
-          <button className="rounded-full px-3 py-1.5 text-sm font-semibold text-primary ring-1 ring-primary/20 transition-all hover:bg-primary/5">
-            {t("nav.login")}
-          </button>
-        </div>
-      </div>
-    </nav>
-  );
-}
-
-function LangSwitch({ locale, setLocale }: { locale: Locale; setLocale: (l: Locale) => void }) {
-  return (
-    <div className="flex overflow-hidden rounded border border-border font-mono text-[11px]">
-      <button
-        onClick={() => setLocale("zh")}
-        className={`px-2 py-1 transition-colors ${
-          locale === "zh" ? "bg-primary text-primary-foreground" : "hover:bg-black/5"
-        }`}
-      >
-        繁中
-      </button>
-      <button
-        onClick={() => setLocale("en")}
-        className={`px-2 py-1 transition-colors ${
-          locale === "en" ? "bg-primary text-primary-foreground" : "hover:bg-black/5"
-        }`}
-      >
-        EN
-      </button>
-    </div>
-  );
-}
 
 function Hero() {
   const { t } = useI18n();
@@ -89,16 +38,17 @@ function Hero() {
             {t("hero.subtitle")}
           </span>
         </h1>
-        <p className="text-lg leading-relaxed text-pretty text-muted-foreground">
-          {t("hero.body")}
-        </p>
+        <p className="text-lg leading-relaxed text-pretty text-muted-foreground">{t("hero.body")}</p>
         <div className="flex flex-wrap gap-4">
           <button className="rounded-sm bg-primary px-6 py-3 font-semibold text-primary-foreground shadow-sm transition-all hover:brightness-110">
             {t("hero.cta.browse")}
           </button>
-          <button className="rounded-sm border border-border bg-transparent px-6 py-3 font-semibold transition-all hover:bg-white">
+          <Link
+            to="/trial"
+            className="rounded-sm border border-border bg-transparent px-6 py-3 font-semibold transition-all hover:bg-white"
+          >
             {t("hero.cta.join")}
-          </button>
+          </Link>
         </div>
       </div>
     </section>
@@ -175,9 +125,7 @@ function ProductCard({ p }: { p: Product }) {
           className="aspect-[4/5] w-full object-cover outline-1 -outline-offset-1 outline-black/5 transition-transform duration-500 group-hover:scale-[1.02]"
         />
         <div className="absolute top-3 left-3 flex flex-col gap-1">
-          <span
-            className={`rounded-sm px-2 py-0.5 text-[10px] font-bold uppercase ${statusBg(p.statusTone)}`}
-          >
+          <span className={`rounded-sm px-2 py-0.5 text-[10px] font-bold uppercase ${statusBg(p.statusTone)}`}>
             {t(p.statusKey)}
           </span>
           <span className="rounded-sm border border-black/5 bg-white/90 px-2 py-0.5 text-[10px] font-bold text-foreground">
@@ -194,15 +142,10 @@ function ProductCard({ p }: { p: Product }) {
         <div className="space-y-2">
           <div className="flex justify-between font-mono text-xs">
             <span>{t("card.threshold")}</span>
-            <span>
-              {p.current} / {p.target}
-            </span>
+            <span>{p.current} / {p.target}</span>
           </div>
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-stone-200">
-            <div
-              className="h-full bg-primary transition-all duration-1000"
-              style={{ width: `${p.progress}%` }}
-            />
+            <div className="h-full bg-primary transition-all duration-1000" style={{ width: `${p.progress}%` }} />
           </div>
           <div className="flex items-end justify-between pt-1">
             <div className="font-mono text-xs leading-tight text-muted-foreground uppercase">
@@ -225,19 +168,14 @@ function ProductCard({ p }: { p: Product }) {
             <span>{p.progress}%</span>
           </div>
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-stone-200">
-            <div
-              className="h-full bg-accent transition-all duration-1000"
-              style={{ width: `${p.progress}%` }}
-            />
+            <div className="h-full bg-accent transition-all duration-1000" style={{ width: `${p.progress}%` }} />
           </div>
           <div className="flex items-end justify-between pt-2">
-            <button className="border-b-2 border-accent pb-0.5 text-xs font-bold">
+            <Link to="/wishlist" className="border-b-2 border-accent pb-0.5 text-xs font-bold">
               {t("card.wish")}
-            </button>
+            </Link>
             <div className="text-right">
-              <span className="block text-xs text-muted-foreground italic">
-                {t("card.estPrice")}
-              </span>
+              <span className="block text-xs text-muted-foreground italic">{t("card.estPrice")}</span>
               <span className="font-mono text-lg font-bold">{p.estPrice}</span>
             </div>
           </div>
@@ -251,9 +189,7 @@ function ProductCard({ p }: { p: Product }) {
             <span className="text-xs font-bold">{t("card.pickup")}</span>
           </div>
           <p className="font-mono text-sm">{p.pickupDate}</p>
-          <p className="mt-1 text-[10px] tracking-tight text-muted-foreground uppercase">
-            {t("card.cold")}
-          </p>
+          <p className="mt-1 text-[10px] tracking-tight text-muted-foreground uppercase">{t("card.cold")}</p>
         </div>
       )}
     </div>
@@ -285,6 +221,67 @@ function ActivePreorders() {
   );
 }
 
+function GuestModulesGrid() {
+  const { t, locale } = useI18n();
+  const cards = [
+    {
+      to: "/trial" as const,
+      title: t("nav.trial"),
+      sub: locale === "zh" ? "30 天體驗＋闖關解鎖迎新券" : "30-day pass, quest for a welcome voucher",
+      badge: locale === "zh" ? "新" : "NEW",
+    },
+    {
+      to: "/calculator" as const,
+      title: t("nav.calculator"),
+      sub: locale === "zh" ? "算算成為社員每年能拿回多少" : "See your annual surplus return",
+    },
+    {
+      to: "/wishlist" as const,
+      title: t("nav.wishlist"),
+      sub: locale === "zh" ? "為想要的商品集氣 +1" : "+1 the products you want sourced",
+    },
+    {
+      to: "/impact" as const,
+      title: t("nav.impact"),
+      sub: locale === "zh" ? "公積金與環境影響的公開帳目" : "Public ledger of reserve fund & impact",
+    },
+  ];
+  return (
+    <section className="animate-reveal mb-20" style={{ animationDelay: "225ms" }}>
+      <div className="mb-6 border-b border-border pb-4">
+        <h2 className="text-2xl font-extrabold">
+          {locale === "zh" ? "非社員也能參與" : "You don't have to be a member yet"}
+        </h2>
+        <p className="font-mono text-xs tracking-wider text-muted-foreground uppercase">
+          Guest onboarding
+        </p>
+      </div>
+      <div className="grid gap-4 md:grid-cols-4">
+        {cards.map((c) => (
+          <Link
+            key={c.to}
+            to={c.to}
+            className="group relative flex flex-col justify-between rounded-md border border-border bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm"
+          >
+            {c.badge && (
+              <span className="absolute right-3 top-3 rounded-sm bg-accent px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-accent-foreground">
+                {c.badge}
+              </span>
+            )}
+            <div>
+              <h3 className="text-lg font-bold">{c.title}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">{c.sub}</p>
+            </div>
+            <span className="mt-6 font-mono text-[11px] uppercase tracking-widest text-primary transition-transform group-hover:translate-x-1">
+              →
+            </span>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function Surplus() {
   const { t } = useI18n();
   return (
@@ -308,6 +305,12 @@ function Surplus() {
               <span className="font-mono text-2xl font-bold">1,240 pts</span>
             </div>
           </div>
+          <Link
+            to="/calculator"
+            className="inline-block rounded-sm bg-white/10 px-4 py-2 text-sm font-semibold ring-1 ring-white/30 transition-colors hover:bg-white/20"
+          >
+            {t("calc.cta")} →
+          </Link>
         </div>
         <div className="space-y-6">
           <div className="space-y-2">
@@ -336,53 +339,13 @@ function Surplus() {
   );
 }
 
-function Footer() {
-  const { t } = useI18n();
-  return (
-    <footer className="border-t border-border bg-stone-100 py-12">
-      <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 px-4 text-sm md:flex-row">
-        <div className="max-w-xs space-y-4">
-          <div className="flex flex-col leading-none">
-            <span className="text-lg font-extrabold tracking-tighter">十圓方里</span>
-            <span className="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
-              Ten Sq Miles Co-op
-            </span>
-          </div>
-          <p className="text-xs leading-relaxed text-muted-foreground">{t("footer.about")}</p>
-        </div>
-        <div className="grid grid-cols-2 gap-12">
-          <div className="space-y-3">
-            <h4 className="text-[10px] font-bold tracking-widest uppercase">{t("footer.admin")}</h4>
-            <ul className="flex flex-col gap-2 text-muted-foreground">
-              <li><a href="#" className="hover:text-primary">{t("footer.link.agm")}</a></li>
-              <li><a href="#" className="hover:text-primary">{t("footer.link.reserve")}</a></li>
-              <li><a href="#" className="hover:text-primary">{t("footer.link.verify")}</a></li>
-            </ul>
-          </div>
-          <div className="space-y-3">
-            <h4 className="text-[10px] font-bold tracking-widest uppercase">{t("footer.ops")}</h4>
-            <ul className="flex flex-col gap-2 text-muted-foreground">
-              <li><a href="#" className="hover:text-primary">{t("footer.link.nonmember")}</a></li>
-              <li><a href="#" className="hover:text-primary">{t("footer.link.logistics")}</a></li>
-              <li><a href="#" className="hover:text-primary">{t("footer.link.inventory")}</a></li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </footer>
-  );
-}
-
 function Home() {
   return (
-    <div className="min-h-screen bg-background text-foreground selection:bg-primary/10">
-      <Nav />
-      <main className="mx-auto max-w-7xl px-4 py-12">
-        <Hero />
-        <ActivePreorders />
-        <Surplus />
-      </main>
-      <Footer />
-    </div>
+    <SiteShell>
+      <Hero />
+      <ActivePreorders />
+      <GuestModulesGrid />
+      <Surplus />
+    </SiteShell>
   );
 }
