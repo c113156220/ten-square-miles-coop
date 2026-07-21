@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useI18n, type DictKey } from "@/lib/i18n";
 import { SiteShell } from "@/components/site-shell";
+import { ArrowRight, Sparkles, Zap, Leaf, ShieldCheck } from "lucide-react";
 import eggsImg from "@/assets/product-eggs.jpg";
 import soyImg from "@/assets/product-soysauce.jpg";
 import vegImg from "@/assets/product-veggies.jpg";
@@ -22,33 +23,60 @@ export const Route = createFileRoute("/")({
 });
 
 function Hero() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   return (
-    <section className="animate-reveal mb-20">
-      <div className="max-w-[65ch] space-y-6">
-        <h1 className="text-5xl leading-[0.95] font-extrabold tracking-tight text-balance md:text-6xl">
-          {t("hero.title.1")}
-          <br />
-          {t("hero.title.2")}
-          <br />
-          <span
-            className="text-3xl leading-relaxed font-normal text-muted-foreground italic md:text-4xl"
-            style={{ fontFamily: "var(--font-serif)" }}
-          >
-            {t("hero.subtitle")}
-          </span>
-        </h1>
-        <p className="text-lg leading-relaxed text-pretty text-muted-foreground">{t("hero.body")}</p>
-        <div className="flex flex-wrap gap-4">
-          <button className="rounded-sm bg-primary px-6 py-3 font-semibold text-primary-foreground shadow-sm transition-all hover:brightness-110">
-            {t("hero.cta.browse")}
-          </button>
-          <Link
-            to="/trial"
-            className="rounded-sm border border-border bg-transparent px-6 py-3 font-semibold transition-all hover:bg-white"
-          >
-            {t("hero.cta.join")}
-          </Link>
+    <section className="animate-reveal relative mb-24 overflow-hidden rounded-3xl border border-border bg-white/60 shadow-soft backdrop-blur-xl">
+      <div className="absolute inset-0 -z-10 bg-tech-grid opacity-60" />
+      <div className="absolute inset-0 -z-10 bg-mesh" />
+      <div className="grid gap-10 p-10 md:grid-cols-[1.3fr_1fr] md:p-16">
+        <div className="space-y-7">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-white/70 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-primary backdrop-blur">
+            <span className="relative flex size-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
+              <span className="relative inline-flex size-2 rounded-full bg-primary" />
+            </span>
+            {locale === "zh" ? "AI 需求預測啟用中" : "AI Forecasting Active"}
+          </div>
+          <h1 className="text-5xl font-bold leading-[1.02] tracking-tight text-balance md:text-6xl">
+            <span className="text-gradient">{t("hero.title.1")}</span>
+            <br />
+            <span className="text-gradient">{t("hero.title.2")}</span>
+            <br />
+            <span className="text-2xl font-medium text-muted-foreground md:text-3xl">
+              {t("hero.subtitle")}
+            </span>
+          </h1>
+          <p className="max-w-[55ch] text-base leading-relaxed text-muted-foreground">{t("hero.body")}</p>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              to="/coop"
+              className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-semibold text-primary-foreground shadow-glow transition-all hover:brightness-110"
+            >
+              <Sparkles className="size-4" />
+              {t("hero.cta.browse")}
+              <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+            </Link>
+            <Link
+              to="/register"
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-white/80 px-6 py-3 font-semibold text-foreground shadow-soft transition-all hover:shadow-elevated"
+            >
+              {t("hero.cta.join")}
+            </Link>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3 self-center">
+          {[
+            { icon: Zap, label: locale === "zh" ? "零庫存預購" : "Zero Inventory", val: "142+" },
+            { icon: Leaf, label: locale === "zh" ? "免稅一級農產" : "Tax-Exempt SKUs", val: "38" },
+            { icon: ShieldCheck, label: locale === "zh" ? "實名社員" : "Verified Members", val: "1,240" },
+            { icon: Sparkles, label: locale === "zh" ? "累積積點" : "Reward Points", val: "82K" },
+          ].map((s) => (
+            <div key={s.label} className="rounded-2xl border border-border bg-white/80 p-4 shadow-soft backdrop-blur">
+              <s.icon className="size-4 text-primary" />
+              <p className="mt-3 font-mono text-2xl font-semibold tracking-tight">{s.val}</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">{s.label}</p>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -72,150 +100,115 @@ type Product = {
 };
 
 const products: Product[] = [
-  {
-    img: eggsImg,
-    nameKey: "product.eggs.name",
-    descKey: "product.eggs.desc",
-    statusKey: "status.preordering",
-    statusTone: "primary",
-    taxKey: "tax.exempt",
-    variant: "preorder",
-    progress: 71,
-    current: 142,
-    target: 200,
-    deposit: 180,
-  },
-  {
-    img: soyImg,
-    nameKey: "product.soy.name",
-    descKey: "product.soy.desc",
-    statusKey: "status.surveying",
-    statusTone: "accent",
-    taxKey: "tax.standard",
-    variant: "survey",
-    progress: 85,
-    estPrice: "$350+",
-  },
-  {
-    img: vegImg,
-    nameKey: "product.veg.name",
-    descKey: "product.veg.desc",
-    statusKey: "status.sourcing",
-    statusTone: "stone",
-    taxKey: "tax.exempt",
-    variant: "sourcing",
-    pickupDate: "2026.07.31 (Fri)",
-  },
+  { img: eggsImg, nameKey: "product.eggs.name", descKey: "product.eggs.desc", statusKey: "status.preordering", statusTone: "primary", taxKey: "tax.exempt", variant: "preorder", progress: 71, current: 142, target: 200, deposit: 180 },
+  { img: soyImg, nameKey: "product.soy.name", descKey: "product.soy.desc", statusKey: "status.surveying", statusTone: "accent", taxKey: "tax.standard", variant: "survey", progress: 85, estPrice: "$350+" },
+  { img: vegImg, nameKey: "product.veg.name", descKey: "product.veg.desc", statusKey: "status.sourcing", statusTone: "stone", taxKey: "tax.exempt", variant: "sourcing", pickupDate: "2026.07.31 (Fri)" },
 ];
 
-function statusBg(tone: Product["statusTone"]) {
-  if (tone === "primary") return "bg-primary text-primary-foreground";
-  if (tone === "accent") return "bg-accent text-accent-foreground";
-  return "bg-stone-600 text-white";
+function statusChip(tone: Product["statusTone"]) {
+  if (tone === "primary") return "bg-primary/10 text-primary ring-1 ring-primary/20";
+  if (tone === "accent") return "bg-accent/10 text-accent ring-1 ring-accent/20";
+  return "bg-foreground/5 text-foreground ring-1 ring-foreground/10";
 }
 
 function ProductCard({ p }: { p: Product }) {
   const { t } = useI18n();
   return (
-    <div className="group space-y-4">
-      <div className="relative overflow-hidden rounded-md">
-        <img
-          src={p.img}
-          alt={t(p.nameKey)}
-          className="aspect-[4/5] w-full object-cover outline-1 -outline-offset-1 outline-black/5 transition-transform duration-500 group-hover:scale-[1.02]"
-        />
-        <div className="absolute top-3 left-3 flex flex-col gap-1">
-          <span className={`rounded-sm px-2 py-0.5 text-[10px] font-bold uppercase ${statusBg(p.statusTone)}`}>
+    <article className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-soft transition-all hover:-translate-y-1 hover:shadow-elevated">
+      <div className="relative aspect-[4/3] overflow-hidden">
+        <img src={p.img} alt={t(p.nameKey)} className="size-full object-cover transition-transform duration-700 group-hover:scale-105" />
+        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-mono text-[10px] font-semibold uppercase backdrop-blur ${statusChip(p.statusTone)}`}>
+            <span className="size-1.5 rounded-full bg-current animate-pulse-glow" />
             {t(p.statusKey)}
           </span>
-          <span className="rounded-sm border border-black/5 bg-white/90 px-2 py-0.5 text-[10px] font-bold text-foreground">
+          <span className="rounded-full bg-white/90 px-2.5 py-1 font-mono text-[10px] font-semibold text-foreground ring-1 ring-border backdrop-blur">
             {t(p.taxKey)}
           </span>
         </div>
       </div>
-      <div>
-        <h3 className="text-lg font-bold">{t(p.nameKey)}</h3>
-        <p className="text-sm text-muted-foreground">{t(p.descKey)}</p>
+      <div className="flex-1 space-y-4 p-5">
+        <div>
+          <h3 className="text-lg font-semibold tracking-tight">{t(p.nameKey)}</h3>
+          <p className="mt-0.5 text-sm text-muted-foreground">{t(p.descKey)}</p>
+        </div>
+
+        {p.variant === "preorder" && (
+          <div className="space-y-2">
+            <div className="flex justify-between font-mono text-xs text-muted-foreground">
+              <span>{t("card.threshold")}</span>
+              <span className="text-foreground">{p.current} / {p.target}</span>
+            </div>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface">
+              <div className="h-full rounded-full bg-gradient-to-r from-primary to-primary-glow transition-all duration-1000" style={{ width: `${p.progress}%` }} />
+            </div>
+            <div className="flex items-end justify-between border-t border-border pt-3">
+              <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                {t("card.deadline")}<br />
+                <span className="font-semibold text-foreground">{t("card.daysLeft")}</span>
+              </div>
+              <div className="text-right">
+                <span className="block text-[10px] uppercase tracking-wider text-muted-foreground">{t("card.deposit")}</span>
+                <span className="font-mono text-xl font-semibold tracking-tight">${p.deposit}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {p.variant === "survey" && (
+          <div className="space-y-2">
+            <div className="flex justify-between font-mono text-xs text-muted-foreground">
+              <span>{t("card.demand")}</span>
+              <span className="text-foreground">{p.progress}%</span>
+            </div>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface">
+              <div className="h-full rounded-full bg-gradient-to-r from-accent to-cyber transition-all duration-1000" style={{ width: `${p.progress}%` }} />
+            </div>
+            <div className="flex items-end justify-between border-t border-border pt-3">
+              <Link to="/wishlist" className="inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline">
+                {t("card.wish")} <ArrowRight className="size-3" />
+              </Link>
+              <div className="text-right">
+                <span className="block text-[10px] uppercase tracking-wider text-muted-foreground">{t("card.estPrice")}</span>
+                <span className="font-mono text-lg font-semibold">{p.estPrice}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {p.variant === "sourcing" && (
+          <div className="rounded-xl border border-border bg-surface/60 p-3">
+            <div className="mb-1.5 flex items-center gap-2">
+              <div className="size-1.5 rounded-full bg-primary animate-pulse-glow" />
+              <span className="text-xs font-semibold">{t("card.pickup")}</span>
+            </div>
+            <p className="font-mono text-sm">{p.pickupDate}</p>
+            <p className="mt-1 font-mono text-[10px] tracking-wider text-muted-foreground uppercase">{t("card.cold")}</p>
+          </div>
+        )}
       </div>
-
-      {p.variant === "preorder" && (
-        <div className="space-y-2">
-          <div className="flex justify-between font-mono text-xs">
-            <span>{t("card.threshold")}</span>
-            <span>{p.current} / {p.target}</span>
-          </div>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-stone-200">
-            <div className="h-full bg-primary transition-all duration-1000" style={{ width: `${p.progress}%` }} />
-          </div>
-          <div className="flex items-end justify-between pt-1">
-            <div className="font-mono text-xs leading-tight text-muted-foreground uppercase">
-              {t("card.deadline")}
-              <br />
-              <span className="font-bold text-foreground">{t("card.daysLeft")}</span>
-            </div>
-            <div className="text-right">
-              <span className="block text-xs text-muted-foreground">{t("card.deposit")}</span>
-              <span className="font-mono text-xl font-bold">${p.deposit}</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {p.variant === "survey" && (
-        <div className="space-y-2">
-          <div className="flex justify-between font-mono text-xs">
-            <span>{t("card.demand")}</span>
-            <span>{p.progress}%</span>
-          </div>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-stone-200">
-            <div className="h-full bg-accent transition-all duration-1000" style={{ width: `${p.progress}%` }} />
-          </div>
-          <div className="flex items-end justify-between pt-2">
-            <Link to="/wishlist" className="border-b-2 border-accent pb-0.5 text-xs font-bold">
-              {t("card.wish")}
-            </Link>
-            <div className="text-right">
-              <span className="block text-xs text-muted-foreground italic">{t("card.estPrice")}</span>
-              <span className="font-mono text-lg font-bold">{p.estPrice}</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {p.variant === "sourcing" && (
-        <div className="rounded border border-black/5 bg-stone-100 p-3">
-          <div className="mb-2 flex items-center gap-2">
-            <div className="size-2 rounded-full bg-primary" />
-            <span className="text-xs font-bold">{t("card.pickup")}</span>
-          </div>
-          <p className="font-mono text-sm">{p.pickupDate}</p>
-          <p className="mt-1 text-[10px] tracking-tight text-muted-foreground uppercase">{t("card.cold")}</p>
-        </div>
-      )}
-    </div>
+    </article>
   );
 }
 
 function ActivePreorders() {
   const { t } = useI18n();
   return (
-    <section className="animate-reveal mb-20" style={{ animationDelay: "150ms" }}>
+    <section className="animate-reveal mb-24" style={{ animationDelay: "150ms" }}>
       <div className="mb-8 flex items-end justify-between border-b border-border pb-4">
         <div>
-          <h2 className="text-2xl font-extrabold">{t("section.active")}</h2>
-          <p className="font-mono text-xs tracking-wider text-muted-foreground uppercase">
+          <h2 className="text-2xl font-bold tracking-tight md:text-3xl">{t("section.active")}</h2>
+          <p className="mt-1 font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
             {t("section.active.sub")}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="size-2 animate-pulse rounded-full bg-accent" />
-          <span className="font-mono text-xs uppercase">{t("section.active.alert")}</span>
+        <div className="hidden items-center gap-2 rounded-full border border-border bg-white/70 px-3 py-1.5 backdrop-blur md:flex">
+          <span className="size-1.5 rounded-full bg-accent animate-pulse-glow" />
+          <span className="font-mono text-[10px] uppercase tracking-wider">{t("section.active.alert")}</span>
         </div>
       </div>
-      <div className="grid gap-8 md:grid-cols-3">
-        {products.map((p) => (
-          <ProductCard key={p.nameKey} p={p} />
-        ))}
+      <div className="grid gap-6 md:grid-cols-3">
+        {products.map((p) => <ProductCard key={p.nameKey} p={p} />)}
       </div>
     </section>
   );
@@ -224,35 +217,18 @@ function ActivePreorders() {
 function GuestModulesGrid() {
   const { t, locale } = useI18n();
   const cards = [
-    {
-      to: "/trial" as const,
-      title: t("nav.trial"),
-      sub: locale === "zh" ? "30 天體驗＋闖關解鎖迎新券" : "30-day pass, quest for a welcome voucher",
-      badge: locale === "zh" ? "新" : "NEW",
-    },
-    {
-      to: "/calculator" as const,
-      title: t("nav.calculator"),
-      sub: locale === "zh" ? "算算成為社員每年能拿回多少" : "See your annual surplus return",
-    },
-    {
-      to: "/wishlist" as const,
-      title: t("nav.wishlist"),
-      sub: locale === "zh" ? "為想要的商品集氣 +1" : "+1 the products you want sourced",
-    },
-    {
-      to: "/impact" as const,
-      title: t("nav.impact"),
-      sub: locale === "zh" ? "公積金與環境影響的公開帳目" : "Public ledger of reserve fund & impact",
-    },
+    { to: "/trial" as const, title: t("nav.trial"), sub: locale === "zh" ? "30 天體驗＋闖關解鎖迎新券" : "30-day pass, quest for a welcome voucher", badge: "NEW" },
+    { to: "/calculator" as const, title: t("nav.calculator"), sub: locale === "zh" ? "算算成為社員每年能拿回多少" : "See your annual surplus return" },
+    { to: "/wishlist" as const, title: t("nav.wishlist"), sub: locale === "zh" ? "為想要的商品集氣 +1" : "+1 the products you want sourced" },
+    { to: "/impact" as const, title: t("nav.impact"), sub: locale === "zh" ? "公積金與環境影響的公開帳目" : "Public ledger of reserve fund & impact" },
   ];
   return (
-    <section className="animate-reveal mb-20" style={{ animationDelay: "225ms" }}>
+    <section className="animate-reveal mb-24" style={{ animationDelay: "225ms" }}>
       <div className="mb-6 border-b border-border pb-4">
-        <h2 className="text-2xl font-extrabold">
+        <h2 className="text-2xl font-bold tracking-tight md:text-3xl">
           {locale === "zh" ? "非社員也能參與" : "You don't have to be a member yet"}
         </h2>
-        <p className="font-mono text-xs tracking-wider text-muted-foreground uppercase">
+        <p className="mt-1 font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
           Guest onboarding
         </p>
       </div>
@@ -261,19 +237,19 @@ function GuestModulesGrid() {
           <Link
             key={c.to}
             to={c.to}
-            className="group relative flex flex-col justify-between rounded-md border border-border bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm"
+            className="group relative flex flex-col justify-between rounded-2xl border border-border bg-white/80 p-5 shadow-soft backdrop-blur transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-elevated"
           >
             {c.badge && (
-              <span className="absolute right-3 top-3 rounded-sm bg-accent px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-accent-foreground">
+              <span className="absolute right-3 top-3 rounded-full bg-primary/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase text-primary ring-1 ring-primary/20">
                 {c.badge}
               </span>
             )}
             <div>
-              <h3 className="text-lg font-bold">{c.title}</h3>
+              <h3 className="text-lg font-semibold tracking-tight">{c.title}</h3>
               <p className="mt-1 text-sm text-muted-foreground">{c.sub}</p>
             </div>
-            <span className="mt-6 font-mono text-[11px] uppercase tracking-widest text-primary transition-transform group-hover:translate-x-1">
-              →
+            <span className="mt-6 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-primary transition-transform group-hover:translate-x-1">
+              Explore <ArrowRight className="size-3" />
             </span>
           </Link>
         ))}
@@ -285,52 +261,58 @@ function GuestModulesGrid() {
 function Surplus() {
   const { t } = useI18n();
   return (
-    <section className="animate-reveal mb-20" style={{ animationDelay: "300ms" }}>
-      <div className="grid items-center gap-12 rounded-sm bg-primary p-8 text-primary-foreground md:grid-cols-2 md:p-12">
-        <div className="space-y-4">
-          <h2 className="text-3xl font-bold tracking-tight">
-            {t("surplus.title")}
-            <br />
-            <span
-              className="text-2xl font-normal opacity-80 italic"
-              style={{ fontFamily: "var(--font-serif)" }}
-            >
-              {t("surplus.subtitle")}
+    <section className="animate-reveal mb-24" style={{ animationDelay: "300ms" }}>
+      <div className="relative overflow-hidden rounded-3xl border border-border bg-foreground text-background shadow-elevated">
+        <div className="absolute inset-0 -z-0 opacity-30 bg-tech-grid" />
+        <div
+          className="pointer-events-none absolute -right-24 -top-24 -z-0 size-96 rounded-full blur-3xl"
+          style={{ background: "radial-gradient(circle, hsl(158 64% 45% / 0.6), transparent 70%)" }}
+        />
+        <div className="relative grid items-center gap-12 p-10 md:grid-cols-2 md:p-14">
+          <div className="space-y-5">
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-primary-glow">
+              <span className="size-1.5 rounded-full bg-primary-glow animate-pulse-glow" />
+              Surplus Engine
             </span>
-          </h2>
-          <p className="text-sm leading-relaxed opacity-90">{t("surplus.body")}</p>
-          <div className="border-t border-white/20 pt-4">
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-xs uppercase">{t("surplus.points")}</span>
-              <span className="font-mono text-2xl font-bold">1,240 pts</span>
+            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+              <span className="text-gradient-cyber">{t("surplus.title")}</span>
+              <br />
+              <span className="text-xl font-normal text-white/60 md:text-2xl">{t("surplus.subtitle")}</span>
+            </h2>
+            <p className="text-sm leading-relaxed text-white/70">{t("surplus.body")}</p>
+            <div className="border-t border-white/10 pt-4">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[10px] uppercase tracking-widest text-white/60">{t("surplus.points")}</span>
+                <span className="font-mono text-2xl font-semibold">1,240 pts</span>
+              </div>
             </div>
+            <Link
+              to="/calculator"
+              className="inline-flex items-center gap-2 rounded-full bg-primary-glow px-4 py-2 text-sm font-semibold text-foreground shadow-glow transition-all hover:brightness-110"
+            >
+              {t("calc.cta")} <ArrowRight className="size-4" />
+            </Link>
           </div>
-          <Link
-            to="/calculator"
-            className="inline-block rounded-sm bg-white/10 px-4 py-2 text-sm font-semibold ring-1 ring-white/30 transition-colors hover:bg-white/20"
-          >
-            {t("calc.cta")} →
-          </Link>
-        </div>
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <div className="flex justify-between font-mono text-[10px] tracking-widest uppercase">
-              <span>{t("surplus.reserve")}</span>
-              <span>{t("surplus.returns")}</span>
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <div className="flex justify-between font-mono text-[10px] tracking-widest uppercase text-white/60">
+                <span>{t("surplus.reserve")}</span>
+                <span>{t("surplus.returns")}</span>
+              </div>
+              <div className="flex h-14 w-full overflow-hidden rounded-full border border-white/10 p-1">
+                <div className="h-full w-1/2 rounded-full bg-white/15" />
+                <div className="h-full w-1/2 rounded-full bg-gradient-to-r from-primary-glow to-cyber" />
+              </div>
             </div>
-            <div className="flex h-12 w-full border border-white/20 p-1">
-              <div className="h-full w-1/2 bg-white/20" />
-              <div className="h-full w-1/2 bg-white" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4 font-mono text-xs">
-            <div className="border border-white/20 p-3">
-              <span className="mb-1 block opacity-60">{t("surplus.revenue")}</span>
-              <span className="text-lg font-bold">$4.2M</span>
-            </div>
-            <div className="border border-white/20 p-3">
-              <span className="mb-1 block opacity-60">{t("surplus.ready")}</span>
-              <span className="text-lg font-bold">$840K</span>
+            <div className="grid grid-cols-2 gap-4 font-mono text-xs">
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/60">{t("surplus.revenue")}</span>
+                <span className="text-2xl font-semibold">$4.2M</span>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                <span className="mb-1 block text-[10px] uppercase tracking-widest text-white/60">{t("surplus.ready")}</span>
+                <span className="text-2xl font-semibold">$840K</span>
+              </div>
             </div>
           </div>
         </div>
