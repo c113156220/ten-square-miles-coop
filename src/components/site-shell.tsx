@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { type ReactNode } from "react";
 import { useI18n, type Locale } from "@/lib/i18n";
+import { Sparkles } from "lucide-react";
 
 const PUBLIC_NAV: { to: string; label: { zh: string; en: string } }[] = [
   { to: "/", label: { zh: "共同購買", en: "Shop" } },
@@ -13,19 +14,19 @@ const PUBLIC_NAV: { to: string; label: { zh: string; en: string } }[] = [
 
 function LangSwitch({ locale, setLocale }: { locale: Locale; setLocale: (l: Locale) => void }) {
   return (
-    <div className="flex overflow-hidden rounded border border-border font-mono text-[11px]">
+    <div className="flex overflow-hidden rounded-full border border-border bg-white/60 p-0.5 font-mono text-[11px] backdrop-blur">
       <button
         onClick={() => setLocale("zh")}
-        className={`px-2 py-1 transition-colors ${
-          locale === "zh" ? "bg-primary text-primary-foreground" : "hover:bg-black/5"
+        className={`rounded-full px-2.5 py-1 transition-all ${
+          locale === "zh" ? "bg-foreground text-background shadow-sm" : "text-muted-foreground hover:text-foreground"
         }`}
       >
         繁中
       </button>
       <button
         onClick={() => setLocale("en")}
-        className={`px-2 py-1 transition-colors ${
-          locale === "en" ? "bg-primary text-primary-foreground" : "hover:bg-black/5"
+        className={`rounded-full px-2.5 py-1 transition-all ${
+          locale === "en" ? "bg-foreground text-background shadow-sm" : "text-muted-foreground hover:text-foreground"
         }`}
       >
         EN
@@ -37,39 +38,43 @@ function LangSwitch({ locale, setLocale }: { locale: Locale; setLocale: (l: Loca
 export function SiteNav() {
   const { locale, setLocale, t } = useI18n();
   return (
-    <nav className="sticky top-0 z-50 border-b border-border bg-background/85 backdrop-blur-md">
+    <nav className="sticky top-0 z-50 border-b border-border/70 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
         <div className="flex items-center gap-8">
-          <Link to="/" className="flex flex-col leading-none">
-            <span className="text-xl font-extrabold tracking-tighter">十圓方里</span>
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-              Ten Sq Miles
+          <Link to="/" className="flex items-center gap-2">
+            <span className="grid size-8 place-items-center rounded-lg bg-foreground text-background shadow-soft">
+              <Sparkles className="size-4" />
+            </span>
+            <span className="flex flex-col leading-none">
+              <span className="text-lg font-bold tracking-tight">十圓方里</span>
+              <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+                Ten Sq Miles
+              </span>
             </span>
           </Link>
-          <div className="hidden gap-5 text-sm font-medium lg:flex">
+          <div className="hidden gap-1 text-sm font-medium lg:flex">
             {PUBLIC_NAV.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
                 activeOptions={{ exact: true }}
-                activeProps={{ className: "text-primary" }}
-                className="transition-colors hover:text-primary"
+                activeProps={{ className: "bg-surface text-foreground" }}
+                className="rounded-full px-3 py-1.5 text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
               >
                 {item.label[locale]}
               </Link>
             ))}
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <Link
             to="/admin"
-            className="hidden rounded-full px-3 py-1.5 font-mono text-[11px] uppercase tracking-widest text-muted-foreground ring-1 ring-border transition-colors hover:text-primary md:inline-block"
+            className="hidden rounded-full border border-border bg-white/60 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground backdrop-blur transition-all hover:text-foreground md:inline-block"
           >
             {t("nav.admin")}
           </Link>
           <LangSwitch locale={locale} setLocale={setLocale} />
-          <div className="hidden h-4 w-px bg-border md:block" />
-          <button className="rounded-full px-3 py-1.5 text-sm font-semibold text-primary ring-1 ring-primary/20 transition-all hover:bg-primary/5">
+          <button className="rounded-full bg-foreground px-4 py-1.5 text-sm font-semibold text-background shadow-soft transition-all hover:shadow-elevated">
             {t("nav.login")}
           </button>
         </div>
@@ -81,20 +86,25 @@ export function SiteNav() {
 export function SiteFooter() {
   const { t } = useI18n();
   return (
-    <footer className="border-t border-border bg-stone-100 py-12">
-      <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 px-4 text-sm md:flex-row">
+    <footer className="border-t border-border bg-surface/60 py-14 backdrop-blur">
+      <div className="mx-auto flex max-w-7xl flex-col justify-between gap-10 px-4 text-sm md:flex-row">
         <div className="max-w-xs space-y-4">
-          <div className="flex flex-col leading-none">
-            <span className="text-lg font-extrabold tracking-tighter">十圓方里</span>
-            <span className="font-mono text-[10px] tracking-widest text-muted-foreground uppercase">
-              Ten Sq Miles Co-op
+          <div className="flex items-center gap-2">
+            <span className="grid size-8 place-items-center rounded-lg bg-foreground text-background">
+              <Sparkles className="size-4" />
             </span>
+            <div className="flex flex-col leading-none">
+              <span className="text-base font-bold tracking-tight">十圓方里</span>
+              <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                Ten Sq Miles Co-op
+              </span>
+            </div>
           </div>
           <p className="text-xs leading-relaxed text-muted-foreground">{t("footer.about")}</p>
         </div>
         <div className="grid grid-cols-2 gap-12">
           <div className="space-y-3">
-            <h4 className="text-[10px] font-bold tracking-widest uppercase">{t("footer.admin")}</h4>
+            <h4 className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground">{t("footer.admin")}</h4>
             <ul className="flex flex-col gap-2 text-muted-foreground">
               <li><Link to="/admin/voting" className="hover:text-primary">{t("footer.link.agm")}</Link></li>
               <li><Link to="/admin/surplus" className="hover:text-primary">{t("footer.link.reserve")}</Link></li>
@@ -102,7 +112,7 @@ export function SiteFooter() {
             </ul>
           </div>
           <div className="space-y-3">
-            <h4 className="text-[10px] font-bold tracking-widest uppercase">{t("footer.ops")}</h4>
+            <h4 className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground">{t("footer.ops")}</h4>
             <ul className="flex flex-col gap-2 text-muted-foreground">
               <li><Link to="/admin/finance" className="hover:text-primary">{t("footer.link.nonmember")}</Link></li>
               <li><Link to="/admin/preorders" className="hover:text-primary">{t("footer.link.logistics")}</Link></li>
@@ -117,7 +127,8 @@ export function SiteFooter() {
 
 export function SiteShell({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-background text-foreground selection:bg-primary/10">
+    <div className="relative min-h-screen bg-background text-foreground selection:bg-primary/15">
+      <div className="pointer-events-none fixed inset-0 -z-10 bg-mesh" />
       <SiteNav />
       <main className="mx-auto max-w-7xl px-4 py-12">{children}</main>
       <SiteFooter />
@@ -139,17 +150,15 @@ export function PageHeader({
   return (
     <header className="animate-reveal mb-10 max-w-[65ch] space-y-3">
       {eyebrow && (
-        <span className="font-mono text-[11px] tracking-widest uppercase text-accent">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white/60 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-accent backdrop-blur">
+          <span className="size-1.5 rounded-full bg-accent animate-pulse-glow" />
           {eyebrow}
         </span>
       )}
-      <h1 className="text-4xl font-extrabold leading-tight tracking-tight md:text-5xl">
-        {title}
+      <h1 className="text-4xl font-bold leading-tight tracking-tight md:text-5xl">
+        <span className="text-gradient">{title}</span>
         {subtitle && (
-          <span
-            className="mt-1 block text-2xl font-normal italic text-muted-foreground md:text-3xl"
-            style={{ fontFamily: "var(--font-serif)" }}
-          >
+          <span className="mt-1 block text-2xl font-normal text-muted-foreground md:text-3xl">
             {subtitle}
           </span>
         )}
