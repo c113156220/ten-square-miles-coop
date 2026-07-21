@@ -29,6 +29,23 @@ function AdminDashboard() {
         </p>
       </header>
 
+      <div className="rounded-md border border-accent/40 bg-accent/5 p-4 text-sm">
+        <p className="mb-1 font-mono text-[10px] uppercase tracking-widest text-accent">
+          Demo access · 展示登入
+        </p>
+        <p>
+          Portal URL: <a href="/admin" className="font-mono font-bold underline">/admin</a>
+          {" · "}
+          Account: <span className="font-mono font-bold">demo@tensqmiles.coop</span>
+          {" · "}
+          Password: <span className="font-mono font-bold">coop2026</span>
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Switch role in the sidebar (Super Admin · Board · Auditor) — the whole portal is in demo mode with mock data.
+        </p>
+      </div>
+
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((k) => (
           <div key={k.key} className={`rounded-md border bg-white p-5 ${toneCls(k.tone)}`}>
