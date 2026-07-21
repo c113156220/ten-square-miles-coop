@@ -2,12 +2,13 @@ import { Link } from "@tanstack/react-router";
 import { type ReactNode } from "react";
 import { useI18n, type Locale, type DictKey } from "@/lib/i18n";
 
-const PUBLIC_NAV: { to: string; key: DictKey; en: string }[] = [
-  { to: "/", key: "nav.shop", en: "Shop" },
-  { to: "/wishlist", key: "nav.wishlist", en: "Wishlist" },
-  { to: "/calculator", key: "nav.calculator", en: "Calculator" },
-  { to: "/impact", key: "nav.impact", en: "Impact" },
-  { to: "/trial", key: "nav.trial", en: "Trial" },
+const PUBLIC_NAV: { to: string; label: { zh: string; en: string } }[] = [
+  { to: "/", label: { zh: "共同購買", en: "Shop" } },
+  { to: "/coop", label: { zh: "共購流程", en: "Co-op Buying" } },
+  { to: "/wishlist", label: { zh: "願望清單", en: "Wishlist" } },
+  { to: "/calculator", label: { zh: "分紅試算", en: "Calculator" } },
+  { to: "/impact", label: { zh: "社會影響力", en: "Impact" } },
+  { to: "/register", label: { zh: "註冊入社", en: "Register" } },
 ];
 
 function LangSwitch({ locale, setLocale }: { locale: Locale; setLocale: (l: Locale) => void }) {
