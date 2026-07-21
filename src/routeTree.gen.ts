@@ -9,38 +9,212 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WishlistRouteImport } from './routes/wishlist'
+import { Route as TrialRouteImport } from './routes/trial'
+import { Route as ImpactRouteImport } from './routes/impact'
+import { Route as CalculatorRouteImport } from './routes/calculator'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminVotingRouteImport } from './routes/admin.voting'
+import { Route as AdminSurplusRouteImport } from './routes/admin.surplus'
+import { Route as AdminPreordersRouteImport } from './routes/admin.preorders'
+import { Route as AdminMembersRouteImport } from './routes/admin.members'
+import { Route as AdminFinanceRouteImport } from './routes/admin.finance'
 
+const WishlistRoute = WishlistRouteImport.update({
+  id: '/wishlist',
+  path: '/wishlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrialRoute = TrialRouteImport.update({
+  id: '/trial',
+  path: '/trial',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImpactRoute = ImpactRouteImport.update({
+  id: '/impact',
+  path: '/impact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CalculatorRoute = CalculatorRouteImport.update({
+  id: '/calculator',
+  path: '/calculator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminVotingRoute = AdminVotingRouteImport.update({
+  id: '/voting',
+  path: '/voting',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSurplusRoute = AdminSurplusRouteImport.update({
+  id: '/surplus',
+  path: '/surplus',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPreordersRoute = AdminPreordersRouteImport.update({
+  id: '/preorders',
+  path: '/preorders',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMembersRoute = AdminMembersRouteImport.update({
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFinanceRoute = AdminFinanceRouteImport.update({
+  id: '/finance',
+  path: '/finance',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/calculator': typeof CalculatorRoute
+  '/impact': typeof ImpactRoute
+  '/trial': typeof TrialRoute
+  '/wishlist': typeof WishlistRoute
+  '/admin/finance': typeof AdminFinanceRoute
+  '/admin/members': typeof AdminMembersRoute
+  '/admin/preorders': typeof AdminPreordersRoute
+  '/admin/surplus': typeof AdminSurplusRoute
+  '/admin/voting': typeof AdminVotingRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/calculator': typeof CalculatorRoute
+  '/impact': typeof ImpactRoute
+  '/trial': typeof TrialRoute
+  '/wishlist': typeof WishlistRoute
+  '/admin/finance': typeof AdminFinanceRoute
+  '/admin/members': typeof AdminMembersRoute
+  '/admin/preorders': typeof AdminPreordersRoute
+  '/admin/surplus': typeof AdminSurplusRoute
+  '/admin/voting': typeof AdminVotingRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/calculator': typeof CalculatorRoute
+  '/impact': typeof ImpactRoute
+  '/trial': typeof TrialRoute
+  '/wishlist': typeof WishlistRoute
+  '/admin/finance': typeof AdminFinanceRoute
+  '/admin/members': typeof AdminMembersRoute
+  '/admin/preorders': typeof AdminPreordersRoute
+  '/admin/surplus': typeof AdminSurplusRoute
+  '/admin/voting': typeof AdminVotingRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/calculator'
+    | '/impact'
+    | '/trial'
+    | '/wishlist'
+    | '/admin/finance'
+    | '/admin/members'
+    | '/admin/preorders'
+    | '/admin/surplus'
+    | '/admin/voting'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/calculator'
+    | '/impact'
+    | '/trial'
+    | '/wishlist'
+    | '/admin/finance'
+    | '/admin/members'
+    | '/admin/preorders'
+    | '/admin/surplus'
+    | '/admin/voting'
+    | '/admin'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/calculator'
+    | '/impact'
+    | '/trial'
+    | '/wishlist'
+    | '/admin/finance'
+    | '/admin/members'
+    | '/admin/preorders'
+    | '/admin/surplus'
+    | '/admin/voting'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
+  CalculatorRoute: typeof CalculatorRoute
+  ImpactRoute: typeof ImpactRoute
+  TrialRoute: typeof TrialRoute
+  WishlistRoute: typeof WishlistRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wishlist': {
+      id: '/wishlist'
+      path: '/wishlist'
+      fullPath: '/wishlist'
+      preLoaderRoute: typeof WishlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/trial': {
+      id: '/trial'
+      path: '/trial'
+      fullPath: '/trial'
+      preLoaderRoute: typeof TrialRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/impact': {
+      id: '/impact'
+      path: '/impact'
+      fullPath: '/impact'
+      preLoaderRoute: typeof ImpactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calculator': {
+      id: '/calculator'
+      path: '/calculator'
+      fullPath: '/calculator'
+      preLoaderRoute: typeof CalculatorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +222,78 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/voting': {
+      id: '/admin/voting'
+      path: '/voting'
+      fullPath: '/admin/voting'
+      preLoaderRoute: typeof AdminVotingRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/surplus': {
+      id: '/admin/surplus'
+      path: '/surplus'
+      fullPath: '/admin/surplus'
+      preLoaderRoute: typeof AdminSurplusRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/preorders': {
+      id: '/admin/preorders'
+      path: '/preorders'
+      fullPath: '/admin/preorders'
+      preLoaderRoute: typeof AdminPreordersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/members': {
+      id: '/admin/members'
+      path: '/members'
+      fullPath: '/admin/members'
+      preLoaderRoute: typeof AdminMembersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/finance': {
+      id: '/admin/finance'
+      path: '/finance'
+      fullPath: '/admin/finance'
+      preLoaderRoute: typeof AdminFinanceRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminFinanceRoute: typeof AdminFinanceRoute
+  AdminMembersRoute: typeof AdminMembersRoute
+  AdminPreordersRoute: typeof AdminPreordersRoute
+  AdminSurplusRoute: typeof AdminSurplusRoute
+  AdminVotingRoute: typeof AdminVotingRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminFinanceRoute: AdminFinanceRoute,
+  AdminMembersRoute: AdminMembersRoute,
+  AdminPreordersRoute: AdminPreordersRoute,
+  AdminSurplusRoute: AdminSurplusRoute,
+  AdminVotingRoute: AdminVotingRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
+  CalculatorRoute: CalculatorRoute,
+  ImpactRoute: ImpactRoute,
+  TrialRoute: TrialRoute,
+  WishlistRoute: WishlistRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

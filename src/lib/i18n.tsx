@@ -2,13 +2,18 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 
 export type Locale = "zh" | "en";
 
-type Dict = Record<string, { zh: string; en: string }>;
+type Entry = { zh: string; en: string };
 
 export const dict = {
   "nav.shop": { zh: "共同購買", en: "Shop" },
   "nav.surveys": { zh: "意象調查", en: "Surveys" },
   "nav.governance": { zh: "社務治理", en: "Governance" },
   "nav.login": { zh: "社員登入", en: "Member Portal" },
+  "nav.trial": { zh: "體驗帳號", en: "Trial Pass" },
+  "nav.calculator": { zh: "分紅試算", en: "Calculator" },
+  "nav.wishlist": { zh: "願望清單", en: "Wishlist" },
+  "nav.impact": { zh: "社會影響力", en: "Impact" },
+  "nav.admin": { zh: "後台管理", en: "Admin" },
 
   "hero.title.1": { zh: "以社群之力，", en: "Powered by community," },
   "hero.title.2": { zh: "重塑在地供應。", en: "reshaping local supply." },
@@ -73,7 +78,159 @@ export const dict = {
   "footer.link.nonmember": { zh: "非社員銷售監控", en: "Non-member Sales Monitor" },
   "footer.link.logistics": { zh: "物流配送狀態", en: "Delivery Status" },
   "footer.link.inventory": { zh: "進銷存模組", en: "Inventory Module" },
-} satisfies Dict;
+
+  // Trial page
+  "trial.title": { zh: "30 天體驗通行證", en: "30-Day Trial Pass" },
+  "trial.subtitle": { zh: "Guest onboarding gamification", en: "Guest onboarding gamification" },
+  "trial.body": {
+    zh: "先試試看合作社的日常。註冊體驗帳號，完成 3 分鐘的「合作社基礎」闖關問答，即可解鎖迎新券與股金折扣。",
+    en: "Try co-op life before you commit. Register for a trial account and finish the 3-minute Co-op Basics quiz to unlock your welcome voucher and share-capital discount.",
+  },
+  "trial.email": { zh: "電子郵件", en: "Email" },
+  "trial.name": { zh: "稱呼", en: "Display name" },
+  "trial.register": { zh: "領取體驗通行證", en: "Claim trial pass" },
+  "trial.quiz.title": { zh: "闖關：合作社基礎", en: "Quest: Co-op Basics" },
+  "trial.quiz.progress": { zh: "進度", en: "Progress" },
+  "trial.quiz.next": { zh: "下一題", en: "Next" },
+  "trial.quiz.finish": { zh: "完成闖關", en: "Finish quest" },
+  "trial.quiz.done.title": { zh: "🎉 恭喜完成！", en: "🎉 Quest complete!" },
+  "trial.quiz.done.body": {
+    zh: "你已解鎖 NT$200 迎新券，並取得股金訂金 10% 折扣。",
+    en: "You've unlocked a NT$200 welcome voucher and 10% off your share-capital deposit.",
+  },
+  "trial.perks": { zh: "體驗期間福利", en: "Trial perks" },
+  "trial.perk.1": { zh: "瀏覽全部預購清單", en: "Browse every pre-order" },
+  "trial.perk.2": { zh: "3 次非社員試購名額", en: "3 guest purchase slots" },
+  "trial.perk.3": { zh: "旁聽 1 次社員大會", en: "Audit 1 general meeting" },
+
+  // Calculator
+  "calc.title": { zh: "結餘分紅互動計算器", en: "Surplus & Dividend Calculator" },
+  "calc.subtitle": { zh: "Estimate your annual return", en: "Estimate your annual return" },
+  "calc.body": {
+    zh: "輸入你預估的每月消費金額，看看成為正式社員後每年可回饋多少結餘與稅務優惠。",
+    en: "Enter your estimated monthly spend to see the annual surplus return and tax savings you'd receive as a verified member.",
+  },
+  "calc.monthly": { zh: "每月預估消費 (NT$)", en: "Estimated monthly spend (NT$)" },
+  "calc.category": { zh: "主要品項", en: "Primary category" },
+  "calc.cat.bento": { zh: "健康餐盒", en: "Healthy bento" },
+  "calc.cat.produce": { zh: "生鮮蔬果", en: "Fresh produce" },
+  "calc.cat.pantry": { zh: "乾貨雜糧", en: "Pantry staples" },
+  "calc.annual": { zh: "年度預估消費", en: "Annual spend" },
+  "calc.return": { zh: "預估結餘回饋", en: "Est. surplus return" },
+  "calc.tax": { zh: "預估稅務節省", en: "Est. tax savings" },
+  "calc.points": { zh: "預估累積積點", en: "Est. reward points" },
+  "calc.cta": { zh: "立即加入社員", en: "Become a member" },
+
+  // Wishlist
+  "wish.title": { zh: "公開願望清單", en: "Community Wishlist" },
+  "wish.subtitle": { zh: "Vote on sourcing proposals", en: "Vote on sourcing proposals" },
+  "wish.body": {
+    zh: "由社員提出的採購願望。點擊「+1 集氣」讓提案更快達成成團門檻。",
+    en: "Sourcing proposals from members. Tap +1 Interested to help proposals reach the group-buy threshold.",
+  },
+  "wish.plus": { zh: "+1 集氣", en: "+1 Interested" },
+  "wish.by": { zh: "提案人", en: "Proposed by" },
+  "wish.ready": { zh: "已達門檻！可開團", en: "Threshold reached! Ready to launch" },
+  "wish.join": { zh: "加入社員以參與獨家預購折扣", en: "Join as a member for the exclusive pre-order discount" },
+
+  // Impact
+  "impact.title": { zh: "社會影響力儀表板", en: "Impact & Sustainability" },
+  "impact.subtitle": { zh: "Public good, in numbers", en: "Public good, in numbers" },
+  "impact.body": {
+    zh: "合作社公積金與運營如何回饋社會。所有數字每季更新，帳目公開透明。",
+    en: "How our reserve fund and operations return value to society. Figures update quarterly with a fully transparent ledger.",
+  },
+  "impact.grants": { zh: "學生助學金", en: "Student grants funded" },
+  "impact.farmers": { zh: "支持在地小農", en: "Local farmers supported" },
+  "impact.plastic": { zh: "減少塑膠使用", en: "Plastic reduced" },
+  "impact.co2": { zh: "減碳量", en: "CO₂ avoided" },
+  "impact.donated": { zh: "累積捐贈公益", en: "Donated to public good" },
+  "impact.meals": { zh: "共餐配送份數", en: "Community meals delivered" },
+
+  // Admin
+  "admin.title": { zh: "後台管理", en: "Admin Portal" },
+  "admin.role": { zh: "角色", en: "Role" },
+  "admin.role.admin": { zh: "系統管理員 Admin", en: "Admin" },
+  "admin.role.board": { zh: "理事 Board Member", en: "Board Member" },
+  "admin.role.auditor": { zh: "監事 Auditor", en: "Auditor" },
+  "admin.nav.dashboard": { zh: "總覽 Dashboard", en: "Dashboard" },
+  "admin.nav.members": { zh: "社員審核", en: "Members & Verification" },
+  "admin.nav.preorders": { zh: "預購與供應鏈", en: "Pre-orders & Supply" },
+  "admin.nav.finance": { zh: "財務與稅務", en: "Finance & Tax" },
+  "admin.nav.voting": { zh: "民主治理", en: "Voting & Meetings" },
+  "admin.nav.surplus": { zh: "結餘分紅", en: "Surplus & Dividend" },
+
+  "admin.dash.pendingMembers": { zh: "待審社員", en: "Pending members" },
+  "admin.dash.activeCampaigns": { zh: "進行中預購", en: "Active campaigns" },
+  "admin.dash.nonmemberRatio": { zh: "非社員銷售比", en: "Non-member sales ratio" },
+  "admin.dash.reserve": { zh: "公積金餘額", en: "Reserve fund" },
+  "admin.dash.recent": { zh: "近期活動", en: "Recent activity" },
+
+  // Members
+  "mem.queue": { zh: "待審核佇列", en: "Pending Verification Queue" },
+  "mem.col.name": { zh: "姓名", en: "Name" },
+  "mem.col.id": { zh: "身分驗證", en: "ID verification" },
+  "mem.col.payment": { zh: "股金繳納", en: "Share payment" },
+  "mem.col.edu": { zh: "社務教育", en: "Co-op education" },
+  "mem.col.action": { zh: "操作", en: "Action" },
+  "mem.approve": { zh: "核准並發放股票", en: "Approve & Issue Share" },
+  "mem.approved": { zh: "已核准 ✓", en: "Approved ✓" },
+  "mem.directory": { zh: "已驗證社員名錄", en: "Verified Member Directory" },
+  "mem.col.mid": { zh: "社員編號", en: "Member ID" },
+  "mem.col.shares": { zh: "股數", en: "Shares" },
+  "mem.col.points": { zh: "積點", en: "Points" },
+  "mem.col.status": { zh: "帳號狀態", en: "Status" },
+  "mem.filter": { zh: "搜尋社員…", en: "Search members…" },
+
+  // Pre-orders
+  "po.wishlist": { zh: "願望與意象調查", en: "Wishlist & Survey" },
+  "po.convert": { zh: "轉為預購活動", en: "Convert to campaign" },
+  "po.votes": { zh: "集氣票數", en: "Interest votes" },
+  "po.vendor": { zh: "廠商採購單", en: "Vendor Purchase Sheet" },
+  "po.generate": { zh: "產生採購單", en: "Generate purchase sheet" },
+  "po.fulfill": { zh: "訂單履行追蹤", en: "Order Fulfillment Tracker" },
+  "po.status.sourcing": { zh: "廠商進貨中", en: "Sourcing" },
+  "po.status.transit": { zh: "運送中", en: "In Transit" },
+  "po.status.ready": { zh: "待取貨/配送", en: "Ready for Pickup" },
+  "po.advance": { zh: "下一階段", en: "Advance stage" },
+  "po.cold": { zh: "冷鏈", en: "Cold Chain" },
+
+  // Finance
+  "fin.cap": { zh: "30% 非社員銷售上限監控", en: "30% Non-member Sales Cap" },
+  "fin.ratio": { zh: "目前比例", en: "Current ratio" },
+  "fin.cap.warn": { zh: "接近上限，請留意排程", en: "Approaching cap — review scheduling" },
+  "fin.cap.ok": { zh: "健康範圍", en: "Within healthy range" },
+  "fin.ledger": { zh: "稅務台帳與發票", en: "Tax Ledger & Invoices" },
+  "fin.exempt": { zh: "免稅（社員／一級農產品）", en: "Tax-Exempt (Member / Raw agri)" },
+  "fin.taxable": { zh: "應稅（非社員／加工餐盒）", en: "Taxable (Non-member / Processed)" },
+  "fin.invoice": { zh: "發票狀態", en: "Invoice" },
+  "fin.issued": { zh: "已開立", en: "Issued" },
+  "fin.pending": { zh: "待開立", en: "Pending" },
+
+  // Voting
+  "vote.meetings": { zh: "會議排程", en: "Meeting Scheduler" },
+  "vote.new": { zh: "建立會議", en: "New meeting" },
+  "vote.type.agm": { zh: "社員大會", en: "Annual General Meeting" },
+  "vote.type.board": { zh: "社務會議", en: "Board Meeting" },
+  "vote.polls": { zh: "投票中議案 (1 社員 1 票)", en: "Active Polls (1 member 1 vote)" },
+  "vote.anon": { zh: "匿名投票", en: "Anonymous ballot" },
+  "vote.new.poll": { zh: "新增議案", en: "New poll" },
+  "vote.close": { zh: "截止", en: "Closes" },
+
+  // Surplus admin
+  "sur.ledger": { zh: "年度結餘台帳", en: "Annual Surplus Ledger" },
+  "sur.income": { zh: "年度營收 (NT$)", en: "Annual gross income" },
+  "sur.cost": { zh: "營運成本 (NT$)", en: "Operating cost" },
+  "sur.calc": { zh: "計算結餘", en: "Calculate surplus" },
+  "sur.total": { zh: "淨結餘", en: "Net surplus" },
+  "sur.reserve50": { zh: "公積金 (50%)", en: "Reserve fund (50%)" },
+  "sur.dividend50": { zh: "社員分紅 (50%)", en: "Member dividend (50%)" },
+  "sur.allocator": { zh: "分紅分配器 (依貢獻度)", en: "Dividend Allocator (contribution-weighted)" },
+  "sur.member": { zh: "社員", en: "Member" },
+  "sur.contribution": { zh: "貢獻積點", en: "Contribution pts" },
+  "sur.share": { zh: "分配比例", en: "Share %" },
+  "sur.payout": { zh: "應發金額", en: "Payout" },
+} satisfies Record<string, Entry>;
 
 export type DictKey = keyof typeof dict;
 
