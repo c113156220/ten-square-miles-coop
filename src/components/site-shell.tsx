@@ -55,7 +55,7 @@ export function SiteNav() {
                 activeProps={{ className: "text-primary" }}
                 className="transition-colors hover:text-primary"
               >
-                {t(item.key)}
+                {item.label[locale]}
               </Link>
             ))}
           </div>
