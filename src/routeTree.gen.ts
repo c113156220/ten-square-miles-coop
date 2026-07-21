@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as TrialRouteImport } from './routes/trial'
 import { Route as ImpactRouteImport } from './routes/impact'
+import { Route as CoopRouteImport } from './routes/coop'
 import { Route as CalculatorRouteImport } from './routes/calculator'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -35,6 +36,11 @@ const TrialRoute = TrialRouteImport.update({
 const ImpactRoute = ImpactRouteImport.update({
   id: '/impact',
   path: '/impact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoopRoute = CoopRouteImport.update({
+  id: '/coop',
+  path: '/coop',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CalculatorRoute = CalculatorRouteImport.update({
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/calculator': typeof CalculatorRoute
+  '/coop': typeof CoopRoute
   '/impact': typeof ImpactRoute
   '/trial': typeof TrialRoute
   '/wishlist': typeof WishlistRoute
@@ -100,6 +107,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/calculator': typeof CalculatorRoute
+  '/coop': typeof CoopRoute
   '/impact': typeof ImpactRoute
   '/trial': typeof TrialRoute
   '/wishlist': typeof WishlistRoute
@@ -115,6 +123,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/calculator': typeof CalculatorRoute
+  '/coop': typeof CoopRoute
   '/impact': typeof ImpactRoute
   '/trial': typeof TrialRoute
   '/wishlist': typeof WishlistRoute
@@ -131,6 +140,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/calculator'
+    | '/coop'
     | '/impact'
     | '/trial'
     | '/wishlist'
@@ -144,6 +154,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/calculator'
+    | '/coop'
     | '/impact'
     | '/trial'
     | '/wishlist'
@@ -158,6 +169,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/calculator'
+    | '/coop'
     | '/impact'
     | '/trial'
     | '/wishlist'
@@ -173,6 +185,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   CalculatorRoute: typeof CalculatorRoute
+  CoopRoute: typeof CoopRoute
   ImpactRoute: typeof ImpactRoute
   TrialRoute: typeof TrialRoute
   WishlistRoute: typeof WishlistRoute
@@ -199,6 +212,13 @@ declare module '@tanstack/react-router' {
       path: '/impact'
       fullPath: '/impact'
       preLoaderRoute: typeof ImpactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/coop': {
+      id: '/coop'
+      path: '/coop'
+      fullPath: '/coop'
+      preLoaderRoute: typeof CoopRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/calculator': {
@@ -291,6 +311,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   CalculatorRoute: CalculatorRoute,
+  CoopRoute: CoopRoute,
   ImpactRoute: ImpactRoute,
   TrialRoute: TrialRoute,
   WishlistRoute: WishlistRoute,
