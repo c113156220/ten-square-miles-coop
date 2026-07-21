@@ -230,6 +230,9 @@ export const dict = {
   "sur.contribution": { zh: "貢獻積點", en: "Contribution pts" },
   "sur.share": { zh: "分配比例", en: "Share %" },
   "sur.payout": { zh: "應發金額", en: "Payout" },
+
+  "admin.nav.forecasting": { zh: "智慧需求預測", en: "Demand Forecasting" },
+  "admin.nav.roles": { zh: "帳號與權限", en: "Admins & Roles" },
 } satisfies Record<string, Entry>;
 
 export type DictKey = keyof typeof dict;
