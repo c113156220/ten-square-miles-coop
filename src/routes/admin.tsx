@@ -22,9 +22,11 @@ const NAV: { to: string; key: DictKey; roles: Role[] }[] = [
   { to: "/admin", key: "admin.nav.dashboard", roles: ["admin", "board", "auditor"] },
   { to: "/admin/members", key: "admin.nav.members", roles: ["admin", "board"] },
   { to: "/admin/preorders", key: "admin.nav.preorders", roles: ["admin", "board"] },
+  { to: "/admin/forecasting", key: "admin.nav.forecasting", roles: ["admin", "board"] },
   { to: "/admin/finance", key: "admin.nav.finance", roles: ["admin", "board", "auditor"] },
   { to: "/admin/voting", key: "admin.nav.voting", roles: ["admin", "board"] },
   { to: "/admin/surplus", key: "admin.nav.surplus", roles: ["admin", "auditor"] },
+  { to: "/admin/roles", key: "admin.nav.roles", roles: ["admin"] },
 ];
 
 function AdminLayout() {

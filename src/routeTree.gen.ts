@@ -11,15 +11,19 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as TrialRouteImport } from './routes/trial'
+import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ImpactRouteImport } from './routes/impact'
+import { Route as CoopRouteImport } from './routes/coop'
 import { Route as CalculatorRouteImport } from './routes/calculator'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminVotingRouteImport } from './routes/admin.voting'
 import { Route as AdminSurplusRouteImport } from './routes/admin.surplus'
+import { Route as AdminRolesRouteImport } from './routes/admin.roles'
 import { Route as AdminPreordersRouteImport } from './routes/admin.preorders'
 import { Route as AdminMembersRouteImport } from './routes/admin.members'
+import { Route as AdminForecastingRouteImport } from './routes/admin.forecasting'
 import { Route as AdminFinanceRouteImport } from './routes/admin.finance'
 
 const WishlistRoute = WishlistRouteImport.update({
@@ -32,9 +36,19 @@ const TrialRoute = TrialRouteImport.update({
   path: '/trial',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ImpactRoute = ImpactRouteImport.update({
   id: '/impact',
   path: '/impact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoopRoute = CoopRouteImport.update({
+  id: '/coop',
+  path: '/coop',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CalculatorRoute = CalculatorRouteImport.update({
@@ -67,6 +81,11 @@ const AdminSurplusRoute = AdminSurplusRouteImport.update({
   path: '/surplus',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminRolesRoute = AdminRolesRouteImport.update({
+  id: '/roles',
+  path: '/roles',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminPreordersRoute = AdminPreordersRouteImport.update({
   id: '/preorders',
   path: '/preorders',
@@ -75,6 +94,11 @@ const AdminPreordersRoute = AdminPreordersRouteImport.update({
 const AdminMembersRoute = AdminMembersRouteImport.update({
   id: '/members',
   path: '/members',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminForecastingRoute = AdminForecastingRouteImport.update({
+  id: '/forecasting',
+  path: '/forecasting',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminFinanceRoute = AdminFinanceRouteImport.update({
@@ -87,12 +111,16 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/calculator': typeof CalculatorRoute
+  '/coop': typeof CoopRoute
   '/impact': typeof ImpactRoute
+  '/register': typeof RegisterRoute
   '/trial': typeof TrialRoute
   '/wishlist': typeof WishlistRoute
   '/admin/finance': typeof AdminFinanceRoute
+  '/admin/forecasting': typeof AdminForecastingRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/preorders': typeof AdminPreordersRoute
+  '/admin/roles': typeof AdminRolesRoute
   '/admin/surplus': typeof AdminSurplusRoute
   '/admin/voting': typeof AdminVotingRoute
   '/admin/': typeof AdminIndexRoute
@@ -100,12 +128,16 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/calculator': typeof CalculatorRoute
+  '/coop': typeof CoopRoute
   '/impact': typeof ImpactRoute
+  '/register': typeof RegisterRoute
   '/trial': typeof TrialRoute
   '/wishlist': typeof WishlistRoute
   '/admin/finance': typeof AdminFinanceRoute
+  '/admin/forecasting': typeof AdminForecastingRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/preorders': typeof AdminPreordersRoute
+  '/admin/roles': typeof AdminRolesRoute
   '/admin/surplus': typeof AdminSurplusRoute
   '/admin/voting': typeof AdminVotingRoute
   '/admin': typeof AdminIndexRoute
@@ -115,12 +147,16 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/calculator': typeof CalculatorRoute
+  '/coop': typeof CoopRoute
   '/impact': typeof ImpactRoute
+  '/register': typeof RegisterRoute
   '/trial': typeof TrialRoute
   '/wishlist': typeof WishlistRoute
   '/admin/finance': typeof AdminFinanceRoute
+  '/admin/forecasting': typeof AdminForecastingRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/preorders': typeof AdminPreordersRoute
+  '/admin/roles': typeof AdminRolesRoute
   '/admin/surplus': typeof AdminSurplusRoute
   '/admin/voting': typeof AdminVotingRoute
   '/admin/': typeof AdminIndexRoute
@@ -131,12 +167,16 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/calculator'
+    | '/coop'
     | '/impact'
+    | '/register'
     | '/trial'
     | '/wishlist'
     | '/admin/finance'
+    | '/admin/forecasting'
     | '/admin/members'
     | '/admin/preorders'
+    | '/admin/roles'
     | '/admin/surplus'
     | '/admin/voting'
     | '/admin/'
@@ -144,12 +184,16 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/calculator'
+    | '/coop'
     | '/impact'
+    | '/register'
     | '/trial'
     | '/wishlist'
     | '/admin/finance'
+    | '/admin/forecasting'
     | '/admin/members'
     | '/admin/preorders'
+    | '/admin/roles'
     | '/admin/surplus'
     | '/admin/voting'
     | '/admin'
@@ -158,12 +202,16 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/calculator'
+    | '/coop'
     | '/impact'
+    | '/register'
     | '/trial'
     | '/wishlist'
     | '/admin/finance'
+    | '/admin/forecasting'
     | '/admin/members'
     | '/admin/preorders'
+    | '/admin/roles'
     | '/admin/surplus'
     | '/admin/voting'
     | '/admin/'
@@ -173,7 +221,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   CalculatorRoute: typeof CalculatorRoute
+  CoopRoute: typeof CoopRoute
   ImpactRoute: typeof ImpactRoute
+  RegisterRoute: typeof RegisterRoute
   TrialRoute: typeof TrialRoute
   WishlistRoute: typeof WishlistRoute
 }
@@ -194,11 +244,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrialRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/impact': {
       id: '/impact'
       path: '/impact'
       fullPath: '/impact'
       preLoaderRoute: typeof ImpactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/coop': {
+      id: '/coop'
+      path: '/coop'
+      fullPath: '/coop'
+      preLoaderRoute: typeof CoopRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/calculator': {
@@ -243,6 +307,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSurplusRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/roles': {
+      id: '/admin/roles'
+      path: '/roles'
+      fullPath: '/admin/roles'
+      preLoaderRoute: typeof AdminRolesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/preorders': {
       id: '/admin/preorders'
       path: '/preorders'
@@ -257,6 +328,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMembersRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/forecasting': {
+      id: '/admin/forecasting'
+      path: '/forecasting'
+      fullPath: '/admin/forecasting'
+      preLoaderRoute: typeof AdminForecastingRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/finance': {
       id: '/admin/finance'
       path: '/finance'
@@ -269,8 +347,10 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminFinanceRoute: typeof AdminFinanceRoute
+  AdminForecastingRoute: typeof AdminForecastingRoute
   AdminMembersRoute: typeof AdminMembersRoute
   AdminPreordersRoute: typeof AdminPreordersRoute
+  AdminRolesRoute: typeof AdminRolesRoute
   AdminSurplusRoute: typeof AdminSurplusRoute
   AdminVotingRoute: typeof AdminVotingRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -278,8 +358,10 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminFinanceRoute: AdminFinanceRoute,
+  AdminForecastingRoute: AdminForecastingRoute,
   AdminMembersRoute: AdminMembersRoute,
   AdminPreordersRoute: AdminPreordersRoute,
+  AdminRolesRoute: AdminRolesRoute,
   AdminSurplusRoute: AdminSurplusRoute,
   AdminVotingRoute: AdminVotingRoute,
   AdminIndexRoute: AdminIndexRoute,
@@ -291,7 +373,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   CalculatorRoute: CalculatorRoute,
+  CoopRoute: CoopRoute,
   ImpactRoute: ImpactRoute,
+  RegisterRoute: RegisterRoute,
   TrialRoute: TrialRoute,
   WishlistRoute: WishlistRoute,
 }
