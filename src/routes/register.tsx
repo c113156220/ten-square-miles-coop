@@ -370,7 +370,7 @@ function MemberApplication() {
           <div className="flex gap-2">
             <StepBtn onClick={() => setStep(2)} label="←" variant="ghost" />
             <StepBtn
-              onClick={() => passed && setStep(4)}
+              onClick={submitApplication}
               label={locale === "zh" ? "提交申請" : "Submit application"}
               disabled={!passed}
             />
