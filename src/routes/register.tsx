@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { SiteShell, PageHeader } from "@/components/site-shell";
+import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/register")({
   head: () => ({
@@ -63,44 +64,80 @@ function RegisterPage() {
 
 function TrialForm() {
   const { locale } = useI18n();
+  const { registerTrial, showVerify, trialDays } = useAuth();
+  const router = useRouter();
+  const [form, setForm] = useState({ name: "", phone: "", email: "", password: "" });
+  const [error, setError] = useState<string | null>(null);
+  const [upgradeHint, setUpgradeHint] = useState(false);
   const [done, setDone] = useState(false);
+
+  function set(k: keyof typeof form, v: string) {
+    setForm((f) => ({ ...f, [k]: v }));
+  }
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setUpgradeHint(false);
+    const r = registerTrial(form);
+    if (!r.ok) {
+      setError(r.error);
+      if (r.upgradeEmail) setUpgradeHint(true);
+      return;
+    }
+    setDone(true);
+    showVerify({ email: r.user.email, link: r.verifyLink, userId: r.user.id });
+  }
+
   return (
     <div className="grid gap-8 md:grid-cols-[2fr_1fr]">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          setDone(true);
-        }}
-        className="space-y-4 rounded-md border border-border bg-white p-6"
-      >
+      <form onSubmit={submit} className="space-y-4 rounded-md border border-border bg-white p-6">
         <h2 className="text-xl font-bold">
-          {locale === "zh" ? "30 天體驗註冊" : "30-Day Trial Pass"}
+          {locale === "zh" ? `${trialDays} 天體驗註冊` : `${trialDays}-Day Trial Pass`}
         </h2>
         {done ? (
           <div className="rounded border border-primary bg-primary/10 p-4 text-sm text-primary">
             ✓ {locale === "zh"
-              ? "體驗帳號已建立！請至信箱啟用連結。"
-              : "Trial pass created. Check your inbox to activate."}
+              ? "體驗帳號已建立！請至驗證信箱視窗完成啟用。"
+              : "Trial pass created. Check the verification popup to activate."}
           </div>
         ) : (
           <>
-            {[
-              { zh: "姓名", en: "Full Name", type: "text" },
-              { zh: "手機號碼", en: "Phone", type: "tel" },
-              { zh: "電子郵件", en: "Email", type: "email" },
-              { zh: "密碼", en: "Password", type: "password" },
-            ].map((f) => (
-              <label key={f.en} className="block">
+            {(
+              [
+                { key: "name", zh: "姓名", en: "Full Name", type: "text" },
+                { key: "phone", zh: "手機號碼", en: "Phone", type: "tel" },
+                { key: "email", zh: "電子郵件", en: "Email", type: "email" },
+                { key: "password", zh: "密碼", en: "Password", type: "password" },
+              ] as const
+            ).map((f) => (
+              <label key={f.key} className="block">
                 <span className="mb-1 block text-xs font-bold text-muted-foreground">
                   {locale === "zh" ? f.zh : f.en}
                 </span>
                 <input
                   required
                   type={f.type}
+                  value={form[f.key]}
+                  onChange={(e) => set(f.key, e.target.value)}
                   className="w-full rounded-sm border border-border bg-background px-3 py-2 text-sm outline-none focus:border-primary"
                 />
               </label>
             ))}
+            {error && (
+              <div className="rounded border border-red-300 bg-red-50 p-3 text-xs text-red-700">
+                {error}
+                {upgradeHint && (
+                  <button
+                    type="button"
+                    onClick={() => router.navigate({ to: "/register" })}
+                    className="mt-2 block rounded-sm bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
+                  >
+                    → Upgrade to Full Member / 升級為正式社員
+                  </button>
+                )}
+              </div>
+            )}
             <button className="w-full rounded-sm bg-primary py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110">
               {locale === "zh" ? "建立體驗帳號" : "Create trial account"}
             </button>
@@ -113,7 +150,11 @@ function TrialForm() {
           <li>· {locale === "zh" ? "瀏覽全部預購檔期" : "Browse every pre-order campaign"}</li>
           <li>· {locale === "zh" ? "投票 +1 願望清單" : "+1 on the community wishlist"}</li>
           <li>· {locale === "zh" ? "享一般價購物 (不含社員價)" : "Regular pricing (no co-op discount)"}</li>
-          <li>· {locale === "zh" ? "30 天內可升級為正式社員" : "Upgrade to full member within 30 days"}</li>
+          <li>
+            · {locale === "zh"
+              ? `${trialDays} 天內可升級為正式社員`
+              : `Upgrade to full member within ${trialDays} days`}
+          </li>
         </ul>
       </aside>
     </div>
