@@ -233,6 +233,7 @@ export const dict = {
 
   "admin.nav.forecasting": { zh: "智慧需求預測", en: "Demand Forecasting" },
   "admin.nav.roles": { zh: "帳號與權限", en: "Admins & Roles" },
+  "admin.nav.settings": { zh: "體驗與系統設定", en: "System Settings" },
 } satisfies Record<string, Entry>;
 
 export type DictKey = keyof typeof dict;
