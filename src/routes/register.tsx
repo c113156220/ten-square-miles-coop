@@ -193,8 +193,11 @@ const QUIZ = [
 
 function MemberApplication() {
   const { locale } = useI18n();
+  const { registerMember, showVerify } = useAuth();
   const [step, setStep] = useState(1);
   const [answers, setAnswers] = useState<number[]>([-1, -1, -1]);
+  const [info, setInfo] = useState({ name: "", nid: "", phone: "", email: "", password: "coop2026" });
+  const [error, setError] = useState<string | null>(null);
   const passed = answers.every((a, i) => a === QUIZ[i].correct);
 
   const STEPS = [
@@ -203,6 +206,39 @@ function MemberApplication() {
     { zh: "社務教育測驗", en: "Co-op Education" },
     { zh: "審核狀態", en: "Tracker" },
   ];
+
+  function nextFromBasic() {
+    setError(null);
+    if (!info.name || !info.email || !info.phone) {
+      setError(locale === "zh" ? "請填寫所有欄位" : "Please fill in all fields");
+      return;
+    }
+    setStep(2);
+  }
+
+  function submitApplication() {
+    if (!passed) return;
+    const r = registerMember({
+      name: info.name,
+      email: info.email,
+      phone: info.phone,
+      password: info.password,
+    });
+    if (!r.ok) {
+      setError(r.error);
+      setStep(1);
+      return;
+    }
+    showVerify({ email: r.user.email, link: r.verifyLink, userId: r.user.id });
+    setStep(4);
+  }
+
+  const basicFields = [
+    { key: "name", zh: "真實姓名", en: "Full legal name", type: "text" },
+    { key: "nid", zh: "身分證 / 學生證字號", en: "National / Student ID", type: "text" },
+    { key: "phone", zh: "聯絡電話", en: "Contact phone", type: "tel" },
+    { key: "email", zh: "電子郵件", en: "Email", type: "email" },
+  ] as const;
 
   return (
     <div className="rounded-md border border-border bg-white p-6">
@@ -236,20 +272,25 @@ function MemberApplication() {
       {step === 1 && (
         <div className="space-y-4">
           <h3 className="font-bold">{locale === "zh" ? "步驟 1 · 基本資料" : "Step 1 · Basic info"}</h3>
-          {[
-            { zh: "真實姓名", en: "Full legal name" },
-            { zh: "身分證 / 學生證字號", en: "National / Student ID" },
-            { zh: "聯絡電話", en: "Contact phone" },
-            { zh: "電子郵件", en: "Email" },
-          ].map((f) => (
-            <label key={f.en} className="block">
+          {basicFields.map((f) => (
+            <label key={f.key} className="block">
               <span className="mb-1 block text-xs font-bold text-muted-foreground">
                 {locale === "zh" ? f.zh : f.en}
               </span>
-              <input className="w-full rounded-sm border border-border px-3 py-2 text-sm" />
+              <input
+                type={f.type}
+                value={info[f.key]}
+                onChange={(e) => setInfo({ ...info, [f.key]: e.target.value })}
+                className="w-full rounded-sm border border-border px-3 py-2 text-sm outline-none focus:border-primary"
+              />
             </label>
           ))}
-          <StepBtn onClick={() => setStep(2)} label={locale === "zh" ? "下一步" : "Next"} />
+          {error && (
+            <div className="rounded border border-red-300 bg-red-50 p-3 text-xs text-red-700">
+              {error}
+            </div>
+          )}
+          <StepBtn onClick={nextFromBasic} label={locale === "zh" ? "下一步" : "Next"} />
         </div>
       )}
 
