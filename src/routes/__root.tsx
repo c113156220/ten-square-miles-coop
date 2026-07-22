@@ -12,6 +12,8 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { I18nProvider } from "../lib/i18n";
+import { AuthProvider } from "../lib/auth";
+import { LoginModal, VerifyEmailModal, ExpiredTrialOverlay } from "../components/auth-modals";
 
 function NotFoundComponent() {
   return (
@@ -129,8 +131,13 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <I18nProvider>
-        {/* Required: nested routes render here. */}
-        <Outlet />
+        <AuthProvider>
+          {/* Required: nested routes render here. */}
+          <Outlet />
+          <LoginModal />
+          <VerifyEmailModal />
+          <ExpiredTrialOverlay />
+        </AuthProvider>
       </I18nProvider>
     </QueryClientProvider>
   );
