@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
+import { useAuth, trialRemainingDays, isTrialExpired, type AuthUser } from "@/lib/auth";
 
 export const Route = createFileRoute("/admin/members")({
   component: MembersPage,
@@ -37,9 +38,20 @@ function Check({ ok }: { ok: boolean }) {
 
 function MembersPage() {
   const { t } = useI18n();
+  const { users, extendTrial, forceConvert } = useAuth();
   const [pending, setPending] = useState(initialPending);
   const [approved, setApproved] = useState<Record<string, string>>({});
   const [query, setQuery] = useState("");
+
+  const trialUsers = users.filter((u) => u.role === "trial");
+  const registeredMembers = users.filter((u) => u.role === "member");
+
+  function trialStatus(u: AuthUser): { label: string; cls: string } {
+    if (u.convertedToMember) return { label: "Converted", cls: "bg-primary/10 text-primary" };
+    if (isTrialExpired(u)) return { label: "Expired", cls: "bg-red-100 text-red-700" };
+    return { label: "Active", cls: "bg-accent/20 text-accent-foreground" };
+  }
+
 
   function approve(p: Pending) {
     if (!(p.idOk && p.payOk && p.eduOk)) return;
