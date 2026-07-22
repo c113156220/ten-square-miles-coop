@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WishlistRouteImport } from './routes/wishlist'
+import { Route as VerifyRouteImport } from './routes/verify'
 import { Route as TrialRouteImport } from './routes/trial'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ImpactRouteImport } from './routes/impact'
@@ -20,6 +21,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminVotingRouteImport } from './routes/admin.voting'
 import { Route as AdminSurplusRouteImport } from './routes/admin.surplus'
+import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminRolesRouteImport } from './routes/admin.roles'
 import { Route as AdminPreordersRouteImport } from './routes/admin.preorders'
 import { Route as AdminMembersRouteImport } from './routes/admin.members'
@@ -29,6 +31,11 @@ import { Route as AdminFinanceRouteImport } from './routes/admin.finance'
 const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
   path: '/wishlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyRoute = VerifyRouteImport.update({
+  id: '/verify',
+  path: '/verify',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TrialRoute = TrialRouteImport.update({
@@ -81,6 +88,11 @@ const AdminSurplusRoute = AdminSurplusRouteImport.update({
   path: '/surplus',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminRolesRoute = AdminRolesRouteImport.update({
   id: '/roles',
   path: '/roles',
@@ -115,12 +127,14 @@ export interface FileRoutesByFullPath {
   '/impact': typeof ImpactRoute
   '/register': typeof RegisterRoute
   '/trial': typeof TrialRoute
+  '/verify': typeof VerifyRoute
   '/wishlist': typeof WishlistRoute
   '/admin/finance': typeof AdminFinanceRoute
   '/admin/forecasting': typeof AdminForecastingRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/preorders': typeof AdminPreordersRoute
   '/admin/roles': typeof AdminRolesRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/surplus': typeof AdminSurplusRoute
   '/admin/voting': typeof AdminVotingRoute
   '/admin/': typeof AdminIndexRoute
@@ -132,12 +146,14 @@ export interface FileRoutesByTo {
   '/impact': typeof ImpactRoute
   '/register': typeof RegisterRoute
   '/trial': typeof TrialRoute
+  '/verify': typeof VerifyRoute
   '/wishlist': typeof WishlistRoute
   '/admin/finance': typeof AdminFinanceRoute
   '/admin/forecasting': typeof AdminForecastingRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/preorders': typeof AdminPreordersRoute
   '/admin/roles': typeof AdminRolesRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/surplus': typeof AdminSurplusRoute
   '/admin/voting': typeof AdminVotingRoute
   '/admin': typeof AdminIndexRoute
@@ -151,12 +167,14 @@ export interface FileRoutesById {
   '/impact': typeof ImpactRoute
   '/register': typeof RegisterRoute
   '/trial': typeof TrialRoute
+  '/verify': typeof VerifyRoute
   '/wishlist': typeof WishlistRoute
   '/admin/finance': typeof AdminFinanceRoute
   '/admin/forecasting': typeof AdminForecastingRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/preorders': typeof AdminPreordersRoute
   '/admin/roles': typeof AdminRolesRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/surplus': typeof AdminSurplusRoute
   '/admin/voting': typeof AdminVotingRoute
   '/admin/': typeof AdminIndexRoute
@@ -171,12 +189,14 @@ export interface FileRouteTypes {
     | '/impact'
     | '/register'
     | '/trial'
+    | '/verify'
     | '/wishlist'
     | '/admin/finance'
     | '/admin/forecasting'
     | '/admin/members'
     | '/admin/preorders'
     | '/admin/roles'
+    | '/admin/settings'
     | '/admin/surplus'
     | '/admin/voting'
     | '/admin/'
@@ -188,12 +208,14 @@ export interface FileRouteTypes {
     | '/impact'
     | '/register'
     | '/trial'
+    | '/verify'
     | '/wishlist'
     | '/admin/finance'
     | '/admin/forecasting'
     | '/admin/members'
     | '/admin/preorders'
     | '/admin/roles'
+    | '/admin/settings'
     | '/admin/surplus'
     | '/admin/voting'
     | '/admin'
@@ -206,12 +228,14 @@ export interface FileRouteTypes {
     | '/impact'
     | '/register'
     | '/trial'
+    | '/verify'
     | '/wishlist'
     | '/admin/finance'
     | '/admin/forecasting'
     | '/admin/members'
     | '/admin/preorders'
     | '/admin/roles'
+    | '/admin/settings'
     | '/admin/surplus'
     | '/admin/voting'
     | '/admin/'
@@ -225,6 +249,7 @@ export interface RootRouteChildren {
   ImpactRoute: typeof ImpactRoute
   RegisterRoute: typeof RegisterRoute
   TrialRoute: typeof TrialRoute
+  VerifyRoute: typeof VerifyRoute
   WishlistRoute: typeof WishlistRoute
 }
 
@@ -235,6 +260,13 @@ declare module '@tanstack/react-router' {
       path: '/wishlist'
       fullPath: '/wishlist'
       preLoaderRoute: typeof WishlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify': {
+      id: '/verify'
+      path: '/verify'
+      fullPath: '/verify'
+      preLoaderRoute: typeof VerifyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/trial': {
@@ -307,6 +339,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSurplusRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/roles': {
       id: '/admin/roles'
       path: '/roles'
@@ -351,6 +390,7 @@ interface AdminRouteChildren {
   AdminMembersRoute: typeof AdminMembersRoute
   AdminPreordersRoute: typeof AdminPreordersRoute
   AdminRolesRoute: typeof AdminRolesRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
   AdminSurplusRoute: typeof AdminSurplusRoute
   AdminVotingRoute: typeof AdminVotingRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -362,6 +402,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminMembersRoute: AdminMembersRoute,
   AdminPreordersRoute: AdminPreordersRoute,
   AdminRolesRoute: AdminRolesRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
   AdminSurplusRoute: AdminSurplusRoute,
   AdminVotingRoute: AdminVotingRoute,
   AdminIndexRoute: AdminIndexRoute,
@@ -377,6 +418,7 @@ const rootRouteChildren: RootRouteChildren = {
   ImpactRoute: ImpactRoute,
   RegisterRoute: RegisterRoute,
   TrialRoute: TrialRoute,
+  VerifyRoute: VerifyRoute,
   WishlistRoute: WishlistRoute,
 }
 export const routeTree = rootRouteImport
