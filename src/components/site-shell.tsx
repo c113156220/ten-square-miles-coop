@@ -2,6 +2,8 @@ import { Link } from "@tanstack/react-router";
 import { type ReactNode } from "react";
 import { useI18n, type Locale } from "@/lib/i18n";
 import { Sparkles } from "lucide-react";
+import { useAuth } from "@/lib/auth";
+import { TrialBadge } from "@/components/auth-modals";
 
 const PUBLIC_NAV: { to: string; label: { zh: string; en: string } }[] = [
   { to: "/", label: { zh: "共同購買", en: "Shop" } },
@@ -37,6 +39,7 @@ function LangSwitch({ locale, setLocale }: { locale: Locale; setLocale: (l: Loca
 
 export function SiteNav() {
   const { locale, setLocale, t } = useI18n();
+  const { user, isAdmin, openLogin, logout } = useAuth();
   return (
     <nav className="sticky top-0 z-50 border-b border-border/70 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
@@ -67,16 +70,39 @@ export function SiteNav() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Link
-            to="/admin"
-            className="hidden rounded-full border border-border bg-white/60 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground backdrop-blur transition-all hover:text-foreground md:inline-block"
-          >
-            {t("nav.admin")}
-          </Link>
+          <TrialBadge />
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className="hidden rounded-full border border-border bg-white/60 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground backdrop-blur transition-all hover:text-foreground md:inline-block"
+            >
+              {t("nav.admin")}
+            </Link>
+          )}
           <LangSwitch locale={locale} setLocale={setLocale} />
-          <button className="rounded-full bg-foreground px-4 py-1.5 text-sm font-semibold text-background shadow-soft transition-all hover:shadow-elevated">
-            {t("nav.login")}
-          </button>
+          {user ? (
+            <div className="flex items-center gap-2">
+              <span className="hidden text-xs font-semibold md:inline">
+                {user.name}
+                <span className="ml-1 rounded-full bg-surface px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                  {user.role}
+                </span>
+              </span>
+              <button
+                onClick={logout}
+                className="rounded-full border border-border bg-white/60 px-3 py-1.5 text-xs font-semibold hover:bg-surface"
+              >
+                Sign out
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={openLogin}
+              className="rounded-full bg-foreground px-4 py-1.5 text-sm font-semibold text-background shadow-soft transition-all hover:shadow-elevated"
+            >
+              {t("nav.login")}
+            </button>
+          )}
         </div>
       </div>
     </nav>

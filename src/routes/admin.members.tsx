@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
+import { useAuth, trialRemainingDays, isTrialExpired, type AuthUser } from "@/lib/auth";
 
 export const Route = createFileRoute("/admin/members")({
   component: MembersPage,
@@ -37,9 +38,20 @@ function Check({ ok }: { ok: boolean }) {
 
 function MembersPage() {
   const { t } = useI18n();
+  const { users, extendTrial, forceConvert } = useAuth();
   const [pending, setPending] = useState(initialPending);
   const [approved, setApproved] = useState<Record<string, string>>({});
   const [query, setQuery] = useState("");
+
+  const trialUsers = users.filter((u) => u.role === "trial");
+  const registeredMembers = users.filter((u) => u.role === "member");
+
+  function trialStatus(u: AuthUser): { label: string; cls: string } {
+    if (u.convertedToMember) return { label: "Converted", cls: "bg-primary/10 text-primary" };
+    if (isTrialExpired(u)) return { label: "Expired", cls: "bg-red-100 text-red-700" };
+    return { label: "Active", cls: "bg-accent/20 text-accent-foreground" };
+  }
+
 
   function approve(p: Pending) {
     if (!(p.idOk && p.payOk && p.eduOk)) return;
@@ -121,6 +133,85 @@ function MembersPage() {
 
       <section className="rounded-md border border-border bg-white">
         <div className="flex items-center justify-between border-b border-border p-5">
+          <div>
+            <h2 className="text-lg font-bold">Trial Accounts · 體驗帳號</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Live self-registered guests. Track expiry, extend, or convert to full member.
+            </p>
+          </div>
+          <span className="rounded-full bg-accent/20 px-3 py-1 font-mono text-[10px] font-bold uppercase text-accent-foreground">
+            {trialUsers.length} active
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-stone-100 text-left font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                <th className="px-4 py-2">Name</th>
+                <th className="px-4 py-2">Email</th>
+                <th className="px-4 py-2">Status</th>
+                <th className="px-4 py-2">Days Left</th>
+                <th className="px-4 py-2">Verified</th>
+                <th className="px-4 py-2 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {trialUsers.map((u) => {
+                const st = trialStatus(u);
+                const remain = trialRemainingDays(u);
+                return (
+                  <tr key={u.id}>
+                    <td className="px-4 py-3 font-semibold">{u.name}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{u.email}</td>
+                    <td className="px-4 py-3">
+                      <span className={`rounded-sm px-2 py-0.5 text-[10px] font-bold uppercase ${st.cls}`}>
+                        {st.label}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 font-mono">{remain}d</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`text-[10px] font-bold ${
+                          u.verified ? "text-primary" : "text-muted-foreground"
+                        }`}
+                      >
+                        {u.verified ? "✓" : "…"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="inline-flex gap-1">
+                        <button
+                          onClick={() => extendTrial(u.id, 7)}
+                          className="rounded-sm border border-border px-2 py-1 text-[11px] font-semibold hover:bg-stone-50"
+                        >
+                          +7d
+                        </button>
+                        <button
+                          onClick={() => forceConvert(u.id)}
+                          className="rounded-sm bg-primary px-2 py-1 text-[11px] font-semibold text-primary-foreground"
+                        >
+                          Convert
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+              {trialUsers.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                    No trial accounts yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+
+      <section className="rounded-md border border-border bg-white">
+        <div className="flex items-center justify-between border-b border-border p-5">
           <h2 className="text-lg font-bold">{t("mem.directory")}</h2>
           <input
             value={query}
@@ -156,6 +247,30 @@ function MembersPage() {
                       }`}
                     >
                       {d.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {registeredMembers.map((u, i) => (
+                <tr key={u.id} className="bg-primary/5">
+                  <td className="px-4 py-3 font-mono">M-{String(500 + i).padStart(4, "0")}</td>
+                  <td className="px-4 py-3 font-semibold">
+                    {u.name}
+                    <span className="ml-2 rounded-full bg-primary/20 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-primary">
+                      new
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 font-mono">—</td>
+                  <td className="px-4 py-3 font-mono">0</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`rounded-sm px-2 py-0.5 text-[10px] font-bold uppercase ${
+                        u.verified
+                          ? "bg-primary/10 text-primary"
+                          : "bg-accent/20 text-accent-foreground"
+                      }`}
+                    >
+                      {u.verified ? "Active" : "Pending verify"}
                     </span>
                   </td>
                 </tr>
