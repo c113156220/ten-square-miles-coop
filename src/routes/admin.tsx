@@ -66,9 +66,12 @@ function AccessDenied() {
 
 function AdminLayout() {
   const { t } = useI18n();
+  const { isAdmin } = useAuth();
   const [role, setRole] = useState<Role>("admin");
   const [open, setOpen] = useState(true);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  if (!isAdmin) return <AccessDenied />;
 
   const visible = NAV.filter((n) => n.roles.includes(role));
 
