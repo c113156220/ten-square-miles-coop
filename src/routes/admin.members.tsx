@@ -251,6 +251,30 @@ function MembersPage() {
                   </td>
                 </tr>
               ))}
+              {registeredMembers.map((u, i) => (
+                <tr key={u.id} className="bg-primary/5">
+                  <td className="px-4 py-3 font-mono">M-{String(500 + i).padStart(4, "0")}</td>
+                  <td className="px-4 py-3 font-semibold">
+                    {u.name}
+                    <span className="ml-2 rounded-full bg-primary/20 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-primary">
+                      new
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 font-mono">—</td>
+                  <td className="px-4 py-3 font-mono">0</td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`rounded-sm px-2 py-0.5 text-[10px] font-bold uppercase ${
+                        u.verified
+                          ? "bg-primary/10 text-primary"
+                          : "bg-accent/20 text-accent-foreground"
+                      }`}
+                    >
+                      {u.verified ? "Active" : "Pending verify"}
+                    </span>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
