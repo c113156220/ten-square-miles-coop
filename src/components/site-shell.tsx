@@ -1,15 +1,21 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { type ReactNode } from "react";
 import { useI18n, type Locale } from "@/lib/i18n";
-import { Sparkles } from "lucide-react";
+import { Sparkles, ShoppingBag, Landmark } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { TrialBadge } from "@/components/auth-modals";
 
-const PUBLIC_NAV: { to: string; label: { zh: string; en: string } }[] = [
+type NavItem = { to: string; label: { zh: string; en: string } };
+
+const STORE_NAV: NavItem[] = [
   { to: "/", label: { zh: "共同購買", en: "Shop" } },
   { to: "/coop", label: { zh: "共購流程", en: "Co-op Buying" } },
   { to: "/wishlist", label: { zh: "願望清單", en: "Wishlist" } },
   { to: "/calculator", label: { zh: "分紅試算", en: "Calculator" } },
+];
+
+const GOVERNANCE_NAV: NavItem[] = [
+  { to: "/governance", label: { zh: "社務大廳", en: "Governance" } },
   { to: "/impact", label: { zh: "社會影響力", en: "Impact" } },
   { to: "/register", label: { zh: "註冊入社", en: "Register" } },
 ];

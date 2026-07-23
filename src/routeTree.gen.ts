@@ -14,6 +14,7 @@ import { Route as VerifyRouteImport } from './routes/verify'
 import { Route as TrialRouteImport } from './routes/trial'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ImpactRouteImport } from './routes/impact'
+import { Route as GovernanceRouteImport } from './routes/governance'
 import { Route as CoopRouteImport } from './routes/coop'
 import { Route as CalculatorRouteImport } from './routes/calculator'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -51,6 +52,11 @@ const RegisterRoute = RegisterRouteImport.update({
 const ImpactRoute = ImpactRouteImport.update({
   id: '/impact',
   path: '/impact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GovernanceRoute = GovernanceRouteImport.update({
+  id: '/governance',
+  path: '/governance',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoopRoute = CoopRouteImport.update({
@@ -124,6 +130,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/calculator': typeof CalculatorRoute
   '/coop': typeof CoopRoute
+  '/governance': typeof GovernanceRoute
   '/impact': typeof ImpactRoute
   '/register': typeof RegisterRoute
   '/trial': typeof TrialRoute
@@ -143,6 +150,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/calculator': typeof CalculatorRoute
   '/coop': typeof CoopRoute
+  '/governance': typeof GovernanceRoute
   '/impact': typeof ImpactRoute
   '/register': typeof RegisterRoute
   '/trial': typeof TrialRoute
@@ -164,6 +172,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/calculator': typeof CalculatorRoute
   '/coop': typeof CoopRoute
+  '/governance': typeof GovernanceRoute
   '/impact': typeof ImpactRoute
   '/register': typeof RegisterRoute
   '/trial': typeof TrialRoute
@@ -186,6 +195,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/calculator'
     | '/coop'
+    | '/governance'
     | '/impact'
     | '/register'
     | '/trial'
@@ -205,6 +215,7 @@ export interface FileRouteTypes {
     | '/'
     | '/calculator'
     | '/coop'
+    | '/governance'
     | '/impact'
     | '/register'
     | '/trial'
@@ -225,6 +236,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/calculator'
     | '/coop'
+    | '/governance'
     | '/impact'
     | '/register'
     | '/trial'
@@ -246,6 +258,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   CalculatorRoute: typeof CalculatorRoute
   CoopRoute: typeof CoopRoute
+  GovernanceRoute: typeof GovernanceRoute
   ImpactRoute: typeof ImpactRoute
   RegisterRoute: typeof RegisterRoute
   TrialRoute: typeof TrialRoute
@@ -288,6 +301,13 @@ declare module '@tanstack/react-router' {
       path: '/impact'
       fullPath: '/impact'
       preLoaderRoute: typeof ImpactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/governance': {
+      id: '/governance'
+      path: '/governance'
+      fullPath: '/governance'
+      preLoaderRoute: typeof GovernanceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/coop': {
@@ -415,6 +435,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   CalculatorRoute: CalculatorRoute,
   CoopRoute: CoopRoute,
+  GovernanceRoute: GovernanceRoute,
   ImpactRoute: ImpactRoute,
   RegisterRoute: RegisterRoute,
   TrialRoute: TrialRoute,
@@ -424,13 +445,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
