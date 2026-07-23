@@ -1,15 +1,21 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { type ReactNode } from "react";
 import { useI18n, type Locale } from "@/lib/i18n";
-import { Sparkles } from "lucide-react";
+import { Sparkles, ShoppingBag, Landmark } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { TrialBadge } from "@/components/auth-modals";
 
-const PUBLIC_NAV: { to: string; label: { zh: string; en: string } }[] = [
+type NavItem = { to: string; label: { zh: string; en: string } };
+
+const STORE_NAV: NavItem[] = [
   { to: "/", label: { zh: "共同購買", en: "Shop" } },
   { to: "/coop", label: { zh: "共購流程", en: "Co-op Buying" } },
   { to: "/wishlist", label: { zh: "願望清單", en: "Wishlist" } },
   { to: "/calculator", label: { zh: "分紅試算", en: "Calculator" } },
+];
+
+const GOVERNANCE_NAV: NavItem[] = [
+  { to: "/governance", label: { zh: "社務大廳", en: "Governance" } },
   { to: "/impact", label: { zh: "社會影響力", en: "Impact" } },
   { to: "/register", label: { zh: "註冊入社", en: "Register" } },
 ];
@@ -37,13 +43,44 @@ function LangSwitch({ locale, setLocale }: { locale: Locale; setLocale: (l: Loca
   );
 }
 
+function SystemSwitcher({ mode, locale }: { mode: "store" | "governance"; locale: Locale }) {
+  return (
+    <div className="hidden overflow-hidden rounded-full border border-border bg-white/60 p-0.5 shadow-soft backdrop-blur md:flex">
+      <Link
+        to="/"
+        className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest transition-all ${
+          mode === "store" ? "bg-foreground text-background shadow-soft" : "text-muted-foreground hover:text-foreground"
+        }`}
+      >
+        <ShoppingBag className="size-3.5" />
+        {locale === "zh" ? "共同購買" : "Store"}
+      </Link>
+      <Link
+        to="/governance"
+        className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest transition-all ${
+          mode === "governance" ? "bg-foreground text-background shadow-soft" : "text-muted-foreground hover:text-foreground"
+        }`}
+      >
+        <Landmark className="size-3.5" />
+        {locale === "zh" ? "社務大廳" : "Governance"}
+      </Link>
+    </div>
+  );
+}
+
 export function SiteNav() {
   const { locale, setLocale, t } = useI18n();
   const { user, isAdmin, openLogin, logout } = useAuth();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const mode: "store" | "governance" =
+    pathname.startsWith("/governance") || pathname.startsWith("/impact") || pathname.startsWith("/register")
+      ? "governance"
+      : "store";
+  const items = mode === "governance" ? GOVERNANCE_NAV : STORE_NAV;
   return (
     <nav className="sticky top-0 z-50 border-b border-border/70 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-6">
           <Link to="/" className="flex items-center gap-2">
             <span className="grid size-8 place-items-center rounded-lg bg-foreground text-background shadow-soft">
               <Sparkles className="size-4" />
@@ -55,8 +92,9 @@ export function SiteNav() {
               </span>
             </span>
           </Link>
-          <div className="hidden gap-1 text-sm font-medium lg:flex">
-            {PUBLIC_NAV.map((item) => (
+          <SystemSwitcher mode={mode} locale={locale} />
+          <div className="hidden gap-1 text-sm font-medium xl:flex">
+            {items.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
