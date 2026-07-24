@@ -17,12 +17,15 @@ export type AuthUser = {
   convertedToMember?: boolean;
 };
 
+type AdminNote = { ts: number; text: string; adminId: string | null };
+
 type StoreShape = {
   users: AuthUser[];
   currentUserId: string | null;
   trialDays: number;
   pendingVerifications: Record<string, string>; // token -> userId
   lastResend: Record<string, number>; // userId -> ts
+  adminNotes: Record<string, AdminNote[]>; // userId -> notes
 };
 
 const STORAGE_KEY = "tsm_auth_v2";
