@@ -148,13 +148,7 @@ type AuthCtx = {
 const AuthContext = createContext<AuthCtx | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [store, setStore] = useState<StoreShape>(() => ({
-    users: SEED_USERS,
-    currentUserId: null,
-    trialDays: 30,
-    pendingVerifications: {},
-    lastResend: {},
-  }));
+  const [store, setStore] = useState<StoreShape>(() => emptyStore());
   const [loginOpen, setLoginOpen] = useState(false);
   const [verifyModal, setVerifyModal] = useState<AuthCtx["verifyModal"]>(null);
 
