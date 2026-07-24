@@ -64,21 +64,30 @@ const SEED_USERS: AuthUser[] = [
   },
 ];
 
+function emptyStore(): StoreShape {
+  return {
+    users: SEED_USERS,
+    currentUserId: null,
+    trialDays: 30,
+    pendingVerifications: {},
+    lastResend: {},
+    adminNotes: {},
+  };
+}
+
 function loadStore(): StoreShape {
-  if (typeof window === "undefined") {
-    return { users: SEED_USERS, currentUserId: null, trialDays: 30, pendingVerifications: {}, lastResend: {} };
-  }
+  if (typeof window === "undefined") return emptyStore();
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { users: SEED_USERS, currentUserId: null, trialDays: 30, pendingVerifications: {}, lastResend: {} };
-    const parsed = JSON.parse(raw) as StoreShape;
-    // Ensure seed accounts exist
+    if (!raw) return emptyStore();
+    const parsed = JSON.parse(raw) as Partial<StoreShape>;
+    const merged: StoreShape = { ...emptyStore(), ...parsed, adminNotes: parsed.adminNotes ?? {} };
     for (const s of SEED_USERS) {
-      if (!parsed.users.find((u) => u.email === s.email)) parsed.users.push(s);
+      if (!merged.users.find((u) => u.email === s.email)) merged.users.push(s);
     }
-    return parsed;
+    return merged;
   } catch {
-    return { users: SEED_USERS, currentUserId: null, trialDays: 30, pendingVerifications: {}, lastResend: {} };
+    return emptyStore();
   }
 }
 
