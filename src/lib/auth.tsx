@@ -125,7 +125,12 @@ type AuthCtx = {
   resendVerification: (userId: string) => { ok: true; link: string; cooldown: 0 } | { ok: false; cooldown: number };
   setTrialDays: (n: number) => void;
   extendTrial: (userId: string, days?: number) => void;
+  setTrialExpiryDays: (userId: string, totalDays: number, note?: string) => void;
+  setTrialExpiryDate: (userId: string, date: Date, note?: string) => void;
+  adjustTrialDays: (userId: string, delta: number, note?: string) => void;
+  forceExpireTrial: (userId: string, note?: string) => void;
   forceConvert: (userId: string) => void;
+  adminNotes: Record<string, { ts: number; text: string; adminId: string | null }[]>;
 };
 
 const AuthContext = createContext<AuthCtx | null>(null);
