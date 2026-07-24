@@ -1,11 +1,152 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
-import { useAuth, trialRemainingDays, isTrialExpired, type AuthUser } from "@/lib/auth";
+import { useAuth, trialRemainingDays, isTrialExpired, trialExpiryDate, type AuthUser } from "@/lib/auth";
 
 export const Route = createFileRoute("/admin/members")({
   component: MembersPage,
 });
+
+function EditTrialDaysModal({
+  user,
+  onClose,
+}: {
+  user: AuthUser;
+  onClose: () => void;
+}) {
+  const { t, locale } = useI18n();
+  const { adjustTrialDays, setTrialExpiryDays, setTrialExpiryDate, forceExpireTrial } = useAuth();
+  const remain = trialRemainingDays(user);
+  const expiry = trialExpiryDate(user);
+  const [delta, setDelta] = useState(0);
+  const [dateStr, setDateStr] = useState(expiry ? expiry.toISOString().slice(0, 10) : "");
+  const [note, setNote] = useState("");
+
+  const quickBtn = (n: number) => (
+    <button
+      key={n}
+      onClick={() => setDelta(n)}
+      className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+        delta === n
+          ? "border-primary bg-primary text-primary-foreground"
+          : "border-border bg-white hover:bg-surface"
+      }`}
+    >
+      {n > 0 ? `+${n}` : n}
+    </button>
+  );
+
+  function save() {
+    const reason = note.trim() || undefined;
+    if (dateStr && dateStr !== (expiry?.toISOString().slice(0, 10) ?? "")) {
+      setTrialExpiryDate(user.id, new Date(dateStr + "T23:59:59"), reason);
+    } else if (delta !== 0) {
+      adjustTrialDays(user.id, delta, reason);
+    } else {
+      setTrialExpiryDays(user.id, user.trialDays ?? 30, reason);
+    }
+    onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={onClose}>
+      <div
+        className="w-full max-w-md rounded-2xl border border-border bg-white p-6 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            {user.name} · {user.email}
+          </p>
+          <h3 className="mt-1 text-xl font-extrabold">{t("edit.title")}</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t("edit.current")}: <b className="font-mono">{remain} {t("common.days")}</b>
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="mb-2 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              {t("edit.quick")}
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {[7, 14, 30].map(quickBtn)}
+              {[-7, -14].map(quickBtn)}
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              {t("edit.custom")}
+            </label>
+            <input
+              type="number"
+              value={delta}
+              onChange={(e) => setDelta(Number(e.target.value) || 0)}
+              className="w-full rounded-full border border-border bg-white px-4 py-2 text-sm outline-none focus:border-primary"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              {t("edit.setExpiry")}
+            </label>
+            <input
+              type="date"
+              value={dateStr}
+              onChange={(e) => setDateStr(e.target.value)}
+              className="w-full rounded-full border border-border bg-white px-4 py-2 text-sm outline-none focus:border-primary"
+            />
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              {locale === "zh"
+                ? "指定日期後將覆蓋上方增減設定。"
+                : "Setting a date overrides the quick/custom adjustment."}
+            </p>
+          </div>
+
+          <div>
+            <label className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              {t("edit.note")}
+            </label>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder={t("edit.notePh")}
+              rows={2}
+              className="w-full rounded-2xl border border-border bg-white px-4 py-2 text-sm outline-none focus:border-primary"
+            />
+          </div>
+        </div>
+
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
+          <button
+            onClick={() => {
+              forceExpireTrial(user.id, note.trim() || undefined);
+              onClose();
+            }}
+            className="rounded-full border border-red-300 bg-red-50 px-4 py-2 text-xs font-semibold text-red-700 hover:bg-red-100"
+          >
+            {t("edit.forceExpire")}
+          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="rounded-full border border-border bg-white px-4 py-2 text-sm font-semibold hover:bg-surface"
+            >
+              {t("edit.cancel")}
+            </button>
+            <button
+              onClick={save}
+              className="rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground hover:brightness-110"
+            >
+              {t("edit.save")}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 type Pending = { id: string; name: string; idOk: boolean; payOk: boolean; eduOk: boolean };
 
