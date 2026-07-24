@@ -178,19 +178,27 @@ function Check({ ok }: { ok: boolean }) {
 }
 
 function MembersPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { users, extendTrial, forceConvert } = useAuth();
   const [pending, setPending] = useState(initialPending);
   const [approved, setApproved] = useState<Record<string, string>>({});
   const [query, setQuery] = useState("");
+  const [editUser, setEditUser] = useState<AuthUser | null>(null);
 
   const trialUsers = users.filter((u) => u.role === "trial");
   const registeredMembers = users.filter((u) => u.role === "member");
 
   function trialStatus(u: AuthUser): { label: string; cls: string } {
-    if (u.convertedToMember) return { label: "Converted", cls: "bg-primary/10 text-primary" };
-    if (isTrialExpired(u)) return { label: "Expired", cls: "bg-red-100 text-red-700" };
-    return { label: "Active", cls: "bg-accent/20 text-accent-foreground" };
+    if (u.convertedToMember) return { label: t("trial.status.upgraded"), cls: "bg-primary/10 text-primary" };
+    if (isTrialExpired(u)) return { label: t("trial.status.expired"), cls: "bg-red-100 text-red-700" };
+    return { label: t("trial.status.active"), cls: "bg-accent/15 text-accent" };
+  }
+
+  function daysCls(remain: number, expired: boolean) {
+    if (expired || remain <= 0) return "bg-red-100 text-red-700 border-red-300";
+    if (remain <= 3) return "bg-red-50 text-red-700 border-red-200";
+    if (remain <= 7) return "bg-orange-50 text-orange-700 border-orange-200";
+    return "bg-emerald-50 text-emerald-700 border-emerald-200";
   }
 
 
