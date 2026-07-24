@@ -234,6 +234,73 @@ export const dict = {
   "admin.nav.forecasting": { zh: "智慧需求預測", en: "Demand Forecasting" },
   "admin.nav.roles": { zh: "帳號與權限", en: "Admins & Roles" },
   "admin.nav.settings": { zh: "體驗與系統設定", en: "System Settings" },
+  "admin.nav.users": { zh: "全體使用者總表", en: "All Users Directory" },
+
+  // Trial roster / edit days
+  "trial.roster.title": { zh: "體驗社員名單", en: "Guest Trial Roster" },
+  "trial.roster.sub": {
+    zh: "追蹤前台自助註冊的體驗帳號、剩餘天數與到期日期。",
+    en: "Track self-registered trial accounts, remaining days and expiration.",
+  },
+  "trial.col.account": { zh: "帳號資訊", en: "Account Info" },
+  "trial.col.registered": { zh: "註冊日期", en: "Registration Date" },
+  "trial.col.remaining": { zh: "剩餘體驗天數", en: "Days Remaining" },
+  "trial.col.expiry": { zh: "到期日期", en: "Expiration Date" },
+  "trial.col.status": { zh: "帳號狀態", en: "Status" },
+  "trial.col.actions": { zh: "操作管理", en: "Actions" },
+  "trial.status.active": { zh: "體驗中", en: "Active Trial" },
+  "trial.status.expired": { zh: "已過期", en: "Expired" },
+  "trial.status.upgraded": { zh: "已轉正式社員", en: "Upgraded" },
+  "trial.action.editDays": { zh: "編輯天數", en: "Edit Days" },
+  "trial.action.convert": { zh: "轉為正式社員", en: "Convert to Member" },
+  "trial.empty": { zh: "尚無體驗帳號註冊。", en: "No trial accounts registered yet." },
+
+  // Edit-days modal
+  "edit.title": { zh: "編輯體驗天數", en: "Edit Trial Days" },
+  "edit.current": { zh: "目前剩餘天數", en: "Current remaining" },
+  "edit.quick": { zh: "快速調整", en: "Quick adjust" },
+  "edit.custom": { zh: "自訂增減 (可為負數)", en: "Custom (+/− days)" },
+  "edit.setExpiry": { zh: "指定到期日期", en: "Set expiration date" },
+  "edit.note": { zh: "調整原因 (內部備註)", en: "Reason for change (internal note)" },
+  "edit.notePh": { zh: "例如：因活動延後補償 7 天", en: "e.g. compensated 7 days for event delay" },
+  "edit.forceExpire": { zh: "強制過期 (0 天)", en: "Force Expire (0 days)" },
+  "edit.save": { zh: "儲存設定", en: "Save" },
+  "edit.cancel": { zh: "取消", en: "Cancel" },
+  "edit.saved": { zh: "已更新體驗天數", en: "Trial days updated" },
+
+  // Common
+  "common.name": { zh: "姓名", en: "Name" },
+  "common.email": { zh: "電子郵件", en: "Email" },
+  "common.phone": { zh: "手機號碼", en: "Phone" },
+  "common.role": { zh: "身份類別", en: "Role" },
+  "common.status": { zh: "狀態", en: "Status" },
+  "common.actions": { zh: "操作", en: "Actions" },
+  "common.days": { zh: "天", en: "days" },
+  "common.days.short": { zh: "天", en: "d" },
+  "common.close": { zh: "關閉", en: "Close" },
+  "common.save": { zh: "儲存", en: "Save" },
+  "common.cancel": { zh: "取消", en: "Cancel" },
+  "common.verified": { zh: "已驗證", en: "Verified" },
+  "common.pending": { zh: "待驗證", en: "Pending" },
+  "common.view": { zh: "查看詳情", en: "View" },
+
+  // Roles / user types
+  "user.role.admin": { zh: "管理員", en: "Admin" },
+  "user.role.member": { zh: "正式社員", en: "Verified Member" },
+  "user.role.trial": { zh: "體驗非社員", en: "Guest / Trial" },
+
+  // Universal directory
+  "users.title": { zh: "全體註冊使用者總表", en: "All Registered Users Directory" },
+  "users.sub": {
+    zh: "涵蓋體驗、審核中、正式與過期帳號。All accounts across trial, in-review, verified, and expired.",
+    en: "Every account across trial, in-review, verified, and expired states.",
+  },
+  "users.filter.all": { zh: "全部", en: "All" },
+  "users.filter.trial": { zh: "體驗", en: "Trial" },
+  "users.filter.member": { zh: "社員", en: "Member" },
+  "users.filter.admin": { zh: "管理員", en: "Admin" },
+  "users.filter.expired": { zh: "已過期", en: "Expired" },
+  "users.count": { zh: "共 {n} 筆", en: "{n} total" },
 } satisfies Record<string, Entry>;
 
 export type DictKey = keyof typeof dict;

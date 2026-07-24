@@ -17,12 +17,15 @@ export type AuthUser = {
   convertedToMember?: boolean;
 };
 
+type AdminNote = { ts: number; text: string; adminId: string | null };
+
 type StoreShape = {
   users: AuthUser[];
   currentUserId: string | null;
   trialDays: number;
   pendingVerifications: Record<string, string>; // token -> userId
   lastResend: Record<string, number>; // userId -> ts
+  adminNotes: Record<string, AdminNote[]>; // userId -> notes
 };
 
 const STORAGE_KEY = "tsm_auth_v2";
@@ -61,21 +64,30 @@ const SEED_USERS: AuthUser[] = [
   },
 ];
 
+function emptyStore(): StoreShape {
+  return {
+    users: SEED_USERS,
+    currentUserId: null,
+    trialDays: 30,
+    pendingVerifications: {},
+    lastResend: {},
+    adminNotes: {},
+  };
+}
+
 function loadStore(): StoreShape {
-  if (typeof window === "undefined") {
-    return { users: SEED_USERS, currentUserId: null, trialDays: 30, pendingVerifications: {}, lastResend: {} };
-  }
+  if (typeof window === "undefined") return emptyStore();
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { users: SEED_USERS, currentUserId: null, trialDays: 30, pendingVerifications: {}, lastResend: {} };
-    const parsed = JSON.parse(raw) as StoreShape;
-    // Ensure seed accounts exist
+    if (!raw) return emptyStore();
+    const parsed = JSON.parse(raw) as Partial<StoreShape>;
+    const merged: StoreShape = { ...emptyStore(), ...parsed, adminNotes: parsed.adminNotes ?? {} };
     for (const s of SEED_USERS) {
-      if (!parsed.users.find((u) => u.email === s.email)) parsed.users.push(s);
+      if (!merged.users.find((u) => u.email === s.email)) merged.users.push(s);
     }
-    return parsed;
+    return merged;
   } catch {
-    return { users: SEED_USERS, currentUserId: null, trialDays: 30, pendingVerifications: {}, lastResend: {} };
+    return emptyStore();
   }
 }
 
@@ -125,19 +137,18 @@ type AuthCtx = {
   resendVerification: (userId: string) => { ok: true; link: string; cooldown: 0 } | { ok: false; cooldown: number };
   setTrialDays: (n: number) => void;
   extendTrial: (userId: string, days?: number) => void;
+  setTrialExpiryDays: (userId: string, totalDays: number, note?: string) => void;
+  setTrialExpiryDate: (userId: string, date: Date, note?: string) => void;
+  adjustTrialDays: (userId: string, delta: number, note?: string) => void;
+  forceExpireTrial: (userId: string, note?: string) => void;
   forceConvert: (userId: string) => void;
+  adminNotes: Record<string, { ts: number; text: string; adminId: string | null }[]>;
 };
 
 const AuthContext = createContext<AuthCtx | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [store, setStore] = useState<StoreShape>(() => ({
-    users: SEED_USERS,
-    currentUserId: null,
-    trialDays: 30,
-    pendingVerifications: {},
-    lastResend: {},
-  }));
+  const [store, setStore] = useState<StoreShape>(() => emptyStore());
   const [loginOpen, setLoginOpen] = useState(false);
   const [verifyModal, setVerifyModal] = useState<AuthCtx["verifyModal"]>(null);
 
@@ -299,6 +310,89 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             : u,
         ),
       })),
+    setTrialExpiryDays: (userId, totalDays, note) =>
+      setStore((s) => ({
+        ...s,
+        users: s.users.map((u) =>
+          u.id === userId && u.role === "trial"
+            ? {
+                ...u,
+                trialStart: u.trialStart ?? Date.now(),
+                trialDays: Math.max(0, Math.round(totalDays)),
+                trialBlocked: totalDays <= 0,
+              }
+            : u,
+        ),
+        adminNotes: note
+          ? {
+              ...s.adminNotes,
+              [userId]: [
+                ...(s.adminNotes[userId] ?? []),
+                { ts: Date.now(), text: note, adminId: s.currentUserId },
+              ],
+            }
+          : s.adminNotes,
+      })),
+    setTrialExpiryDate: (userId, date, note) =>
+      setStore((s) => ({
+        ...s,
+        users: s.users.map((u) => {
+          if (u.id !== userId || u.role !== "trial") return u;
+          const start = u.trialStart ?? Date.now();
+          const daysFromStart = Math.max(0, Math.round((date.getTime() - start) / DAY_MS));
+          return { ...u, trialDays: daysFromStart, trialBlocked: date.getTime() <= Date.now() };
+        }),
+        adminNotes: note
+          ? {
+              ...s.adminNotes,
+              [userId]: [
+                ...(s.adminNotes[userId] ?? []),
+                { ts: Date.now(), text: note, adminId: s.currentUserId },
+              ],
+            }
+          : s.adminNotes,
+      })),
+    adjustTrialDays: (userId, delta, note) =>
+      setStore((s) => ({
+        ...s,
+        users: s.users.map((u) =>
+          u.id === userId && u.role === "trial"
+            ? {
+                ...u,
+                trialDays: Math.max(0, (u.trialDays ?? 30) + delta),
+                trialBlocked: (u.trialDays ?? 30) + delta <= 0,
+              }
+            : u,
+        ),
+        adminNotes: note
+          ? {
+              ...s.adminNotes,
+              [userId]: [
+                ...(s.adminNotes[userId] ?? []),
+                { ts: Date.now(), text: note, adminId: s.currentUserId },
+              ],
+            }
+          : s.adminNotes,
+      })),
+    forceExpireTrial: (userId, note) =>
+      setStore((s) => ({
+        ...s,
+        users: s.users.map((u) =>
+          u.id === userId && u.role === "trial"
+            ? { ...u, trialDays: 0, trialBlocked: true }
+            : u,
+        ),
+        adminNotes: note
+          ? {
+              ...s.adminNotes,
+              [userId]: [
+                ...(s.adminNotes[userId] ?? []),
+                { ts: Date.now(), text: note, adminId: s.currentUserId },
+              ],
+            }
+          : s.adminNotes,
+      })),
+    adminNotes: store.adminNotes,
     forceConvert: (userId) =>
       setStore((s) => ({
         ...s,

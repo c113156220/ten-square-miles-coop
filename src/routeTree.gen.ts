@@ -21,6 +21,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminVotingRouteImport } from './routes/admin.voting'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminSurplusRouteImport } from './routes/admin.surplus'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AdminRolesRouteImport } from './routes/admin.roles'
@@ -89,6 +90,11 @@ const AdminVotingRoute = AdminVotingRouteImport.update({
   path: '/voting',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSurplusRoute = AdminSurplusRouteImport.update({
   id: '/surplus',
   path: '/surplus',
@@ -143,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/admin/roles': typeof AdminRolesRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/surplus': typeof AdminSurplusRoute
+  '/admin/users': typeof AdminUsersRoute
   '/admin/voting': typeof AdminVotingRoute
   '/admin/': typeof AdminIndexRoute
 }
@@ -163,6 +170,7 @@ export interface FileRoutesByTo {
   '/admin/roles': typeof AdminRolesRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/surplus': typeof AdminSurplusRoute
+  '/admin/users': typeof AdminUsersRoute
   '/admin/voting': typeof AdminVotingRoute
   '/admin': typeof AdminIndexRoute
 }
@@ -185,6 +193,7 @@ export interface FileRoutesById {
   '/admin/roles': typeof AdminRolesRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/surplus': typeof AdminSurplusRoute
+  '/admin/users': typeof AdminUsersRoute
   '/admin/voting': typeof AdminVotingRoute
   '/admin/': typeof AdminIndexRoute
 }
@@ -208,6 +217,7 @@ export interface FileRouteTypes {
     | '/admin/roles'
     | '/admin/settings'
     | '/admin/surplus'
+    | '/admin/users'
     | '/admin/voting'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
@@ -228,6 +238,7 @@ export interface FileRouteTypes {
     | '/admin/roles'
     | '/admin/settings'
     | '/admin/surplus'
+    | '/admin/users'
     | '/admin/voting'
     | '/admin'
   id:
@@ -249,6 +260,7 @@ export interface FileRouteTypes {
     | '/admin/roles'
     | '/admin/settings'
     | '/admin/surplus'
+    | '/admin/users'
     | '/admin/voting'
     | '/admin/'
   fileRoutesById: FileRoutesById
@@ -352,6 +364,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminVotingRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/surplus': {
       id: '/admin/surplus'
       path: '/surplus'
@@ -412,6 +431,7 @@ interface AdminRouteChildren {
   AdminRolesRoute: typeof AdminRolesRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminSurplusRoute: typeof AdminSurplusRoute
+  AdminUsersRoute: typeof AdminUsersRoute
   AdminVotingRoute: typeof AdminVotingRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -424,6 +444,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminRolesRoute: AdminRolesRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminSurplusRoute: AdminSurplusRoute,
+  AdminUsersRoute: AdminUsersRoute,
   AdminVotingRoute: AdminVotingRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
@@ -445,13 +466,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

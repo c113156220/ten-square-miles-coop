@@ -1,11 +1,152 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
-import { useAuth, trialRemainingDays, isTrialExpired, type AuthUser } from "@/lib/auth";
+import { useAuth, trialRemainingDays, isTrialExpired, trialExpiryDate, type AuthUser } from "@/lib/auth";
 
 export const Route = createFileRoute("/admin/members")({
   component: MembersPage,
 });
+
+function EditTrialDaysModal({
+  user,
+  onClose,
+}: {
+  user: AuthUser;
+  onClose: () => void;
+}) {
+  const { t, locale } = useI18n();
+  const { adjustTrialDays, setTrialExpiryDays, setTrialExpiryDate, forceExpireTrial } = useAuth();
+  const remain = trialRemainingDays(user);
+  const expiry = trialExpiryDate(user);
+  const [delta, setDelta] = useState(0);
+  const [dateStr, setDateStr] = useState(expiry ? expiry.toISOString().slice(0, 10) : "");
+  const [note, setNote] = useState("");
+
+  const quickBtn = (n: number) => (
+    <button
+      key={n}
+      onClick={() => setDelta(n)}
+      className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+        delta === n
+          ? "border-primary bg-primary text-primary-foreground"
+          : "border-border bg-white hover:bg-surface"
+      }`}
+    >
+      {n > 0 ? `+${n}` : n}
+    </button>
+  );
+
+  function save() {
+    const reason = note.trim() || undefined;
+    if (dateStr && dateStr !== (expiry?.toISOString().slice(0, 10) ?? "")) {
+      setTrialExpiryDate(user.id, new Date(dateStr + "T23:59:59"), reason);
+    } else if (delta !== 0) {
+      adjustTrialDays(user.id, delta, reason);
+    } else {
+      setTrialExpiryDays(user.id, user.trialDays ?? 30, reason);
+    }
+    onClose();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={onClose}>
+      <div
+        className="w-full max-w-md rounded-2xl border border-border bg-white p-6 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+            {user.name} · {user.email}
+          </p>
+          <h3 className="mt-1 text-xl font-extrabold">{t("edit.title")}</h3>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t("edit.current")}: <b className="font-mono">{remain} {t("common.days")}</b>
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="mb-2 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              {t("edit.quick")}
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {[7, 14, 30].map(quickBtn)}
+              {[-7, -14].map(quickBtn)}
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              {t("edit.custom")}
+            </label>
+            <input
+              type="number"
+              value={delta}
+              onChange={(e) => setDelta(Number(e.target.value) || 0)}
+              className="w-full rounded-full border border-border bg-white px-4 py-2 text-sm outline-none focus:border-primary"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              {t("edit.setExpiry")}
+            </label>
+            <input
+              type="date"
+              value={dateStr}
+              onChange={(e) => setDateStr(e.target.value)}
+              className="w-full rounded-full border border-border bg-white px-4 py-2 text-sm outline-none focus:border-primary"
+            />
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              {locale === "zh"
+                ? "指定日期後將覆蓋上方增減設定。"
+                : "Setting a date overrides the quick/custom adjustment."}
+            </p>
+          </div>
+
+          <div>
+            <label className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              {t("edit.note")}
+            </label>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder={t("edit.notePh")}
+              rows={2}
+              className="w-full rounded-2xl border border-border bg-white px-4 py-2 text-sm outline-none focus:border-primary"
+            />
+          </div>
+        </div>
+
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-2">
+          <button
+            onClick={() => {
+              forceExpireTrial(user.id, note.trim() || undefined);
+              onClose();
+            }}
+            className="rounded-full border border-red-300 bg-red-50 px-4 py-2 text-xs font-semibold text-red-700 hover:bg-red-100"
+          >
+            {t("edit.forceExpire")}
+          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="rounded-full border border-border bg-white px-4 py-2 text-sm font-semibold hover:bg-surface"
+            >
+              {t("edit.cancel")}
+            </button>
+            <button
+              onClick={save}
+              className="rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground hover:brightness-110"
+            >
+              {t("edit.save")}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 type Pending = { id: string; name: string; idOk: boolean; payOk: boolean; eduOk: boolean };
 
@@ -37,19 +178,27 @@ function Check({ ok }: { ok: boolean }) {
 }
 
 function MembersPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { users, extendTrial, forceConvert } = useAuth();
   const [pending, setPending] = useState(initialPending);
   const [approved, setApproved] = useState<Record<string, string>>({});
   const [query, setQuery] = useState("");
+  const [editUser, setEditUser] = useState<AuthUser | null>(null);
 
   const trialUsers = users.filter((u) => u.role === "trial");
   const registeredMembers = users.filter((u) => u.role === "member");
 
   function trialStatus(u: AuthUser): { label: string; cls: string } {
-    if (u.convertedToMember) return { label: "Converted", cls: "bg-primary/10 text-primary" };
-    if (isTrialExpired(u)) return { label: "Expired", cls: "bg-red-100 text-red-700" };
-    return { label: "Active", cls: "bg-accent/20 text-accent-foreground" };
+    if (u.convertedToMember) return { label: t("trial.status.upgraded"), cls: "bg-primary/10 text-primary" };
+    if (isTrialExpired(u)) return { label: t("trial.status.expired"), cls: "bg-red-100 text-red-700" };
+    return { label: t("trial.status.active"), cls: "bg-accent/15 text-accent" };
+  }
+
+  function daysCls(remain: number, expired: boolean) {
+    if (expired || remain <= 0) return "bg-red-100 text-red-700 border-red-300";
+    if (remain <= 3) return "bg-red-50 text-red-700 border-red-200";
+    if (remain <= 7) return "bg-orange-50 text-orange-700 border-orange-200";
+    return "bg-emerald-50 text-emerald-700 border-emerald-200";
   }
 
 
@@ -134,63 +283,82 @@ function MembersPage() {
       <section className="rounded-md border border-border bg-white">
         <div className="flex items-center justify-between border-b border-border p-5">
           <div>
-            <h2 className="text-lg font-bold">Trial Accounts · 體驗帳號</h2>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Live self-registered guests. Track expiry, extend, or convert to full member.
-            </p>
+            <h2 className="text-lg font-bold">{t("trial.roster.title")}</h2>
+            <p className="mt-1 text-xs text-muted-foreground">{t("trial.roster.sub")}</p>
           </div>
-          <span className="rounded-full bg-accent/20 px-3 py-1 font-mono text-[10px] font-bold uppercase text-accent-foreground">
-            {trialUsers.length} active
+          <span className="rounded-full bg-accent/15 px-3 py-1 font-mono text-[10px] font-bold uppercase text-accent">
+            {trialUsers.length} · {t("trial.status.active")}
           </span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-stone-100 text-left font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                <th className="px-4 py-2">Name</th>
-                <th className="px-4 py-2">Email</th>
-                <th className="px-4 py-2">Status</th>
-                <th className="px-4 py-2">Days Left</th>
-                <th className="px-4 py-2">Verified</th>
-                <th className="px-4 py-2 text-right">Action</th>
+                <th className="px-4 py-2">{t("common.name")}</th>
+                <th className="px-4 py-2">{t("common.email")}</th>
+                <th className="px-4 py-2">{t("trial.col.status")}</th>
+                <th className="px-4 py-2">{t("trial.col.remaining")}</th>
+                <th className="px-4 py-2">{t("trial.col.expiry")}</th>
+                <th className="px-4 py-2">{t("common.verified")}</th>
+                <th className="px-4 py-2 text-right">{t("trial.col.actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {trialUsers.map((u) => {
                 const st = trialStatus(u);
                 const remain = trialRemainingDays(u);
+                const expired = isTrialExpired(u);
+                const expiry = trialExpiryDate(u);
                 return (
                   <tr key={u.id}>
                     <td className="px-4 py-3 font-semibold">{u.name}</td>
                     <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{u.email}</td>
                     <td className="px-4 py-3">
-                      <span className={`rounded-sm px-2 py-0.5 text-[10px] font-bold uppercase ${st.cls}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${st.cls}`}>
                         {st.label}
                       </span>
                     </td>
-                    <td className="px-4 py-3 font-mono">{remain}d</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center rounded-full border px-2.5 py-0.5 font-mono text-xs font-bold ${daysCls(
+                          remain,
+                          expired,
+                        )}`}
+                      >
+                        {remain} {t("common.days.short")}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
+                      {expiry ? expiry.toISOString().slice(0, 10) : "—"}
+                    </td>
                     <td className="px-4 py-3">
                       <span
                         className={`text-[10px] font-bold ${
                           u.verified ? "text-primary" : "text-muted-foreground"
                         }`}
                       >
-                        {u.verified ? "✓" : "…"}
+                        {u.verified ? t("common.verified") : t("common.pending")}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="inline-flex gap-1">
                         <button
-                          onClick={() => extendTrial(u.id, 7)}
-                          className="rounded-sm border border-border px-2 py-1 text-[11px] font-semibold hover:bg-stone-50"
+                          onClick={() => setEditUser(u)}
+                          className="rounded-full border border-border bg-white px-2.5 py-1 text-[11px] font-semibold hover:bg-surface"
                         >
-                          +7d
+                          {t("trial.action.editDays")}
+                        </button>
+                        <button
+                          onClick={() => extendTrial(u.id, 7)}
+                          className="rounded-full border border-border bg-white px-2.5 py-1 text-[11px] font-semibold hover:bg-surface"
+                        >
+                          +7 {t("common.days.short")}
                         </button>
                         <button
                           onClick={() => forceConvert(u.id)}
-                          className="rounded-sm bg-primary px-2 py-1 text-[11px] font-semibold text-primary-foreground"
+                          className="rounded-full bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground"
                         >
-                          Convert
+                          {t("trial.action.convert")}
                         </button>
                       </div>
                     </td>
@@ -199,8 +367,8 @@ function MembersPage() {
               })}
               {trialUsers.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">
-                    No trial accounts yet.
+                  <td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                    {t("trial.empty")}
                   </td>
                 </tr>
               )}
@@ -209,6 +377,7 @@ function MembersPage() {
         </div>
       </section>
 
+      {editUser && <EditTrialDaysModal user={editUser} onClose={() => setEditUser(null)} />}
 
       <section className="rounded-md border border-border bg-white">
         <div className="flex items-center justify-between border-b border-border p-5">
