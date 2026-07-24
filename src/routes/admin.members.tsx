@@ -283,63 +283,82 @@ function MembersPage() {
       <section className="rounded-md border border-border bg-white">
         <div className="flex items-center justify-between border-b border-border p-5">
           <div>
-            <h2 className="text-lg font-bold">Trial Accounts · 體驗帳號</h2>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Live self-registered guests. Track expiry, extend, or convert to full member.
-            </p>
+            <h2 className="text-lg font-bold">{t("trial.roster.title")}</h2>
+            <p className="mt-1 text-xs text-muted-foreground">{t("trial.roster.sub")}</p>
           </div>
-          <span className="rounded-full bg-accent/20 px-3 py-1 font-mono text-[10px] font-bold uppercase text-accent-foreground">
-            {trialUsers.length} active
+          <span className="rounded-full bg-accent/15 px-3 py-1 font-mono text-[10px] font-bold uppercase text-accent">
+            {trialUsers.length} · {t("trial.status.active")}
           </span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-stone-100 text-left font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                <th className="px-4 py-2">Name</th>
-                <th className="px-4 py-2">Email</th>
-                <th className="px-4 py-2">Status</th>
-                <th className="px-4 py-2">Days Left</th>
-                <th className="px-4 py-2">Verified</th>
-                <th className="px-4 py-2 text-right">Action</th>
+                <th className="px-4 py-2">{t("common.name")}</th>
+                <th className="px-4 py-2">{t("common.email")}</th>
+                <th className="px-4 py-2">{t("trial.col.status")}</th>
+                <th className="px-4 py-2">{t("trial.col.remaining")}</th>
+                <th className="px-4 py-2">{t("trial.col.expiry")}</th>
+                <th className="px-4 py-2">{t("common.verified")}</th>
+                <th className="px-4 py-2 text-right">{t("trial.col.actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {trialUsers.map((u) => {
                 const st = trialStatus(u);
                 const remain = trialRemainingDays(u);
+                const expired = isTrialExpired(u);
+                const expiry = trialExpiryDate(u);
                 return (
                   <tr key={u.id}>
                     <td className="px-4 py-3 font-semibold">{u.name}</td>
                     <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{u.email}</td>
                     <td className="px-4 py-3">
-                      <span className={`rounded-sm px-2 py-0.5 text-[10px] font-bold uppercase ${st.cls}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${st.cls}`}>
                         {st.label}
                       </span>
                     </td>
-                    <td className="px-4 py-3 font-mono">{remain}d</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center rounded-full border px-2.5 py-0.5 font-mono text-xs font-bold ${daysCls(
+                          remain,
+                          expired,
+                        )}`}
+                      >
+                        {remain} {t("common.days.short")}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
+                      {expiry ? expiry.toISOString().slice(0, 10) : "—"}
+                    </td>
                     <td className="px-4 py-3">
                       <span
                         className={`text-[10px] font-bold ${
                           u.verified ? "text-primary" : "text-muted-foreground"
                         }`}
                       >
-                        {u.verified ? "✓" : "…"}
+                        {u.verified ? t("common.verified") : t("common.pending")}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="inline-flex gap-1">
                         <button
-                          onClick={() => extendTrial(u.id, 7)}
-                          className="rounded-sm border border-border px-2 py-1 text-[11px] font-semibold hover:bg-stone-50"
+                          onClick={() => setEditUser(u)}
+                          className="rounded-full border border-border bg-white px-2.5 py-1 text-[11px] font-semibold hover:bg-surface"
                         >
-                          +7d
+                          {t("trial.action.editDays")}
+                        </button>
+                        <button
+                          onClick={() => extendTrial(u.id, 7)}
+                          className="rounded-full border border-border bg-white px-2.5 py-1 text-[11px] font-semibold hover:bg-surface"
+                        >
+                          +7 {t("common.days.short")}
                         </button>
                         <button
                           onClick={() => forceConvert(u.id)}
-                          className="rounded-sm bg-primary px-2 py-1 text-[11px] font-semibold text-primary-foreground"
+                          className="rounded-full bg-primary px-2.5 py-1 text-[11px] font-semibold text-primary-foreground"
                         >
-                          Convert
+                          {t("trial.action.convert")}
                         </button>
                       </div>
                     </td>
@@ -348,8 +367,8 @@ function MembersPage() {
               })}
               {trialUsers.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">
-                    No trial accounts yet.
+                  <td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                    {t("trial.empty")}
                   </td>
                 </tr>
               )}
@@ -358,6 +377,7 @@ function MembersPage() {
         </div>
       </section>
 
+      {editUser && <EditTrialDaysModal user={editUser} onClose={() => setEditUser(null)} />}
 
       <section className="rounded-md border border-border bg-white">
         <div className="flex items-center justify-between border-b border-border p-5">
