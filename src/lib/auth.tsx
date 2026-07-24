@@ -310,6 +310,89 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             : u,
         ),
       })),
+    setTrialExpiryDays: (userId, totalDays, note) =>
+      setStore((s) => ({
+        ...s,
+        users: s.users.map((u) =>
+          u.id === userId && u.role === "trial"
+            ? {
+                ...u,
+                trialStart: u.trialStart ?? Date.now(),
+                trialDays: Math.max(0, Math.round(totalDays)),
+                trialBlocked: totalDays <= 0,
+              }
+            : u,
+        ),
+        adminNotes: note
+          ? {
+              ...s.adminNotes,
+              [userId]: [
+                ...(s.adminNotes[userId] ?? []),
+                { ts: Date.now(), text: note, adminId: s.currentUserId },
+              ],
+            }
+          : s.adminNotes,
+      })),
+    setTrialExpiryDate: (userId, date, note) =>
+      setStore((s) => ({
+        ...s,
+        users: s.users.map((u) => {
+          if (u.id !== userId || u.role !== "trial") return u;
+          const start = u.trialStart ?? Date.now();
+          const daysFromStart = Math.max(0, Math.round((date.getTime() - start) / DAY_MS));
+          return { ...u, trialDays: daysFromStart, trialBlocked: date.getTime() <= Date.now() };
+        }),
+        adminNotes: note
+          ? {
+              ...s.adminNotes,
+              [userId]: [
+                ...(s.adminNotes[userId] ?? []),
+                { ts: Date.now(), text: note, adminId: s.currentUserId },
+              ],
+            }
+          : s.adminNotes,
+      })),
+    adjustTrialDays: (userId, delta, note) =>
+      setStore((s) => ({
+        ...s,
+        users: s.users.map((u) =>
+          u.id === userId && u.role === "trial"
+            ? {
+                ...u,
+                trialDays: Math.max(0, (u.trialDays ?? 30) + delta),
+                trialBlocked: (u.trialDays ?? 30) + delta <= 0,
+              }
+            : u,
+        ),
+        adminNotes: note
+          ? {
+              ...s.adminNotes,
+              [userId]: [
+                ...(s.adminNotes[userId] ?? []),
+                { ts: Date.now(), text: note, adminId: s.currentUserId },
+              ],
+            }
+          : s.adminNotes,
+      })),
+    forceExpireTrial: (userId, note) =>
+      setStore((s) => ({
+        ...s,
+        users: s.users.map((u) =>
+          u.id === userId && u.role === "trial"
+            ? { ...u, trialDays: 0, trialBlocked: true }
+            : u,
+        ),
+        adminNotes: note
+          ? {
+              ...s.adminNotes,
+              [userId]: [
+                ...(s.adminNotes[userId] ?? []),
+                { ts: Date.now(), text: note, adminId: s.currentUserId },
+              ],
+            }
+          : s.adminNotes,
+      })),
+    adminNotes: store.adminNotes,
     forceConvert: (userId) =>
       setStore((s) => ({
         ...s,
