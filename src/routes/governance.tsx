@@ -3,6 +3,12 @@ import { useMemo, useState } from "react";
 import { SiteShell, PageHeader } from "@/components/site-shell";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
+import producerFarmImg from "@/assets/producer-farm.jpg";
+import producerVendorImg from "@/assets/producer-vendor.jpg";
+import producerGrantImg from "@/assets/producer-grant.jpg";
+import eventFarmImg from "@/assets/event-farm-tour.jpg";
+import eventTastingImg from "@/assets/event-tasting.jpg";
+import eventSeminarImg from "@/assets/event-seminar.jpg";
 import {
   Vote,
   Award,
