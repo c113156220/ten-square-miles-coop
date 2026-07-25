@@ -13,6 +13,7 @@ import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as VerifyRouteImport } from './routes/verify'
 import { Route as TrialRouteImport } from './routes/trial'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as ImpactRouteImport } from './routes/impact'
 import { Route as GovernanceRouteImport } from './routes/governance'
 import { Route as CoopRouteImport } from './routes/coop'
@@ -48,6 +49,11 @@ const TrialRoute = TrialRouteImport.update({
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ImpactRoute = ImpactRouteImport.update({
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/coop': typeof CoopRoute
   '/governance': typeof GovernanceRoute
   '/impact': typeof ImpactRoute
+  '/onboarding': typeof OnboardingRoute
   '/register': typeof RegisterRoute
   '/trial': typeof TrialRoute
   '/verify': typeof VerifyRoute
@@ -159,6 +166,7 @@ export interface FileRoutesByTo {
   '/coop': typeof CoopRoute
   '/governance': typeof GovernanceRoute
   '/impact': typeof ImpactRoute
+  '/onboarding': typeof OnboardingRoute
   '/register': typeof RegisterRoute
   '/trial': typeof TrialRoute
   '/verify': typeof VerifyRoute
@@ -182,6 +190,7 @@ export interface FileRoutesById {
   '/coop': typeof CoopRoute
   '/governance': typeof GovernanceRoute
   '/impact': typeof ImpactRoute
+  '/onboarding': typeof OnboardingRoute
   '/register': typeof RegisterRoute
   '/trial': typeof TrialRoute
   '/verify': typeof VerifyRoute
@@ -206,6 +215,7 @@ export interface FileRouteTypes {
     | '/coop'
     | '/governance'
     | '/impact'
+    | '/onboarding'
     | '/register'
     | '/trial'
     | '/verify'
@@ -227,6 +237,7 @@ export interface FileRouteTypes {
     | '/coop'
     | '/governance'
     | '/impact'
+    | '/onboarding'
     | '/register'
     | '/trial'
     | '/verify'
@@ -249,6 +260,7 @@ export interface FileRouteTypes {
     | '/coop'
     | '/governance'
     | '/impact'
+    | '/onboarding'
     | '/register'
     | '/trial'
     | '/verify'
@@ -272,6 +284,7 @@ export interface RootRouteChildren {
   CoopRoute: typeof CoopRoute
   GovernanceRoute: typeof GovernanceRoute
   ImpactRoute: typeof ImpactRoute
+  OnboardingRoute: typeof OnboardingRoute
   RegisterRoute: typeof RegisterRoute
   TrialRoute: typeof TrialRoute
   VerifyRoute: typeof VerifyRoute
@@ -306,6 +319,13 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/impact': {
@@ -458,6 +478,7 @@ const rootRouteChildren: RootRouteChildren = {
   CoopRoute: CoopRoute,
   GovernanceRoute: GovernanceRoute,
   ImpactRoute: ImpactRoute,
+  OnboardingRoute: OnboardingRoute,
   RegisterRoute: RegisterRoute,
   TrialRoute: TrialRoute,
   VerifyRoute: VerifyRoute,
@@ -466,13 +487,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

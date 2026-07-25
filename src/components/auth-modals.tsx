@@ -101,27 +101,39 @@ export function VerifyEmailModal() {
   const [verified, setVerified] = useState(false);
   const [currentLink, setCurrentLink] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [expiresAt, setExpiresAt] = useState<number>(0);
+  const [now, setNow] = useState<number>(Date.now());
 
   useEffect(() => {
     setVerified(false);
     setCurrentLink(verifyModal?.link ?? null);
     setCooldown(60);
     setNotice(null);
+    setExpiresAt(Date.now() + 5 * 60 * 1000);
   }, [verifyModal]);
 
   useEffect(() => {
     if (!verifyModal) return;
-    if (cooldown <= 0) return;
-    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
-    return () => clearTimeout(t);
-  }, [cooldown, verifyModal]);
+    const t = setInterval(() => {
+      setNow(Date.now());
+      setCooldown((c) => (c > 0 ? c - 1 : 0));
+    }, 1000);
+    return () => clearInterval(t);
+  }, [verifyModal]);
 
   if (!verifyModal) return null;
 
+  const secondsLeft = Math.max(0, Math.ceil((expiresAt - now) / 1000));
+  const expired = secondsLeft <= 0;
+  const otpLabel = `${Math.floor(secondsLeft / 60)}:${(secondsLeft % 60).toString().padStart(2, "0")}`;
   const token = currentLink ? new URL(currentLink).searchParams.get("token") ?? "" : "";
 
   function doVerify() {
     if (!token) return;
+    if (expired) {
+      setNotice("⚠️ Verification link expired. Please resend. / 驗證連結已過期，請重新寄送。");
+      return;
+    }
     if (verifyToken(token)) setVerified(true);
   }
 
@@ -130,6 +142,7 @@ export function VerifyEmailModal() {
     if (r.ok) {
       setCurrentLink(r.link);
       setCooldown(60);
+      setExpiresAt(Date.now() + 5 * 60 * 1000);
       setNotice("New verification email sent (dev inbox updated). / 已重新寄出驗證信。");
     } else {
       setNotice(`Please wait ${r.cooldown}s before resending. / 請稍候 ${r.cooldown} 秒再試。`);
@@ -147,6 +160,15 @@ export function VerifyEmailModal() {
           <button onClick={closeVerify} className="rounded-sm px-2 text-xl text-muted-foreground hover:text-foreground">×</button>
         </div>
 
+        <div className="mb-3 flex items-center justify-between rounded-lg border border-border bg-surface/60 px-3 py-2 text-xs">
+          <span className="text-muted-foreground">
+            {expired ? "❌ Link expired / 已過期" : "⏱ Link valid for / 連結有效"}
+          </span>
+          <span className={`font-mono font-bold ${expired ? "text-red-600" : secondsLeft <= 60 ? "text-accent" : "text-primary"}`}>
+            {otpLabel}
+          </span>
+        </div>
+
         <div className="mb-3 rounded-lg border border-dashed border-accent/40 bg-accent/5 p-3 text-xs">
           <p className="mb-1 font-mono text-[10px] uppercase tracking-widest text-accent">
             Dev Test Inbox · 開發模式測試信箱
@@ -154,7 +176,7 @@ export function VerifyEmailModal() {
           <p className="mb-2 text-muted-foreground">
             Mock environment: click the simulated link below to verify. In production this is delivered via Supabase Auth Email / Resend.
           </p>
-          <div className="break-all rounded border border-border bg-white p-2 font-mono text-[11px]">
+          <div className={`break-all rounded border border-border bg-white p-2 font-mono text-[11px] ${expired ? "opacity-40 line-through" : ""}`}>
             {currentLink}
           </div>
         </div>
@@ -167,7 +189,8 @@ export function VerifyEmailModal() {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={doVerify}
-              className="rounded-sm bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:brightness-110"
+              disabled={expired}
+              className="rounded-sm bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Click verification link / 點擊驗證連結
             </button>

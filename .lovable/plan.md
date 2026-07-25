@@ -1,52 +1,51 @@
-This is a very large multi-part request. Before writing code I want to confirm scope and flag a critical infra decision.
 
-## Part A — Frontend/UX work (can implement directly in this project)
+This request bundles two very different kinds of work. Part A is pure frontend/UX and I can ship it in this turn. Part B (real SMTP, real database persistence, real-time backoffice sync) requires enabling Lovable Cloud and configuring an email domain — that's a one-way infra change I don't want to do without your explicit go-ahead.
 
-1. **Dual-System Split (單一入口)**
-   - Site shell already has a Governance/Store toggle; polish it into a segmented pill in the top bar, add trial-days countdown badge, ensure language switcher and role badge are grouped consistently.
-   - Confirm route grouping: `/` (landing chooser) → Store side (`/coop`, `/wishlist`, `/calculator`) vs Governance side (`/governance`, `/impact`, `/trial`). No route moves needed; just nav grouping.
+## Part A — Ship now (frontend only, still on localStorage)
 
-2. **Non-Member Conversion Engine**
-   - Add dual-price tag component (Member vs Non-Member) on product cards in `/` and `/coop`.
-   - Add interactive "Annual Surplus Return Calculator" enhancements on `/calculator` (weekly input → annual + ROI months + share-payback line).
-   - Share Deposit $100 voucher awarded after `/trial` quiz completion (persist on user).
-   - "Share Exit & Refund Guarantee" drawer in register modal + user profile area.
-   - Wishlist: 48h member-first countdown badge on items at 100+ votes; weekly bento menu voting widget with guest-nudge modal.
+### 1. Interactive Taiwan producer map (`src/routes/governance.tsx`)
+- Replace the abstract map with an inline SVG outline of Taiwan.
+- Plot pins for Yilan, Hualien, Nantou, Pingtung, Taitung, Chiayi.
+- Hover popover per pin: producer name, location, support amount + CO₂/plastic-saved impact badge, 2-line blurb, thumbnail (generated).
+- Bilingual labels via `t()`.
 
-3. **Backoffice Guest Trial Roster + Edit Days Modal**
-   - Rewrite Trial Accounts table in `admin.members.tsx` with: name, email, phone, registered date, days-remaining color badge (green>7 / orange 1–3 / red 0), expiration date, status, Edit Days action.
-   - `EditTrialDaysModal`: quick chips (+7/+14/+30/Force expire), custom numeric ± input, date picker for exact expiry, admin note, save. Extend `auth.tsx` with `setTrialExpiry(userId, days|date, note)` and admin-note log.
-   - Universal Directory: add a new admin route `/admin/users` (or a tab) listing ALL users — guest / trial / applicant / member / expired — with step, role, actions.
+### 2. Event cards visual overhaul (`src/routes/governance.tsx`)
+- Add `aspect-video` cover image container to every event card (3 generated covers: farm tour, tasting workshop, seminar).
+- Top-right overlaid status badge (Free for Members / Limited Seats).
+- Hover zoom: `transition-transform duration-300 hover:scale-105`, `overflow-hidden` wrapper.
 
-4. **Strict Bilingual i18n Audit**
-   - Sweep every route/component; replace remaining hardcoded EN/ZH strings with `t()` calls.
-   - Expand `src/lib/i18n.tsx` with full keys listed in the request (userId, role, registrationDate, daysRemaining, expirationDate, status, actions, active, expired, upgraded, editDays, save, cancel, admin, guestNonMember, verifiedMember, etc.).
-   - Priority files: `admin.members.tsx`, `admin.forecasting.tsx`, `admin.finance.tsx`, `admin.roles.tsx`, `admin.settings.tsx`, `admin.preorders.tsx`, `admin.surplus.tsx`, `admin.voting.tsx`, `admin.index.tsx`, `governance.tsx`, `wishlist.tsx`, `trial.tsx`, `calculator.tsx`, `register.tsx`, `verify.tsx`, `site-shell.tsx`, `auth-modals.tsx`.
-   - Verify by toggling language and grep for hardcoded latin/CJK leftovers.
+### 3. OTP verification UX (`src/components/auth-modals.tsx` + new onboarding step)
+- 5-minute countdown on the code input; expired state shows "OTP Code expired. Please request a new code." and disables Verify.
+- Resend Code button with 60s cooldown (extend existing pattern).
+- 6-digit code input; accepts `123456` in dev mode.
 
-5. **Taiwan Map + Event Card Images**
-   - Replace the abstract map in `/governance` with an inline SVG Taiwan outline; plot pins for Yilan / Hualien / Nantou / Pingtung / Taitung / Chiayi with hover Popover showing name, support amount, CO2 saved, 2-line blurb, thumbnail.
-   - Event cards: add `aspect-video` cover image (generate 3 images: farm tour, tasting workshop, seminar), overlay status badge top-right, `hover:scale-105 transition-transform duration-300`.
+### 4. Member Education Onboarding flow (new `/onboarding` route)
+- Full-page 4-step flow; homepage "體驗帳號 / 立即體驗" button routes here.
+- **Step 1** — Identity form (Name, ID/Student ID, Email) → Send code → 6-digit input (OTP UX from #3).
+- **Step 2** — Swipeable "合作社十講" card carousel, 3 cards (一人一票 / 營業不營利 / 免稅福利), top progress bar, 3-second read-lock before Next unlocks.
+- **Step 3** — Randomized quiz: pool of 8 questions (as specified), pick 3 per attempt, must get all 3 correct, on fail restart with 3 new random questions.
+- **Step 4** — Confetti celebration + welcome voucher message + CTA "去逛預購商品" → `/coop`. On success, mint the trial account via existing `auth.tsx` (30-day trial + voucher flag).
 
-## Part B — Production infra (needs decisions before I touch it)
+All strings bilingual through `src/lib/i18n.tsx`.
 
-Items 1–3 and 5 of your "Critical Bug Fixes" list ask for **real database persistence and real Gmail delivery**. Right now the whole app runs on `localStorage` (`src/lib/auth.tsx`). Wiring real accounts + real email requires enabling **Lovable Cloud** (managed Supabase-backed backend + email service), then:
+## Part B — Needs your go-ahead (I will NOT touch until you confirm)
 
-- Migrate `AuthProvider` from localStorage to Supabase Auth (real signup, OTP/magic-link email verification to actual Gmail inbox).
-- Create `profiles`, `verification_steps`, `trial_settings`, `admin_notes` tables with RLS.
-- Move Trial-days edits, verification step writes, and admin approvals to server functions so the admin table shows live front-end submissions.
-- Configure a real email domain (Lovable Emails) or connect Resend for transactional step-completion notifications.
-- Allow editing prior steps until final approval (unlock state on `profiles.status !== 'approved'`).
+These three items require Lovable Cloud + real email:
 
-**This is a big shift and unlocks real cost/quota/domain setup.** I want your go-ahead before enabling Cloud, because:
-- You'll need to verify a sender domain for real Gmail delivery (or accept default sender until then).
-- All existing demo/local accounts (`admin@coop.tw`, `member@coop.tw`, `demo@tensqmiles.coop`) will need to be recreated as real Supabase users.
-- Any data currently in your browser's localStorage will not migrate.
+- **Real SMTP transactional emails** for the 4 verification-step notifications (Step 1/2/3/Final Approval). Requires either Lovable Emails with a sender domain you own, or a Resend API key.
+- **Persistent DB for registration/verification** (`profiles`, `member_applications`, `verification_steps`, `admin_notes`) replacing `localStorage` in `src/lib/auth.tsx`.
+- **Real-time backoffice audit table** — front-end step submissions appear in `/admin/members` without refresh (Supabase realtime subscription).
 
-## Questions before I proceed
+Impact if we do Part B:
+- Enabling Cloud is one-way (easy to add, can't undo cleanly).
+- Existing demo accounts (`admin@coop.tw`, `member@coop.tw`, `demo@tensqmiles.coop`) get recreated as real Supabase users; anything in your browser's localStorage won't migrate.
+- For real Gmail delivery I need you to pick: **Lovable Emails** (built-in, needs a domain you own for verified sending) or **Resend** (needs your Resend API key).
 
-1. Should I do **Part A now** (frontend + i18n + map + trial-editor + universal directory, all still on the current localStorage mock) and treat **Part B as a follow-up** once you're ready to enable Lovable Cloud? — recommended, keeps this turn shippable.
-2. Or enable Lovable Cloud **now** and do Part A + Part B together (bigger change, real emails require you to add a sender domain)?
-3. For the real email provider — use **Lovable Emails** (built-in, needs a domain you own) or **Resend** (needs a Resend API key)?
+## What I need from you
 
-Tell me 1 or 2, and if 2 tell me which email provider, and I'll execute.
+Reply with one of:
+- **"A only"** — I ship Part A now, we do Part B in a follow-up turn.
+- **"A + B, Lovable Emails, domain: yourdomain.com"** — I do everything; you'll set DNS after.
+- **"A + B, Resend"** — I do everything; you'll paste a Resend API key when I prompt.
+
+Recommended: **A only** first so you get the visible UX/onboarding wins immediately, then we do the infra migration cleanly in its own turn.
