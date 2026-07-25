@@ -217,7 +217,7 @@ function ActivePreorders() {
 function GuestModulesGrid() {
   const { t, locale } = useI18n();
   const cards = [
-    { to: "/trial" as const, title: t("nav.trial"), sub: locale === "zh" ? "30 天體驗＋闖關解鎖迎新券" : "30-day pass, quest for a welcome voucher", badge: "NEW" },
+    { to: "/onboarding" as const, title: locale === "zh" ? "會員教育啟蒙" : "Member Onboarding", sub: locale === "zh" ? "4 步驟解鎖 30 天通行證＋NT$100 迎新券" : "4-step activation → 30-day pass + NT$100 voucher", badge: "NEW" },
     { to: "/calculator" as const, title: t("nav.calculator"), sub: locale === "zh" ? "算算成為社員每年能拿回多少" : "See your annual surplus return" },
     { to: "/wishlist" as const, title: t("nav.wishlist"), sub: locale === "zh" ? "為想要的商品集氣 +1" : "+1 the products you want sourced" },
     { to: "/impact" as const, title: t("nav.impact"), sub: locale === "zh" ? "公積金與環境影響的公開帳目" : "Public ledger of reserve fund & impact" },
