@@ -455,24 +455,34 @@ type Producer = {
   category: "farm" | "vendor" | "grant";
   since: string;
   impact: { zh: string; en: string };
-  x: number; // % on map
-  y: number;
+  co2: string;
+  support: string;
+  blurb: { zh: string; en: string };
+  img: string;
+  x: number; // Taiwan SVG coords in viewBox 0..100
+  y: number; // viewBox 0..140
 };
 
 const PRODUCERS: Producer[] = [
-  { id: "n1", name: { zh: "阿里山高山雞農場", en: "Alishan Highland Chicken Farm" }, region: { zh: "嘉義 阿里山", en: "Chiayi · Alishan" }, category: "farm", since: "2022", impact: { zh: "月供 3,200 顆放牧蛋", en: "3,200 pasture eggs / month" }, x: 32, y: 58 },
-  { id: "n2", name: { zh: "花蓮青農米作坊", en: "Hualien Young Farmer Rice" }, region: { zh: "花蓮 玉里", en: "Hualien · Yuli" }, category: "farm", since: "2023", impact: { zh: "有機米 1.2 噸／季", en: "1.2t organic rice / season" }, x: 72, y: 42 },
-  { id: "n3", name: { zh: "西螺柴燒醬園", en: "Xiluo Wood-Fired Soy" }, region: { zh: "雲林 西螺", en: "Yunlin · Xiluo" }, category: "vendor", since: "2021", impact: { zh: "傳統工法 · 零添加", en: "Traditional · zero-additive" }, x: 30, y: 45 },
-  { id: "n4", name: { zh: "南投小農蔬菜聯盟", en: "Nantou Small-Farm Veggie Union" }, region: { zh: "南投 埔里", en: "Nantou · Puli" }, category: "farm", since: "2022", impact: { zh: "12 家農戶 · 週配", en: "12 farms · weekly" }, x: 42, y: 50 },
-  { id: "n5", name: { zh: "東港鮮魚共漁隊", en: "Donggang Fresh Fish Co-op" }, region: { zh: "屏東 東港", en: "Pingtung · Donggang" }, category: "vendor", since: "2024", impact: { zh: "當日直送冷鏈", en: "Same-day cold chain" }, x: 36, y: 76 },
-  { id: "n6", name: { zh: "偏鄉學童早餐計畫", en: "Rural Student Breakfast" }, region: { zh: "台東 卑南", en: "Taitung · Beinan" }, category: "grant", since: "2023", impact: { zh: "受助 128 名學童", en: "128 students supported" }, x: 68, y: 68 },
-  { id: "n7", name: { zh: "青年返鄉學農計畫", en: "Youth Farming Fellowship" }, region: { zh: "宜蘭 三星", en: "Yilan · Sanxing" }, category: "grant", since: "2024", impact: { zh: "6 位青農入駐", en: "6 young farmers onboard" }, x: 66, y: 22 },
+  { id: "n1", name: { zh: "阿里山高山雞農場", en: "Alishan Highland Chicken Farm" }, region: { zh: "嘉義 阿里山", en: "Chiayi · Alishan" }, category: "farm", since: "2022", impact: { zh: "月供 3,200 顆放牧蛋", en: "3,200 pasture eggs / month" }, co2: "-1.8t CO₂/yr", support: "NT$ 480K", blurb: { zh: "海拔 1,400m 放牧養雞，飼料無抗生素，社員月月直送。", en: "1,400m free-range flock, antibiotic-free feed, monthly member delivery." }, img: producerFarmImg, x: 45, y: 82 },
+  { id: "n2", name: { zh: "花蓮青農米作坊", en: "Hualien Young Farmer Rice" }, region: { zh: "花蓮 玉里", en: "Hualien · Yuli" }, category: "farm", since: "2023", impact: { zh: "有機米 1.2 噸／季", en: "1.2t organic rice / season" }, co2: "-3.2t CO₂/yr", support: "NT$ 720K", blurb: { zh: "青農返鄉三年，玉里花東縱谷全稻田通過有機認證。", en: "Third-year returnee farmer, fully organic paddies in the Yuli valley." }, img: producerFarmImg, x: 76, y: 66 },
+  { id: "n3", name: { zh: "西螺柴燒醬園", en: "Xiluo Wood-Fired Soy" }, region: { zh: "雲林 西螺", en: "Yunlin · Xiluo" }, category: "vendor", since: "2021", impact: { zh: "傳統工法 · 零添加", en: "Traditional · zero-additive" }, co2: "-0.8t CO₂/yr", support: "NT$ 260K", blurb: { zh: "180 天日曬柴燒黑豆醬油，非基改，無防腐劑。", en: "180-day sun-fermented black bean soy, non-GMO, no preservatives." }, img: producerVendorImg, x: 38, y: 68 },
+  { id: "n4", name: { zh: "南投小農蔬菜聯盟", en: "Nantou Small-Farm Veggie Union" }, region: { zh: "南投 埔里", en: "Nantou · Puli" }, category: "farm", since: "2022", impact: { zh: "12 家農戶 · 週配", en: "12 farms · weekly" }, co2: "-2.1t CO₂/yr", support: "NT$ 540K", blurb: { zh: "埔里 12 家小農聯盟，每週配送當季葉菜到取貨點。", en: "12-farm Puli alliance, weekly seasonal greens to pickup points." }, img: producerFarmImg, x: 52, y: 62 },
+  { id: "n5", name: { zh: "東港鮮魚共漁隊", en: "Donggang Fresh Fish Co-op" }, region: { zh: "屏東 東港", en: "Pingtung · Donggang" }, category: "vendor", since: "2024", impact: { zh: "當日直送冷鏈", en: "Same-day cold chain" }, co2: "-1.4t CO₂/yr", support: "NT$ 380K", blurb: { zh: "港邊直送 8 小時內到門，公平船價、拒絕過捕。", en: "8-hour dock-to-door, fair boat pricing, no overfishing." }, img: producerVendorImg, x: 42, y: 108 },
+  { id: "n6", name: { zh: "偏鄉學童早餐計畫", en: "Rural Student Breakfast" }, region: { zh: "台東 卑南", en: "Taitung · Beinan" }, category: "grant", since: "2023", impact: { zh: "受助 128 名學童", en: "128 students supported" }, co2: "", support: "NT$ 320K", blurb: { zh: "每週 5 天為卑南國小 128 名學童供應合作社早餐。", en: "5 mornings/week co-op breakfast for 128 Beinan Elementary students." }, img: producerGrantImg, x: 66, y: 100 },
+  { id: "n7", name: { zh: "青年返鄉學農計畫", en: "Youth Farming Fellowship" }, region: { zh: "宜蘭 三星", en: "Yilan · Sanxing" }, category: "grant", since: "2024", impact: { zh: "6 位青農入駐", en: "6 young farmers onboard" }, co2: "", support: "NT$ 450K", blurb: { zh: "6 位 30 歲以下青農入駐三星蔥田，兩年培育計畫。", en: "6 sub-30 fellows join Sanxing scallion fields for a 2-year program." }, img: producerGrantImg, x: 68, y: 32 },
 ];
+
+// Simplified but recognizable Taiwan silhouette (sweet-potato shape)
+const TAIWAN_PATH =
+  "M55 6 C 66 8 74 18 78 32 C 82 46 82 60 80 74 C 78 88 74 100 66 112 C 58 122 50 128 42 128 C 34 128 30 122 30 112 C 30 100 32 88 34 76 C 34 66 32 56 34 46 C 36 34 42 22 48 14 C 51 10 53 7 55 6 Z";
 
 function ProducerMap() {
   const { locale } = useI18n();
-  const [active, setActive] = useState<string | null>("n1");
+  const [hover, setHover] = useState<string | null>(null);
+  const [active, setActive] = useState<string>("n1");
   const activeP = PRODUCERS.find((p) => p.id === active) ?? PRODUCERS[0];
+  const hoverP = hover ? PRODUCERS.find((p) => p.id === hover) : null;
 
   const color = (c: Producer["category"]) =>
     c === "farm" ? "bg-primary" : c === "vendor" ? "bg-accent" : "bg-fuchsia-500";
@@ -482,7 +492,7 @@ function ProducerMap() {
       <div>
         <p className="font-mono text-[10px] uppercase tracking-widest text-accent">04 · Local Producer Map</p>
         <h2 className="mt-1 text-3xl font-bold tracking-tight">
-          {locale === "zh" ? "在地永續小農足跡地圖" : "Interactive Local Producer Map"}
+          {locale === "zh" ? "在地永續小農足跡地圖" : "Interactive Taiwan Producer Map"}
         </h2>
         <p className="text-sm text-muted-foreground">
           {locale === "zh" ? "由 50% 公積金／公益金支持的合作網絡" : "Supported by our 50% Reserve & Public Good Fund"}
@@ -492,53 +502,126 @@ function ProducerMap() {
       <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
         <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/5 via-white to-accent/5 shadow-soft">
           <div className="absolute inset-0 bg-tech-grid opacity-40" />
-          {/* Stylized Taiwan silhouette */}
-          <svg viewBox="0 0 100 125" className="absolute inset-0 h-full w-full">
+          <svg viewBox="0 0 100 140" className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <linearGradient id="tw-fill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="rgba(16,185,129,0.14)" />
+                <stop offset="100%" stopColor="rgba(6,182,212,0.10)" />
+              </linearGradient>
+            </defs>
             <path
-              d="M55 8 C 62 12, 70 22, 72 32 C 74 42, 70 52, 68 62 C 66 72, 60 82, 52 90 C 44 96, 38 100, 34 92 C 28 82, 26 70, 28 58 C 30 46, 34 34, 40 22 C 46 12, 50 6, 55 8 Z"
-              fill="rgba(16,185,129,0.08)"
-              stroke="rgba(16,185,129,0.3)"
-              strokeWidth="0.5"
+              d={TAIWAN_PATH}
+              fill="url(#tw-fill)"
+              stroke="rgba(16,185,129,0.55)"
+              strokeWidth="0.6"
+              strokeLinejoin="round"
+            />
+            {/* Central mountain range hint */}
+            <path
+              d="M55 20 C 58 40 60 60 58 80 C 56 96 52 110 48 122"
+              fill="none"
+              stroke="rgba(16,185,129,0.25)"
+              strokeWidth="0.35"
+              strokeDasharray="1 1.5"
             />
           </svg>
+
           {PRODUCERS.map((p) => (
             <button
               key={p.id}
               onClick={() => setActive(p.id)}
+              onMouseEnter={() => setHover(p.id)}
+              onMouseLeave={() => setHover((h) => (h === p.id ? null : h))}
               className="absolute -translate-x-1/2 -translate-y-1/2"
-              style={{ left: `${p.x}%`, top: `${p.y}%` }}
+              style={{ left: `${p.x}%`, top: `${(p.y / 140) * 100}%` }}
               aria-label={p.name[locale]}
             >
               <span className="relative flex">
                 <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-40 ${color(p.category)}`} />
                 <span
-                  className={`relative grid size-4 place-items-center rounded-full border-2 border-white shadow-md transition-transform ${color(
-                    p.category,
-                  )} ${active === p.id ? "scale-150" : "hover:scale-125"}`}
+                  className={`relative grid size-4 place-items-center rounded-full border-2 border-white shadow-md transition-transform ${color(p.category)} ${
+                    active === p.id ? "scale-150" : "hover:scale-125"
+                  }`}
                 />
               </span>
             </button>
           ))}
 
-          {/* Legend */}
+          {/* Hover popover */}
+          {hoverP && (
+            <div
+              className="pointer-events-none absolute z-20 w-56 -translate-x-1/2 -translate-y-full rounded-xl border border-border bg-white/95 p-3 shadow-elevated backdrop-blur"
+              style={{ left: `${hoverP.x}%`, top: `calc(${(hoverP.y / 140) * 100}% - 14px)` }}
+            >
+              <div className="flex gap-2">
+                <img
+                  src={hoverP.img}
+                  alt={hoverP.name[locale]}
+                  loading="lazy"
+                  width={64}
+                  height={64}
+                  className="size-14 shrink-0 rounded-lg object-cover"
+                />
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-bold">{hoverP.name[locale]}</p>
+                  <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{hoverP.region[locale]}</p>
+                  <p className="mt-0.5 text-[10px] font-semibold text-primary">{hoverP.support}{hoverP.co2 ? ` · ${hoverP.co2}` : ""}</p>
+                </div>
+              </div>
+              <p className="mt-2 line-clamp-2 text-[11px] leading-snug text-muted-foreground">{hoverP.blurb[locale]}</p>
+            </div>
+          )}
+
           <div className="absolute bottom-3 left-3 flex flex-wrap gap-2 rounded-lg border border-border bg-white/80 p-2 font-mono text-[10px] backdrop-blur">
             <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-primary" />{locale === "zh" ? "農場" : "Farm"}</span>
             <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-accent" />{locale === "zh" ? "職人" : "Vendor"}</span>
             <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-fuchsia-500" />{locale === "zh" ? "公益" : "Grant"}</span>
           </div>
+          <span className="absolute right-3 top-3 rounded-full border border-border bg-white/80 px-2.5 py-1 font-mono text-[10px] font-bold backdrop-blur">
+            🇹🇼 Taiwan
+          </span>
         </div>
 
         <div className="space-y-4">
           {activeP && (
-            <article className="rounded-2xl border border-border bg-white/80 p-6 shadow-soft backdrop-blur">
-              <div className="flex items-center gap-2">
-                <MapPin className={`size-4 ${activeP.category === "grant" ? "text-fuchsia-500" : activeP.category === "vendor" ? "text-accent" : "text-primary"}`} />
-                <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                  {activeP.region[locale]} · Since {activeP.since}
+            <article className="overflow-hidden rounded-2xl border border-border bg-white/80 shadow-soft backdrop-blur">
+              <div className="relative aspect-[16/9] overflow-hidden">
+                <img
+                  src={activeP.img}
+                  alt={activeP.name[locale]}
+                  loading="lazy"
+                  width={512}
+                  height={288}
+                  className="size-full object-cover"
+                />
+                <span className="absolute right-3 top-3 rounded-full bg-white/90 px-2.5 py-1 font-mono text-[10px] font-bold backdrop-blur">
+                  {activeP.category === "grant" ? (locale === "zh" ? "公益計畫" : "Grant") : activeP.category === "vendor" ? (locale === "zh" ? "在地職人" : "Vendor") : (locale === "zh" ? "契作農場" : "Farm")}
                 </span>
               </div>
-              <h3 className="mt-2 text-xl font-bold">{activeP.name[locale]}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{activeP.impact[locale]}</p>
+              <div className="p-5">
+                <div className="flex items-center gap-2">
+                  <MapPin className={`size-4 ${activeP.category === "grant" ? "text-fuchsia-500" : activeP.category === "vendor" ? "text-accent" : "text-primary"}`} />
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                    {activeP.region[locale]} · Since {activeP.since}
+                  </span>
+                </div>
+                <h3 className="mt-2 text-xl font-bold">{activeP.name[locale]}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{activeP.blurb[locale]}</p>
+                <div className="mt-4 grid grid-cols-3 gap-2 font-mono text-[10px]">
+                  <div className="rounded-lg border border-border bg-surface/50 p-2 text-center">
+                    <p className="uppercase tracking-widest text-muted-foreground">{locale === "zh" ? "支持" : "Support"}</p>
+                    <p className="mt-0.5 text-sm font-bold">{activeP.support}</p>
+                  </div>
+                  <div className="rounded-lg border border-border bg-surface/50 p-2 text-center">
+                    <p className="uppercase tracking-widest text-muted-foreground">CO₂</p>
+                    <p className="mt-0.5 text-sm font-bold">{activeP.co2 || "—"}</p>
+                  </div>
+                  <div className="rounded-lg border border-border bg-surface/50 p-2 text-center">
+                    <p className="uppercase tracking-widest text-muted-foreground">{locale === "zh" ? "產能" : "Impact"}</p>
+                    <p className="mt-0.5 text-[10px] font-bold leading-tight">{activeP.impact[locale]}</p>
+                  </div>
+                </div>
+              </div>
             </article>
           )}
 
@@ -592,6 +675,8 @@ type Event = {
   memberPrice: number;
   guestPrice: number;
   tag: { zh: string; en: string };
+  img: string;
+  status: "open" | "hot" | "soon";
 };
 
 const EVENTS: Event[] = [
@@ -605,6 +690,8 @@ const EVENTS: Event[] = [
     memberPrice: 0,
     guestPrice: 480,
     tag: { zh: "🚌 農場參訪", en: "🚌 Farm Tour" },
+    img: eventFarmImg,
+    status: "hot",
   },
   {
     id: "e2",
@@ -616,6 +703,8 @@ const EVENTS: Event[] = [
     memberPrice: 0,
     guestPrice: 350,
     tag: { zh: "🍶 品味工作坊", en: "🍶 Tasting" },
+    img: eventTastingImg,
+    status: "open",
   },
   {
     id: "e3",
@@ -627,6 +716,8 @@ const EVENTS: Event[] = [
     memberPrice: 0,
     guestPrice: 200,
     tag: { zh: "🎓 線上講座", en: "🎓 Seminar" },
+    img: eventSeminarImg,
+    status: "soon",
   },
 ];
 
@@ -634,6 +725,12 @@ function EventsBoard() {
   const { locale } = useI18n();
   const { user } = useAuth();
   const isMember = user?.role === "member" || user?.role === "admin";
+
+  const statusBadge = (s: Event["status"]) => {
+    if (s === "hot") return { label: locale === "zh" ? "🔥 熱門" : "🔥 Hot", cls: "bg-red-500/95 text-white" };
+    if (s === "soon") return { label: locale === "zh" ? "⏳ 即將額滿" : "⏳ Filling", cls: "bg-accent/95 text-white" };
+    return { label: locale === "zh" ? "✨ 開放報名" : "✨ Open", cls: "bg-primary/95 text-primary-foreground" };
+  };
 
   return (
     <section id="events" className="space-y-6">
@@ -643,26 +740,41 @@ function EventsBoard() {
           {locale === "zh" ? "社員專屬社務活動" : "Co-op Events & Tasting Workshops"}
         </h2>
         <p className="text-sm text-muted-foreground">
-          {locale === "zh"
-            ? "實名社員免費入場，非社員可購票體驗"
-            : "Free for verified members · Paid pass for non-members"}
+          {locale === "zh" ? "實名社員免費入場，非社員可購票體驗" : "Free for verified members · Paid pass for non-members"}
         </p>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
         {EVENTS.map((e) => {
           const pct = Math.round((e.taken / e.seats) * 100);
+          const badge = statusBadge(e.status);
           return (
             <article
               key={e.id}
-              className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-white/70 shadow-soft backdrop-blur transition-all hover:-translate-y-0.5 hover:shadow-elevated"
+              className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-white/70 shadow-soft backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated"
             >
-              <div className="relative aspect-[16/9] bg-gradient-to-br from-primary/15 via-accent/15 to-fuchsia-200/40">
-                <div className="absolute inset-0 bg-tech-grid opacity-40" />
-                <span className="absolute left-4 top-4 rounded-full bg-white/80 px-2.5 py-1 font-mono text-[10px] font-bold backdrop-blur">
+              <div className="relative aspect-video overflow-hidden">
+                <img
+                  src={e.img}
+                  alt={e.title[locale]}
+                  loading="lazy"
+                  width={1280}
+                  height={720}
+                  className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                <span className="absolute left-4 top-4 rounded-full bg-white/90 px-2.5 py-1 font-mono text-[10px] font-bold backdrop-blur">
                   {e.tag[locale]}
                 </span>
-                <span className="absolute right-4 top-4 rounded-full bg-foreground/90 px-2.5 py-1 font-mono text-[10px] font-bold text-background backdrop-blur">
+                <span className={`absolute right-4 top-4 rounded-full px-2.5 py-1 font-mono text-[10px] font-bold backdrop-blur ${badge.cls}`}>
+                  {badge.label}
+                </span>
+                {isMember && e.memberPrice === 0 && (
+                  <span className="absolute bottom-3 left-4 rounded-full bg-primary px-2.5 py-1 font-mono text-[10px] font-bold text-primary-foreground shadow-glow">
+                    {locale === "zh" ? "社員免費" : "Free for members"}
+                  </span>
+                )}
+                <span className="absolute bottom-3 right-4 rounded-full bg-foreground/85 px-2.5 py-1 font-mono text-[10px] font-bold text-background backdrop-blur">
                   {e.date}
                 </span>
               </div>
