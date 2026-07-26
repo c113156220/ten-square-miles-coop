@@ -1,51 +1,54 @@
 
-This request bundles two very different kinds of work. Part A is pure frontend/UX and I can ship it in this turn. Part B (real SMTP, real database persistence, real-time backoffice sync) requires enabling Lovable Cloud and configuring an email domain — that's a one-way infra change I don't want to do without your explicit go-ahead.
+This is a large, multi-track request. I've grouped it into 6 tracks. Tracks 1–5 are pure frontend and I can ship them in one pass on the current localStorage stack. Track 6 requires enabling Lovable Cloud (Supabase) — one-way infra change — so I want your go-ahead before doing it.
 
-## Part A — Ship now (frontend only, still on localStorage)
+## Track 1 — /onboarding rebuild (frontend)
+- Rewrite `src/routes/onboarding.tsx` as 4-step full-page flow.
+- Step 1: Name / 身分證字號 / Email → "發送驗證碼" → 6-digit input (accepts `123456`), 5-min expiry countdown + 60s resend cooldown (reuse existing OTP UX).
+- Step 2: 5 lecture cards (exact copy you supplied), swipeable, top progress bar `1/5`, Next button locked 3s per card.
+- Step 3: Pool of 8 quiz questions (exact copy), pick 3 at random with no repeats in session, must get 3/3, on any wrong answer show "答錯囉！" and reshuffle 3 new ones.
+- Step 4: Confetti + "恭喜通過入社教育訓練！系統已為您開通 30 天體驗帳號！" + CTA "去逛預購商品" → `/coop`. Mints trial via existing `registerTrial`.
+- Homepage "體驗帳號 / 立即體驗" already routes to `/onboarding` — verify.
 
-### 1. Interactive Taiwan producer map (`src/routes/governance.tsx`)
-- Replace the abstract map with an inline SVG outline of Taiwan.
-- Plot pins for Yilan, Hualien, Nantou, Pingtung, Taitung, Chiayi.
-- Hover popover per pin: producer name, location, support amount + CO₂/plastic-saved impact badge, 2-line blurb, thumbnail (generated).
-- Bilingual labels via `t()`.
+## Track 2 — Labor Points + Wallet (frontend, localStorage)
+- Extend `src/lib/auth.tsx` with `laborPoints`, `laborLog[]`, `walletBalance`, `walletLog[]` per user + admin adjust methods.
+- Member center (`src/routes/trial.tsx` or new `/account`): "勞動積分" block with log drawer; "電子錢包" block with 儲值 modal (500/1000/2000, mock gateway).
+- Checkout page (part of `src/routes/coop.tsx` cart): add "使用勞動積分折抵" checkbox+input (1pt=1元, capped at balance/subtotal); add "儲值金餘額支付" payment option, disabled + tooltip if insufficient.
+- Admin: new page `src/routes/admin.wallet.tsx` — table of members with inline +/- points and +/- wallet with note; wire into admin nav.
 
-### 2. Event cards visual overhaul (`src/routes/governance.tsx`)
-- Add `aspect-video` cover image container to every event card (3 generated covers: farm tour, tasting workshop, seminar).
-- Top-right overlaid status badge (Free for Members / Limited Seats).
-- Hover zoom: `transition-transform duration-300 hover:scale-105`, `overflow-hidden` wrapper.
+## Track 3 — 預購截單 + 取貨防呆 + 逾期轉現貨 (frontend)
+- Add per-product `cutoffAt` (next Tuesday 12:00 rolling). Top-of-page countdown component on `/coop` and product cards.
+- When `now > cutoffAt`: buttons swap to disabled "本週已截單／下週請早".
+- Order tracking (member center orders view): if status = 待取貨 and now within pickup window, yellow warning banner "請記得於今日 20:00 前至清大站取貨…".
+- Admin preorders (`src/routes/admin.preorders.tsx`): "一鍵轉為逾期現貨" button on overdue 待取貨 orders → status → 逾期未取, add qty back into a `walkInStock` map.
 
-### 3. OTP verification UX (`src/components/auth-modals.tsx` + new onboarding step)
-- 5-minute countdown on the code input; expired state shows "OTP Code expired. Please request a new code." and disables Verify.
-- Resend Code button with 60s cooldown (extend existing pattern).
-- 6-digit code input; accepts `123456` in dev mode.
+## Track 4 — 值班學生大使工作台 (admin)
+- New `src/routes/admin.packing.tsx`: date picker → group all pickup-on-date orders by member → card per member with checkboxes per item → "配貨完成" state when all checked (persist to localStorage).
+- New `src/routes/admin.pos.tsx`: grid of `walkInStock` items → click to add to right-side cart → 現金 / 現場掃碼 → 確認收單 decrements stock + appends transaction to a `posTx[]` log.
 
-### 4. Member Education Onboarding flow (new `/onboarding` route)
-- Full-page 4-step flow; homepage "體驗帳號 / 立即體驗" button routes here.
-- **Step 1** — Identity form (Name, ID/Student ID, Email) → Send code → 6-digit input (OTP UX from #3).
-- **Step 2** — Swipeable "合作社十講" card carousel, 3 cards (一人一票 / 營業不營利 / 免稅福利), top progress bar, 3-second read-lock before Next unlocks.
-- **Step 3** — Randomized quiz: pool of 8 questions (as specified), pick 3 per attempt, must get all 3 correct, on fail restart with 3 new random questions.
-- **Step 4** — Confetti celebration + welcome voucher message + CTA "去逛預購商品" → `/coop`. On success, mint the trial account via existing `auth.tsx` (30-day trial + voucher flag).
+## Track 5 — 真實台灣互動地圖 (frontend)
+- `bun add leaflet react-leaflet @types/leaflet`.
+- Replace SVG in `src/routes/governance.tsx` producer map section with `<MapContainer>` centered at `[23.9738, 120.9820]`, CartoDB Positron tiles.
+- Producers list (with real lat/lng for 阿里山/花蓮玉里/西螺/南投埔里/東港/卑南/三星) rendered as colored `CircleMarker`s (green=農場, blue=職人, purple=公益).
+- Click marker → highlight right-side card; click list item → `map.flyTo(latlng)`.
+- Load Leaflet CSS in `__root.tsx` head; import map component behind `<ClientOnly>` / dynamic import to avoid SSR window errors.
 
-All strings bilingual through `src/lib/i18n.tsx`.
+## Track 6 — 許願清單 + 即時通知中心 (REQUIRES LOVABLE CLOUD)
+Needs Supabase. Will enable Cloud, then:
+- Migration: `wishes` (id, user_id, title, description, location, created_at) + `notifications` (id, type, title, content, is_read, created_at) with RLS + grants + realtime publication.
+- Frontend: "許願" modal writes to `wishes`; DB trigger (or client insert) also inserts a `notification`.
+- Admin: bell icon in `SiteNav` with unread red dot; dropdown of latest 10; new `src/routes/admin.notifications.tsx` list page; `src/routes/admin.wishes.tsx` list page with status.
+- Realtime: `supabase.channel().on('postgres_changes', …)` subscription in admin layout → sonner toast "收到一筆新的許願請求！" + short WebAudio beep.
 
-## Part B — Needs your go-ahead (I will NOT touch until you confirm)
-
-These three items require Lovable Cloud + real email:
-
-- **Real SMTP transactional emails** for the 4 verification-step notifications (Step 1/2/3/Final Approval). Requires either Lovable Emails with a sender domain you own, or a Resend API key.
-- **Persistent DB for registration/verification** (`profiles`, `member_applications`, `verification_steps`, `admin_notes`) replacing `localStorage` in `src/lib/auth.tsx`.
-- **Real-time backoffice audit table** — front-end step submissions appear in `/admin/members` without refresh (Supabase realtime subscription).
-
-Impact if we do Part B:
-- Enabling Cloud is one-way (easy to add, can't undo cleanly).
-- Existing demo accounts (`admin@coop.tw`, `member@coop.tw`, `demo@tensqmiles.coop`) get recreated as real Supabase users; anything in your browser's localStorage won't migrate.
-- For real Gmail delivery I need you to pick: **Lovable Emails** (built-in, needs a domain you own for verified sending) or **Resend** (needs your Resend API key).
+## Technical notes
+- All new strings bilingual through `src/lib/i18n.tsx` — strict isolation (no English in zh mode).
+- Leaflet SSR: `React.lazy(() => import('@/components/producer-map'))` inside `<ClientOnly>`.
+- Confetti: reuse existing lightweight canvas or `bun add canvas-confetti`.
+- Cutoff time: `getNextTuesdayNoon()` helper in `src/lib/cutoff.ts`.
 
 ## What I need from you
+Pick one:
+- **"All, enable Cloud"** — I do Tracks 1–6, enable Lovable Cloud now.
+- **"1–5 only"** — I ship Tracks 1–5 this turn, skip 許願/通知 realtime.
+- **"Just Track N"** — pick a subset and I'll ship only those.
 
-Reply with one of:
-- **"A only"** — I ship Part A now, we do Part B in a follow-up turn.
-- **"A + B, Lovable Emails, domain: yourdomain.com"** — I do everything; you'll set DNS after.
-- **"A + B, Resend"** — I do everything; you'll paste a Resend API key when I prompt.
-
-Recommended: **A only** first so you get the visible UX/onboarding wins immediately, then we do the infra migration cleanly in its own turn.
+Recommended: **"All, enable Cloud"** — the wishes/notifications realtime is the module that most needs a real backend, and doing it in one pass avoids a second infra migration.
