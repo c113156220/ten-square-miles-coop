@@ -8,117 +8,165 @@ import { useAuth } from "@/lib/auth";
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
     meta: [
-      { title: "會員教育啟蒙 · Member Onboarding — 十圓方里" },
-      { name: "description", content: "4-step gamified onboarding: identity, OTP, co-op lectures, and a randomized quiz that unlocks your 30-day trial pass." },
+      { title: "入社教育訓練 · Member Onboarding — 十圓方里" },
+      { name: "description", content: "四步驟入社教育訓練：實名驗證、合作社十講、隨機理念快問快答，通關後開通 30 天體驗帳號。" },
       { property: "og:title", content: "Co-op Member Onboarding — Ten Sq Miles" },
-      { property: "og:description", content: "Learn the co-op basics, verify your identity, and activate a 30-day trial with a NT$100 welcome voucher." },
+      { property: "og:description", content: "Verify identity, read the 5 co-op lectures, pass the random quiz, activate your 30-day trial pass." },
     ],
   }),
   component: OnboardingPage,
 });
 
-// ---------- helpers ----------
 function digits6() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// ---------- data ----------
-const LECTURES = [
+// ---------- Lecture cards (Cooperative 10 Lectures — 5 curated) ----------
+type Lecture = {
+  emoji: string;
+  gradient: string;
+  zh: { title: string; body: string };
+  en: { title: string; body: string };
+};
+
+const LECTURES: Lecture[] = [
   {
     emoji: "🗳️",
-    zh: { title: "民主治理 · 1 社員 1 票", body: "無論你認購 1 股或 100 股，社員大會上每人擁有一票。理事會由社員直選，決策全數公開。" },
-    en: { title: "Democratic Governance", body: "Whether you hold 1 share or 100, every member has exactly one vote at the General Meeting. The board is elected directly by members." },
     gradient: "from-primary/20 via-accent/10 to-cyber/10",
+    zh: {
+      title: "一人一票，營業不營利",
+      body: "合作社是『認人不認錢』的民主組織。無論出資多寡，每位社員在『社員大會』（合作社最高權力機關）都擁有一人一票的平權決定權。結餘不分給大股東，而是回饋給社員與社區。",
+    },
+    en: {
+      title: "One member, one vote — not for private profit",
+      body: "A co-op is a democratic organisation that recognises people, not capital. Regardless of shareholding, every member has one equal vote at the General Meeting (the highest authority). Surplus is returned to members and the community, not to major shareholders.",
+    },
+  },
+  {
+    emoji: "👥",
+    gradient: "from-accent/20 via-primary/10 to-fuchsia-200/40",
+    zh: {
+      title: "社員不是顧客，而是主人",
+      body: "一般商店會員只是有折價券的『顧客』。但合作社社員兼具『使用者、擁有者、共創者與治理者』的多重身分，可以主動在系統『許願／提案』想要的永續商品或走讀活動。",
+    },
+    en: {
+      title: "Members are owners, not just customers",
+      body: "Store loyalty members are customers with coupons. Co-op members are simultaneously users, owners, co-creators and governors — you can post wishes and propose the sustainable goods and events you want.",
+    },
+  },
+  {
+    emoji: "🎓",
+    gradient: "from-fuchsia-200/40 via-primary/10 to-accent/20",
+    zh: {
+      title: "認購社股，學生特別保護",
+      body: "加入合作社需認購社股（每股 100 元，一般人上限 100 股）。為了確保平權、防止資本支配，在校全職學生身份的社員，每人至多只能認購 10 股（共 1,000 元）。",
+    },
+    en: {
+      title: "Share subscription — with student safeguards",
+      body: "Joining requires buying co-op shares (NT$100 each, capped at 100 shares for ordinary members). To prevent capital dominance, full-time student members may only subscribe up to 10 shares (NT$1,000).",
+    },
   },
   {
     emoji: "💰",
-    zh: { title: "結餘分配 · 依消費貢獻", body: "年度結餘的 50% 依照社員的消費貢獻度回饋，不是依股份多寡。買越多，回饋越多；不是股東拿走全部。" },
-    en: { title: "Surplus by Contribution", body: "50% of the annual surplus is distributed based on your purchase contribution — not by shareholding. Buy more, get more back." },
-    gradient: "from-accent/20 via-primary/10 to-fuchsia-200/40",
+    gradient: "from-primary/15 via-white to-accent/15",
+    zh: {
+      title: "結餘 30% 提撥公積金，50% 消費回饋",
+      body: "合作社年終結算有結餘時，依法必須提撥 30% 作為公積金強化營運。而高達 50% 的結餘會作為『社員分配金』，依照每位社員的『交易額（消費貢獻度）比例』分紅回饋！",
+    },
+    en: {
+      title: "30% to reserve fund, 50% back to buyers",
+      body: "When there is an annual surplus, 30% is legally allocated to the reserve fund to strengthen operations. Up to 50% is distributed to members as dividends — in proportion to each member's purchase contribution.",
+    },
   },
   {
     emoji: "🌱",
-    zh: { title: "免稅一級農產 · 支持在地", body: "一級農產品在合作社內部交易免營業稅，價格更透明。非社員銷售嚴格控制在 30% 以下。" },
-    en: { title: "Tax-Exempt Primary Goods", body: "Primary agricultural goods are tax-exempt for members. Non-member sales are strictly capped below 30% of total revenue." },
-    gradient: "from-fuchsia-200/40 via-primary/10 to-accent/20",
+    gradient: "from-accent/15 via-primary/10 to-fuchsia-200/30",
+    zh: {
+      title: "社員專屬免稅福利",
+      body: "一級農產品（如米、青菜）不論是誰買都免稅。但如果是加工食品（如健康便當、手工醬油），只有完成入社的『正式社員』才享有免徵 5% 營業稅的法規優惠！",
+    },
+    en: {
+      title: "Members-only tax exemption",
+      body: "Primary agricultural goods (rice, vegetables) are tax-exempt for everyone. But for processed foods (healthy bento, handcrafted soy sauce), only verified members enjoy the statutory 5% business-tax exemption.",
+    },
   },
 ];
 
-const QUIZ_POOL = [
+// ---------- Quiz pool (8 questions per spec) ----------
+type Question = {
+  zh: string;
+  en: string;
+  options: { zh: string; en: string; correct: boolean }[];
+};
+
+const QUIZ_POOL: Question[] = [
   {
-    zh: "合作社的結餘主要如何分配？",
-    en: "How is co-op surplus primarily distributed?",
+    zh: "十里方圓合作社的最高權力決策機關是誰？",
+    en: "Who is the highest decision-making body of the co-op?",
     options: [
-      { zh: "按股份多寡", en: "By share count", correct: false },
-      { zh: "依社員消費貢獻度", en: "By member purchase contribution", correct: true },
-      { zh: "全數保留為公積金", en: "Fully retained as reserve", correct: false },
+      { zh: "理事主席", en: "The board chair", correct: false },
+      { zh: "社員大會", en: "The General Meeting of members", correct: true },
     ],
   },
   {
-    zh: "非社員銷售佔比的法定上限？",
-    en: "Legal cap on non-member sales?",
+    zh: "在校學生加入合作社，股金認購上限是多少？",
+    en: "What is the share-subscription cap for full-time students?",
     options: [
-      { zh: "10%", en: "10%", correct: false },
+      { zh: "學生上限 10 股共 1,000 元以確保平等", en: "Capped at 10 shares (NT$1,000) to ensure equality", correct: true },
+      { zh: "無上限", en: "No cap", correct: false },
+    ],
+  },
+  {
+    zh: "合作社的決策投票機制，和一般股份有限公司最大的差異是什麼？",
+    en: "How does co-op voting differ from a corporation?",
+    options: [
+      { zh: "誰出錢多決定一切", en: "Bigger capital gets more power", correct: false },
+      { zh: "認人不認錢，每位社員都是『一人一票』的平權參與", en: "People not money — each member gets one equal vote", correct: true },
+    ],
+  },
+  {
+    zh: "購買合作社的『加工食品（如便當、醬油）』，誰享有免徵 5% 營業稅福利？",
+    en: "Who is exempt from 5% business tax on processed foods?",
+    options: [
+      { zh: "只有完成入社的正式社員", en: "Only verified full members", correct: true },
+      { zh: "所有人", en: "Everyone", correct: false },
+    ],
+  },
+  {
+    zh: "在十里方圓合作社中，社員的身分和一般商店的『顧客』有何不同？",
+    en: "How does a co-op member differ from a store customer?",
+    options: [
+      { zh: "只是有打折優惠的消費者", en: "Just a discount-holding consumer", correct: false },
+      { zh: "同時是合作社的『使用者、擁有者、共創者與治理者』", en: "Simultaneously user, owner, co-creator and governor", correct: true },
+    ],
+  },
+  {
+    zh: "合作社年底的結餘如何分配？",
+    en: "How is the annual surplus distributed?",
+    options: [
+      { zh: "依據社員的『消費貢獻度』按比例回饋", en: "Distributed by each member's purchase contribution", correct: true },
+      { zh: "按出資比例分給大股東", en: "By share ratio to major shareholders", correct: false },
+    ],
+  },
+  {
+    zh: "合作社被稱為『營業不營利』的組織，這代表什麼意思？",
+    en: "What does 'operate but not for private profit' mean?",
+    options: [
+      { zh: "合作社只能賠錢不能有收入", en: "The co-op must never earn revenue", correct: false },
+      { zh: "產生結餘不是為大股東賺錢，而是回饋給社員與社區", en: "Surplus isn't for shareholders — it returns to members and community", correct: true },
+    ],
+  },
+  {
+    zh: "根據章程，合作社提撥『公積金』的比例為多少？",
+    en: "What share of surplus goes to the reserve fund?",
+    options: [
       { zh: "30%", en: "30%", correct: true },
-      { zh: "50%", en: "50%", correct: false },
-    ],
-  },
-  {
-    zh: "民主治理的核心原則？",
-    en: "Core principle of democratic governance?",
-    options: [
-      { zh: "股份越多、票越多", en: "More shares = more votes", correct: false },
-      { zh: "1 社員 1 票", en: "1 member, 1 vote", correct: true },
-      { zh: "理事會全權決定", en: "Board decides all", correct: false },
-    ],
-  },
-  {
-    zh: "一級農產品在合作社內部交易的稅務？",
-    en: "Tax treatment of primary agricultural goods?",
-    options: [
-      { zh: "免營業稅", en: "Tax-exempt", correct: true },
-      { zh: "應稅 5%", en: "Taxable 5%", correct: false },
-      { zh: "應稅 10%", en: "Taxable 10%", correct: false },
-    ],
-  },
-  {
-    zh: "合作資本／公積金佔結餘比例？",
-    en: "Reserve fund share of surplus?",
-    options: [
-      { zh: "20%", en: "20%", correct: false },
-      { zh: "50%", en: "50%", correct: true },
-      { zh: "80%", en: "80%", correct: false },
-    ],
-  },
-  {
-    zh: "體驗通行證有效期為？",
-    en: "Trial pass duration?",
-    options: [
-      { zh: "7 天", en: "7 days", correct: false },
-      { zh: "30 天", en: "30 days", correct: true },
-      { zh: "90 天", en: "90 days", correct: false },
-    ],
-  },
-  {
-    zh: "誰有權投票理事？",
-    en: "Who can vote for the board?",
-    options: [
-      { zh: "所有已驗證社員", en: "All verified members", correct: true },
-      { zh: "僅前 10 大股東", en: "Only top 10 shareholders", correct: false },
-      { zh: "僅理事會提名者", en: "Only board nominees", correct: false },
-    ],
-  },
-  {
-    zh: "預購商品什麼時候扣款？", en: "When are pre-orders charged?",
-    options: [
-      { zh: "訂單成立時支付訂金／全額", en: "Deposit/full at order time", correct: true },
-      { zh: "貨到時付款", en: "On delivery", correct: false },
-      { zh: "月結", en: "Monthly billing", correct: false },
+      { zh: "10%", en: "10%", correct: false },
     ],
   },
 ];
 
-function pick3<T>(arr: T[]) {
+function pick3<T>(arr: T[]): T[] {
   const copy = [...arr];
   for (let i = copy.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -127,15 +175,25 @@ function pick3<T>(arr: T[]) {
   return copy.slice(0, 3);
 }
 
-// ---------- page ----------
+function shuffleOptions(q: Question): Question {
+  const opts = [...q.options];
+  for (let i = opts.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [opts[i], opts[j]] = [opts[j], opts[i]];
+  }
+  return { ...q, options: opts };
+}
+
 function OnboardingPage() {
   const { locale } = useI18n();
+  const router = useRouter();
+  const { registerTrial, openLogin } = useAuth();
   const [step, setStep] = useState(1);
 
-  // step 1 state
+  // ---------- Step 1: identity + OTP ----------
   const [name, setName] = useState("");
+  const [idNo, setIdNo] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [otpSent, setOtpSent] = useState<string | null>(null);
   const [otpInput, setOtpInput] = useState("");
   const [otpExpiresAt, setOtpExpiresAt] = useState<number | null>(null);
@@ -166,10 +224,12 @@ function OnboardingPage() {
   function verifyOtp() {
     if (!otpSent) return;
     if (otpSecondsLeft <= 0) {
-      setOtpError(locale === "zh" ? "驗證碼已過期，請重新發送。" : "Code expired. Please resend.");
+      setOtpError(locale === "zh" ? "驗證碼已過期，請重新發送。" : "Code expired. Please request a new code.");
       return;
     }
-    if (otpInput.trim() !== otpSent) {
+    // Accept mock 123456 OR the actual generated code
+    const val = otpInput.trim();
+    if (val !== otpSent && val !== "123456") {
       setOtpError(locale === "zh" ? "驗證碼錯誤，請再試一次。" : "Wrong code. Try again.");
       return;
     }
@@ -177,7 +237,7 @@ function OnboardingPage() {
     setStep(2);
   }
 
-  // step 2: lectures with 3s read-lock
+  // ---------- Step 2: swipeable lectures w/ 3s read-lock ----------
   const [lectureIdx, setLectureIdx] = useState(0);
   const [readSeconds, setReadSeconds] = useState(0);
   useEffect(() => {
@@ -187,20 +247,24 @@ function OnboardingPage() {
     return () => clearInterval(t);
   }, [step, lectureIdx]);
 
-  // step 3: quiz
-  const questions = useMemo(() => pick3(QUIZ_POOL), [step === 3]);
+  // ---------- Step 3: randomized quiz ----------
+  const [quizAttempt, setQuizAttempt] = useState(0); // bump to reshuffle
+  const questions = useMemo(
+    () => pick3(QUIZ_POOL).map(shuffleOptions),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [step === 3, quizAttempt],
+  );
   const [qIdx, setQIdx] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
-  const [wrong, setWrong] = useState(false);
+  const [failModal, setFailModal] = useState(false);
 
   function submitAnswer() {
     if (picked === null) return;
     const correct = questions[qIdx].options[picked].correct;
     if (!correct) {
-      setWrong(true);
+      setFailModal(true);
       return;
     }
-    setWrong(false);
     if (qIdx === questions.length - 1) {
       setStep(4);
     } else {
@@ -209,9 +273,14 @@ function OnboardingPage() {
     }
   }
 
-  // step 4: activation
-  const { registerTrial, openLogin } = useAuth();
-  const router = useRouter();
+  function restartQuiz() {
+    setFailModal(false);
+    setQIdx(0);
+    setPicked(null);
+    setQuizAttempt((n) => n + 1);
+  }
+
+  // ---------- Step 4: activation ----------
   const [activated, setActivated] = useState<{ email: string; password: string } | null>(null);
   const [activationError, setActivationError] = useState<string | null>(null);
   const firedRef = useRef(false);
@@ -219,33 +288,31 @@ function OnboardingPage() {
   useEffect(() => {
     if (step !== 4 || firedRef.current) return;
     firedRef.current = true;
-    // confetti
-    setTimeout(() => confetti({ particleCount: 140, spread: 90, origin: { y: 0.6 } }), 200);
+    setTimeout(() => confetti({ particleCount: 160, spread: 90, origin: { y: 0.6 } }), 200);
     setTimeout(() => confetti({ particleCount: 100, spread: 120, angle: 60, origin: { x: 0, y: 0.7 } }), 500);
     setTimeout(() => confetti({ particleCount: 100, spread: 120, angle: 120, origin: { x: 1, y: 0.7 } }), 800);
-    // register trial user
     const generatedPw = "coop-" + Math.random().toString(36).slice(2, 8);
+    const phone = "09" + Math.floor(10000000 + Math.random() * 89999999).toString();
     const r = registerTrial({ name, email, phone, password: generatedPw });
-    if (r.ok) {
-      setActivated({ email, password: generatedPw });
-    } else {
-      setActivationError(r.error);
-    }
+    if (r.ok) setActivated({ email, password: generatedPw });
+    else setActivationError(r.error);
   }, [step]);
 
   const stepLabels: [string, string][] = [
-    ["身份驗證", "Identity"],
-    ["社務教育", "Lectures"],
-    ["合作社小考", "Quiz"],
-    ["啟用通行證", "Activate"],
+    ["身分驗證", "Identity"],
+    ["合作社十講", "Lectures"],
+    ["理念快問快答", "Quiz"],
+    ["解鎖體驗", "Activate"],
   ];
+
+  const canSendOtp = name.trim() && idNo.trim() && email.trim();
 
   return (
     <SiteShell>
       <PageHeader
-        eyebrow={locale === "zh" ? "會員教育啟蒙 · 4 步驟" : "Member Onboarding · 4 steps"}
-        title={locale === "zh" ? "3 分鐘認識合作社，領取 NT$100 迎新券" : "Learn the co-op in 3 minutes, unlock a NT$100 welcome voucher"}
-        subtitle={locale === "zh" ? "OTP 驗證 → 民主／稅務短講 → 隨機小考 → 30 天體驗通行證" : "OTP → Micro-lectures → Randomized quiz → 30-day trial pass"}
+        eyebrow={locale === "zh" ? "入社教育訓練 · 4 步驟闖關" : "Member Onboarding · 4 steps"}
+        title={locale === "zh" ? "3 分鐘認識合作社，解鎖 30 天體驗帳號" : "Learn the co-op in 3 minutes, unlock a 30-day trial pass"}
+        subtitle={locale === "zh" ? "實名驗證 → 合作社十講 → 隨機小考 → 30 天通行證＋NT$100 迎新券" : "Identity + OTP → Lectures → Random quiz → 30-day trial + NT$100 voucher"}
       />
 
       {/* Stepper */}
@@ -278,12 +345,12 @@ function OnboardingPage() {
 
       {/* STEP 1 */}
       {step === 1 && (
-        <section className="rounded-2xl border border-border bg-white/80 p-6 shadow-soft backdrop-blur md:p-8">
-          <h2 className="text-xl font-bold">{locale === "zh" ? "① 實名與 OTP 驗證" : "① Identity & OTP"}</h2>
+        <section className="rounded-2xl border border-border bg-white/80 p-6 shadow-soft backdrop-blur md:p-8 animate-fade-in">
+          <h2 className="text-xl font-bold">{locale === "zh" ? "① 防弊身分驗證" : "① Identity & Email verification"}</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             {locale === "zh"
-              ? "填寫真實姓名、Email 與手機，系統將寄出 6 位數驗證碼（5 分鐘內有效）。"
-              : "Enter your real name, email and phone. We'll send a 6-digit code valid for 5 minutes."}
+              ? "為避免冒用他人身分證註冊，請填寫真實資料，系統將寄出 6 位數驗證碼（5 分鐘內有效）。"
+              : "To prevent identity theft, please fill in real details. We'll send a 6-digit code valid for 5 minutes."}
           </p>
 
           <div className="mt-5 grid gap-4 md:grid-cols-3">
@@ -299,7 +366,21 @@ function OnboardingPage() {
               />
             </label>
             <label className="block">
-              <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Email</span>
+              <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                {locale === "zh" ? "身分證字號 / 學號" : "ID No. / Student ID"}
+              </span>
+              <input
+                value={idNo}
+                onChange={(e) => setIdNo(e.target.value.toUpperCase())}
+                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none focus:border-primary"
+                placeholder="A123456789"
+                maxLength={20}
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                {locale === "zh" ? "電子信箱" : "Email"}
+              </span>
               <input
                 type="email"
                 value={email}
@@ -308,22 +389,11 @@ function OnboardingPage() {
                 placeholder="you@gmail.com"
               />
             </label>
-            <label className="block">
-              <span className="mb-1 block font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                {locale === "zh" ? "手機" : "Phone"}
-              </span>
-              <input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm outline-none focus:border-primary"
-                placeholder="09xx-xxx-xxx"
-              />
-            </label>
           </div>
 
           <div className="mt-5 flex flex-wrap items-center gap-3">
             <button
-              disabled={!name || !email || !phone || (resendCooldown > 0 && !!otpSent)}
+              disabled={!canSendOtp || (resendCooldown > 0 && !!otpSent)}
               onClick={sendOtp}
               className="rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground shadow-glow transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
             >
@@ -331,7 +401,7 @@ function OnboardingPage() {
                 ? resendCooldown > 0
                   ? locale === "zh" ? `重新寄送 (${resendCooldown}s)` : `Resend (${resendCooldown}s)`
                   : locale === "zh" ? "重新寄送驗證碼" : "Resend code"
-                : locale === "zh" ? "寄送驗證碼" : "Send OTP"}
+                : locale === "zh" ? "發送驗證碼" : "Send verification code"}
             </button>
             {otpSent && (
               <span className={`inline-flex items-center gap-2 rounded-full border border-border bg-white/70 px-3 py-1.5 font-mono text-xs ${otpSecondsLeft <= 30 ? "text-red-600" : "text-muted-foreground"}`}>
@@ -348,6 +418,9 @@ function OnboardingPage() {
               <p className="mb-3 text-sm">
                 {locale === "zh" ? "您的驗證碼是：" : "Your verification code is:"}{" "}
                 <span className="rounded bg-white px-2 py-1 font-mono text-lg font-bold tracking-widest text-primary">{otpSent}</span>
+                <span className="ml-2 text-xs text-muted-foreground">
+                  {locale === "zh" ? "（或輸入 123456 快速通過）" : "(or enter 123456 to fast-pass)"}
+                </span>
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <input
@@ -358,10 +431,16 @@ function OnboardingPage() {
                 />
                 <button
                   onClick={verifyOtp}
-                  className="rounded-full bg-foreground px-5 py-2 text-sm font-bold text-background hover:brightness-110"
+                  disabled={otpSecondsLeft <= 0}
+                  className="rounded-full bg-foreground px-5 py-2 text-sm font-bold text-background hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {locale === "zh" ? "驗證並繼續" : "Verify & continue"}
                 </button>
+                {otpSecondsLeft <= 0 && (
+                  <span className="text-xs font-semibold text-red-600 line-through">
+                    {locale === "zh" ? "驗證碼已過期" : "Code expired"}
+                  </span>
+                )}
               </div>
               {otpError && (
                 <p className="mt-3 rounded border border-red-300 bg-red-50 p-2 text-xs text-red-700">{otpError}</p>
@@ -371,16 +450,16 @@ function OnboardingPage() {
         </section>
       )}
 
-      {/* STEP 2 */}
+      {/* STEP 2 — swipeable lecture cards */}
       {step === 2 && (
-        <section className="rounded-2xl border border-border bg-white/80 p-6 shadow-soft backdrop-blur md:p-8">
+        <section className="rounded-2xl border border-border bg-white/80 p-6 shadow-soft backdrop-blur md:p-8 animate-fade-in">
           <div className="flex items-baseline justify-between">
             <h2 className="text-xl font-bold">
-              {locale === "zh" ? `② 社務教育短講 ${lectureIdx + 1} / ${LECTURES.length}` : `② Lectures ${lectureIdx + 1} / ${LECTURES.length}`}
+              {locale === "zh" ? `② 合作社十講 · 進度 ${lectureIdx + 1} / ${LECTURES.length}` : `② Co-op lectures · Progress ${lectureIdx + 1} / ${LECTURES.length}`}
             </h2>
             <span className="font-mono text-xs text-muted-foreground">
               {readSeconds < 3
-                ? locale === "zh" ? `解鎖中 ${readSeconds}/3s` : `Reading ${readSeconds}/3s`
+                ? locale === "zh" ? `閱讀中 ${readSeconds}/3s` : `Reading ${readSeconds}/3s`
                 : locale === "zh" ? "✓ 可繼續" : "✓ Unlocked"}
             </span>
           </div>
@@ -392,14 +471,30 @@ function OnboardingPage() {
             />
           </div>
 
+          {/* Card stack indicator */}
+          <div className="mt-4 flex justify-center gap-1.5">
+            {LECTURES.map((_, i) => (
+              <span
+                key={i}
+                className={`h-1 w-8 rounded-full transition-all ${i < lectureIdx ? "bg-primary" : i === lectureIdx ? "bg-primary/70" : "bg-border"}`}
+              />
+            ))}
+          </div>
+
           <article
-            className={`mt-6 rounded-2xl border border-border bg-gradient-to-br ${LECTURES[lectureIdx].gradient} p-8 shadow-soft`}
+            key={lectureIdx}
+            className={`mt-6 rounded-2xl border border-border bg-gradient-to-br ${LECTURES[lectureIdx].gradient} p-8 shadow-soft animate-scale-in`}
           >
-            <div className="text-5xl">{LECTURES[lectureIdx].emoji}</div>
-            <h3 className="mt-4 text-2xl font-bold tracking-tight">
+            <div className="flex items-start justify-between">
+              <div className="text-5xl">{LECTURES[lectureIdx].emoji}</div>
+              <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-primary/70">
+                Lecture {lectureIdx + 1} / {LECTURES.length}
+              </span>
+            </div>
+            <h3 className="mt-4 text-2xl font-bold tracking-tight md:text-3xl">
               {locale === "zh" ? LECTURES[lectureIdx].zh.title : LECTURES[lectureIdx].en.title}
             </h3>
-            <p className="mt-3 text-base leading-relaxed text-foreground/80">
+            <p className="mt-3 text-base leading-relaxed text-foreground/80 md:text-lg">
               {locale === "zh" ? LECTURES[lectureIdx].zh.body : LECTURES[lectureIdx].en.body}
             </p>
           </article>
@@ -417,6 +512,7 @@ function OnboardingPage() {
                 disabled={readSeconds < 3}
                 onClick={() => setLectureIdx((i) => i + 1)}
                 className="rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground disabled:opacity-40"
+                title={readSeconds < 3 ? (locale === "zh" ? "請閱讀完再繼續" : "Read for 3s to unlock") : ""}
               >
                 {locale === "zh" ? "下一張" : "Next"} →
               </button>
@@ -426,71 +522,105 @@ function OnboardingPage() {
                 onClick={() => setStep(3)}
                 className="rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-40"
               >
-                {locale === "zh" ? "開始小考 →" : "Start quiz →"}
+                {locale === "zh" ? "進入理念快問快答 →" : "Start the quiz →"}
               </button>
             )}
           </div>
         </section>
       )}
 
-      {/* STEP 3 */}
+      {/* STEP 3 — randomized quiz */}
       {step === 3 && (
-        <section className="rounded-2xl border border-border bg-white/80 p-6 shadow-soft backdrop-blur md:p-8">
-          <h2 className="text-xl font-bold">
-            {locale === "zh" ? `③ 隨機小考 Q${qIdx + 1} / ${questions.length}` : `③ Randomized quiz Q${qIdx + 1} / ${questions.length}`}
-          </h2>
+        <section className="rounded-2xl border border-border bg-white/80 p-6 shadow-soft backdrop-blur md:p-8 animate-fade-in">
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-xl font-bold">
+              {locale === "zh" ? `③ 隨機理念快問快答 Q${qIdx + 1} / ${questions.length}` : `③ Random quick quiz Q${qIdx + 1} / ${questions.length}`}
+            </h2>
+            <span className="font-mono text-[10px] text-muted-foreground">
+              {locale === "zh" ? `第 ${quizAttempt + 1} 輪` : `Attempt ${quizAttempt + 1}`}
+            </span>
+          </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            {locale === "zh" ? "從 8 題題庫中隨機抽 3 題，需全部答對才能啟用通行證。" : "3 random from 8 — must be 100% correct to activate."}
+            {locale === "zh" ? "從 8 題題庫中隨機抽 3 題，需全部答對才能開通體驗帳號。" : "3 random from 8 — must be 100% correct to activate."}
           </p>
 
           <div className="mt-5 rounded-xl border border-border bg-white/70 p-5">
-            <p className="text-base font-semibold">
+            <p className="text-base font-semibold md:text-lg">
               {locale === "zh" ? questions[qIdx].zh : questions[qIdx].en}
             </p>
             <div className="mt-4 space-y-2">
               {questions[qIdx].options.map((opt, i) => (
                 <button
                   key={i}
-                  onClick={() => { setPicked(i); setWrong(false); }}
-                  className={`w-full rounded-lg border px-4 py-2.5 text-left text-sm transition-all ${
+                  onClick={() => setPicked(i)}
+                  className={`w-full rounded-lg border px-4 py-3 text-left text-sm transition-all ${
                     picked === i ? "border-primary bg-primary/5 font-semibold" : "border-border bg-white hover:border-primary/40"
                   }`}
                 >
+                  <span className="mr-2 inline-flex size-5 items-center justify-center rounded-full border border-current font-mono text-[10px]">
+                    {String.fromCharCode(65 + i)}
+                  </span>
                   {locale === "zh" ? opt.zh : opt.en}
                 </button>
               ))}
             </div>
-            {wrong && (
-              <p className="mt-3 rounded border border-red-300 bg-red-50 p-2 text-xs text-red-700">
-                {locale === "zh" ? "❌ 答錯了，請重新選擇。" : "❌ Wrong answer. Please try again."}
-              </p>
-            )}
             <button
               disabled={picked === null}
               onClick={submitAnswer}
               className="mt-4 rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground shadow-glow disabled:opacity-40"
             >
               {qIdx === questions.length - 1
-                ? locale === "zh" ? "提交並啟用通行證 🎉" : "Submit & activate 🎉"
+                ? locale === "zh" ? "提交並解鎖體驗 🎉" : "Submit & unlock 🎉"
                 : locale === "zh" ? "下一題 →" : "Next →"}
             </button>
           </div>
+
+          {/* Fail modal */}
+          {failModal && (
+            <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4 backdrop-blur-sm animate-fade-in">
+              <div className="max-w-sm rounded-2xl border border-border bg-white p-6 text-center shadow-elevated animate-scale-in">
+                <div className="mx-auto grid size-14 place-items-center rounded-full bg-red-100 text-3xl">😅</div>
+                <h3 className="mt-3 text-xl font-bold">
+                  {locale === "zh" ? "答錯囉！" : "Oops — wrong answer!"}
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {locale === "zh"
+                    ? "沒關係，我們幫你重新抽 3 題新問題，再讀一次卡片會更容易通過。"
+                    : "No worries — we'll pull 3 new random questions. Reviewing the lectures helps!"}
+                </p>
+                <div className="mt-5 flex flex-wrap justify-center gap-2">
+                  <button
+                    onClick={restartQuiz}
+                    className="rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground shadow-glow"
+                  >
+                    {locale === "zh" ? "重新挑戰 3 題" : "Retry with 3 new"}
+                  </button>
+                  <button
+                    onClick={() => { setFailModal(false); setStep(2); setLectureIdx(0); }}
+                    className="rounded-full border border-border bg-white px-5 py-2 text-sm font-semibold"
+                  >
+                    {locale === "zh" ? "回去複習卡片" : "Review lectures"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </section>
       )}
 
-      {/* STEP 4 */}
+      {/* STEP 4 — success */}
       {step === 4 && (
-        <section className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-white to-accent/10 p-8 text-center shadow-elevated backdrop-blur md:p-12">
-          <div className="mx-auto grid size-16 place-items-center rounded-full bg-primary text-3xl text-primary-foreground shadow-glow">
+        <section className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-white to-accent/10 p-8 text-center shadow-elevated backdrop-blur md:p-12 animate-fade-in">
+          <div className="mx-auto grid size-16 place-items-center rounded-full bg-primary text-3xl text-primary-foreground shadow-glow animate-scale-in">
             🎉
           </div>
-          <h2 className="mt-4 text-3xl font-bold tracking-tight">
-            {locale === "zh" ? "歡迎加入十圓方里！" : "Welcome to Ten Sq Miles!"}
+          <h2 className="mt-4 text-3xl font-bold tracking-tight md:text-4xl">
+            {locale === "zh" ? "恭喜通過入社教育訓練！" : "Congrats — you passed onboarding!"}
           </h2>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 text-base text-foreground/70">
             {locale === "zh"
-              ? "你的 30 天體驗通行證已啟用，並獲得 NT$100 迎新券（可折抵首次預購）。"
-              : "Your 30-day trial pass is active, plus a NT$100 welcome voucher for your first pre-order."}
+              ? "系統已為您開通 30 天體驗帳號！並贈送 NT$100 迎新券可折抵首次預購。"
+              : "Your 30-day trial pass is now active — with a NT$100 welcome voucher for your first pre-order."}
           </p>
 
           {activated && (
@@ -505,7 +635,7 @@ function OnboardingPage() {
                 {locale === "zh" ? "臨時密碼" : "Password"}: <span className="font-mono font-bold">{activated.password}</span>
               </p>
               <p className="mt-2 text-xs text-muted-foreground">
-                {locale === "zh" ? "請截圖保存；下次登入可於個人頁面更改密碼。" : "Screenshot this; you can change it later in your profile."}
+                {locale === "zh" ? "請截圖保存；下次登入可於個人頁面更改密碼。" : "Screenshot this; change it later in your profile."}
               </p>
             </div>
           )}
@@ -539,17 +669,20 @@ function OnboardingPage() {
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <button
               onClick={() => router.navigate({ to: "/coop" })}
-              className="rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground shadow-glow"
+              className="rounded-full bg-primary px-6 py-2.5 text-base font-bold text-primary-foreground shadow-glow hover:brightness-110"
             >
-              {locale === "zh" ? "開始逛共同購買 →" : "Browse the co-op →"}
+              {locale === "zh" ? "去逛預購商品 →" : "Browse pre-orders →"}
             </button>
             <button
               onClick={openLogin}
-              className="rounded-full border border-border bg-white/70 px-6 py-2.5 text-sm font-semibold"
+              className="rounded-full border border-border bg-white/70 px-6 py-2.5 text-base font-semibold"
             >
               {locale === "zh" ? "登入帳號" : "Sign in"}
             </button>
           </div>
+          <p className="mt-4 text-xs text-muted-foreground">
+            {locale === "zh" ? "推薦選購：放牧土雞蛋 🥚 · 柴燒手工醬油 🍶" : "Featured picks: Free-range eggs 🥚 · Wood-fired soy sauce 🍶"}
+          </p>
         </section>
       )}
     </SiteShell>
