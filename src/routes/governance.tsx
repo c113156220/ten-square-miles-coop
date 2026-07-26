@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
+import { ClientOnly } from "@tanstack/react-router";
 import { SiteShell, PageHeader } from "@/components/site-shell";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
+
+const ProducerMapLeaflet = lazy(() => import("@/components/producer-map"));
 import producerFarmImg from "@/assets/producer-farm.jpg";
 import producerVendorImg from "@/assets/producer-vendor.jpg";
 import producerGrantImg from "@/assets/producer-grant.jpg";
@@ -459,33 +462,32 @@ type Producer = {
   support: string;
   blurb: { zh: string; en: string };
   img: string;
-  x: number; // Taiwan SVG coords in viewBox 0..100
-  y: number; // viewBox 0..140
+  lat: number;
+  lng: number;
 };
 
 const PRODUCERS: Producer[] = [
-  { id: "n1", name: { zh: "阿里山高山雞農場", en: "Alishan Highland Chicken Farm" }, region: { zh: "嘉義 阿里山", en: "Chiayi · Alishan" }, category: "farm", since: "2022", impact: { zh: "月供 3,200 顆放牧蛋", en: "3,200 pasture eggs / month" }, co2: "-1.8t CO₂/yr", support: "NT$ 480K", blurb: { zh: "海拔 1,400m 放牧養雞，飼料無抗生素，社員月月直送。", en: "1,400m free-range flock, antibiotic-free feed, monthly member delivery." }, img: producerFarmImg, x: 45, y: 82 },
-  { id: "n2", name: { zh: "花蓮青農米作坊", en: "Hualien Young Farmer Rice" }, region: { zh: "花蓮 玉里", en: "Hualien · Yuli" }, category: "farm", since: "2023", impact: { zh: "有機米 1.2 噸／季", en: "1.2t organic rice / season" }, co2: "-3.2t CO₂/yr", support: "NT$ 720K", blurb: { zh: "青農返鄉三年，玉里花東縱谷全稻田通過有機認證。", en: "Third-year returnee farmer, fully organic paddies in the Yuli valley." }, img: producerFarmImg, x: 76, y: 66 },
-  { id: "n3", name: { zh: "西螺柴燒醬園", en: "Xiluo Wood-Fired Soy" }, region: { zh: "雲林 西螺", en: "Yunlin · Xiluo" }, category: "vendor", since: "2021", impact: { zh: "傳統工法 · 零添加", en: "Traditional · zero-additive" }, co2: "-0.8t CO₂/yr", support: "NT$ 260K", blurb: { zh: "180 天日曬柴燒黑豆醬油，非基改，無防腐劑。", en: "180-day sun-fermented black bean soy, non-GMO, no preservatives." }, img: producerVendorImg, x: 38, y: 68 },
-  { id: "n4", name: { zh: "南投小農蔬菜聯盟", en: "Nantou Small-Farm Veggie Union" }, region: { zh: "南投 埔里", en: "Nantou · Puli" }, category: "farm", since: "2022", impact: { zh: "12 家農戶 · 週配", en: "12 farms · weekly" }, co2: "-2.1t CO₂/yr", support: "NT$ 540K", blurb: { zh: "埔里 12 家小農聯盟，每週配送當季葉菜到取貨點。", en: "12-farm Puli alliance, weekly seasonal greens to pickup points." }, img: producerFarmImg, x: 52, y: 62 },
-  { id: "n5", name: { zh: "東港鮮魚共漁隊", en: "Donggang Fresh Fish Co-op" }, region: { zh: "屏東 東港", en: "Pingtung · Donggang" }, category: "vendor", since: "2024", impact: { zh: "當日直送冷鏈", en: "Same-day cold chain" }, co2: "-1.4t CO₂/yr", support: "NT$ 380K", blurb: { zh: "港邊直送 8 小時內到門，公平船價、拒絕過捕。", en: "8-hour dock-to-door, fair boat pricing, no overfishing." }, img: producerVendorImg, x: 42, y: 108 },
-  { id: "n6", name: { zh: "偏鄉學童早餐計畫", en: "Rural Student Breakfast" }, region: { zh: "台東 卑南", en: "Taitung · Beinan" }, category: "grant", since: "2023", impact: { zh: "受助 128 名學童", en: "128 students supported" }, co2: "", support: "NT$ 320K", blurb: { zh: "每週 5 天為卑南國小 128 名學童供應合作社早餐。", en: "5 mornings/week co-op breakfast for 128 Beinan Elementary students." }, img: producerGrantImg, x: 66, y: 100 },
-  { id: "n7", name: { zh: "青年返鄉學農計畫", en: "Youth Farming Fellowship" }, region: { zh: "宜蘭 三星", en: "Yilan · Sanxing" }, category: "grant", since: "2024", impact: { zh: "6 位青農入駐", en: "6 young farmers onboard" }, co2: "", support: "NT$ 450K", blurb: { zh: "6 位 30 歲以下青農入駐三星蔥田，兩年培育計畫。", en: "6 sub-30 fellows join Sanxing scallion fields for a 2-year program." }, img: producerGrantImg, x: 68, y: 32 },
+  { id: "n1", name: { zh: "阿里山高山雞農場", en: "Alishan Highland Chicken Farm" }, region: { zh: "嘉義 阿里山", en: "Chiayi · Alishan" }, category: "farm", since: "2022", impact: { zh: "月供 3,200 顆放牧蛋", en: "3,200 pasture eggs / month" }, co2: "-1.8t CO₂/yr", support: "NT$ 480K", blurb: { zh: "海拔 1,400m 放牧養雞，飼料無抗生素，社員月月直送。", en: "1,400m free-range flock, antibiotic-free feed, monthly member delivery." }, img: producerFarmImg, lat: 23.5083, lng: 120.8025 },
+  { id: "n2", name: { zh: "花蓮青農米作坊", en: "Hualien Young Farmer Rice" }, region: { zh: "花蓮 玉里", en: "Hualien · Yuli" }, category: "farm", since: "2023", impact: { zh: "有機米 1.2 噸／季", en: "1.2t organic rice / season" }, co2: "-3.2t CO₂/yr", support: "NT$ 720K", blurb: { zh: "青農返鄉三年，玉里花東縱谷全稻田通過有機認證。", en: "Third-year returnee farmer, fully organic paddies in the Yuli valley." }, img: producerFarmImg, lat: 23.3352, lng: 121.3097 },
+  { id: "n3", name: { zh: "西螺柴燒醬園", en: "Xiluo Wood-Fired Soy" }, region: { zh: "雲林 西螺", en: "Yunlin · Xiluo" }, category: "vendor", since: "2021", impact: { zh: "傳統工法 · 零添加", en: "Traditional · zero-additive" }, co2: "-0.8t CO₂/yr", support: "NT$ 260K", blurb: { zh: "180 天日曬柴燒黑豆醬油，非基改，無防腐劑。", en: "180-day sun-fermented black bean soy, non-GMO, no preservatives." }, img: producerVendorImg, lat: 23.7970, lng: 120.4650 },
+  { id: "n4", name: { zh: "南投小農蔬菜聯盟", en: "Nantou Small-Farm Veggie Union" }, region: { zh: "南投 埔里", en: "Nantou · Puli" }, category: "farm", since: "2022", impact: { zh: "12 家農戶 · 週配", en: "12 farms · weekly" }, co2: "-2.1t CO₂/yr", support: "NT$ 540K", blurb: { zh: "埔里 12 家小農聯盟，每週配送當季葉菜到取貨點。", en: "12-farm Puli alliance, weekly seasonal greens to pickup points." }, img: producerFarmImg, lat: 23.9650, lng: 120.9670 },
+  { id: "n5", name: { zh: "東港鮮魚共漁隊", en: "Donggang Fresh Fish Co-op" }, region: { zh: "屏東 東港", en: "Pingtung · Donggang" }, category: "vendor", since: "2024", impact: { zh: "當日直送冷鏈", en: "Same-day cold chain" }, co2: "-1.4t CO₂/yr", support: "NT$ 380K", blurb: { zh: "港邊直送 8 小時內到門，公平船價、拒絕過捕。", en: "8-hour dock-to-door, fair boat pricing, no overfishing." }, img: producerVendorImg, lat: 22.4667, lng: 120.4500 },
+  { id: "n6", name: { zh: "偏鄉學童早餐計畫", en: "Rural Student Breakfast" }, region: { zh: "台東 卑南", en: "Taitung · Beinan" }, category: "grant", since: "2023", impact: { zh: "受助 128 名學童", en: "128 students supported" }, co2: "", support: "NT$ 320K", blurb: { zh: "每週 5 天為卑南國小 128 名學童供應合作社早餐。", en: "5 mornings/week co-op breakfast for 128 Beinan Elementary students." }, img: producerGrantImg, lat: 22.7838, lng: 121.0870 },
+  { id: "n7", name: { zh: "青年返鄉學農計畫", en: "Youth Farming Fellowship" }, region: { zh: "宜蘭 三星", en: "Yilan · Sanxing" }, category: "grant", since: "2024", impact: { zh: "6 位青農入駐", en: "6 young farmers onboard" }, co2: "", support: "NT$ 450K", blurb: { zh: "6 位 30 歲以下青農入駐三星蔥田，兩年培育計畫。", en: "6 sub-30 fellows join Sanxing scallion fields for a 2-year program." }, img: producerGrantImg, lat: 24.6702, lng: 121.6600 },
 ];
-
-// Simplified but recognizable Taiwan silhouette (sweet-potato shape)
-const TAIWAN_PATH =
-  "M55 6 C 66 8 74 18 78 32 C 82 46 82 60 80 74 C 78 88 74 100 66 112 C 58 122 50 128 42 128 C 34 128 30 122 30 112 C 30 100 32 88 34 76 C 34 66 32 56 34 46 C 36 34 42 22 48 14 C 51 10 53 7 55 6 Z";
 
 function ProducerMap() {
   const { locale } = useI18n();
-  const [hover, setHover] = useState<string | null>(null);
   const [active, setActive] = useState<string>("n1");
   const activeP = PRODUCERS.find((p) => p.id === active) ?? PRODUCERS[0];
-  const hoverP = hover ? PRODUCERS.find((p) => p.id === hover) : null;
 
   const color = (c: Producer["category"]) =>
     c === "farm" ? "bg-primary" : c === "vendor" ? "bg-accent" : "bg-fuchsia-500";
+
+  const mapProducers = useMemo(
+    () => PRODUCERS.map((p) => ({ id: p.id, name: p.name[locale], region: p.region[locale], category: p.category, lat: p.lat, lng: p.lng })),
+    [locale],
+  );
 
   return (
     <section id="producers" className="space-y-6">
@@ -500,84 +502,27 @@ function ProducerMap() {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
-        <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-primary/5 via-white to-accent/5 shadow-soft">
-          <div className="absolute inset-0 bg-tech-grid opacity-40" />
-          <svg viewBox="0 0 100 140" className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid meet">
-            <defs>
-              <linearGradient id="tw-fill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="rgba(16,185,129,0.14)" />
-                <stop offset="100%" stopColor="rgba(6,182,212,0.10)" />
-              </linearGradient>
-            </defs>
-            <path
-              d={TAIWAN_PATH}
-              fill="url(#tw-fill)"
-              stroke="rgba(16,185,129,0.55)"
-              strokeWidth="0.6"
-              strokeLinejoin="round"
-            />
-            {/* Central mountain range hint */}
-            <path
-              d="M55 20 C 58 40 60 60 58 80 C 56 96 52 110 48 122"
-              fill="none"
-              stroke="rgba(16,185,129,0.25)"
-              strokeWidth="0.35"
-              strokeDasharray="1 1.5"
-            />
-          </svg>
-
-          {PRODUCERS.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => setActive(p.id)}
-              onMouseEnter={() => setHover(p.id)}
-              onMouseLeave={() => setHover((h) => (h === p.id ? null : h))}
-              className="absolute -translate-x-1/2 -translate-y-1/2"
-              style={{ left: `${p.x}%`, top: `${(p.y / 140) * 100}%` }}
-              aria-label={p.name[locale]}
-            >
-              <span className="relative flex">
-                <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-40 ${color(p.category)}`} />
-                <span
-                  className={`relative grid size-4 place-items-center rounded-full border-2 border-white shadow-md transition-transform ${color(p.category)} ${
-                    active === p.id ? "scale-150" : "hover:scale-125"
-                  }`}
-                />
-              </span>
-            </button>
-          ))}
-
-          {/* Hover popover */}
-          {hoverP && (
-            <div
-              className="pointer-events-none absolute z-20 w-56 -translate-x-1/2 -translate-y-full rounded-xl border border-border bg-white/95 p-3 shadow-elevated backdrop-blur"
-              style={{ left: `${hoverP.x}%`, top: `calc(${(hoverP.y / 140) * 100}% - 14px)` }}
-            >
-              <div className="flex gap-2">
-                <img
-                  src={hoverP.img}
-                  alt={hoverP.name[locale]}
-                  loading="lazy"
-                  width={64}
-                  height={64}
-                  className="size-14 shrink-0 rounded-lg object-cover"
-                />
-                <div className="min-w-0">
-                  <p className="truncate text-xs font-bold">{hoverP.name[locale]}</p>
-                  <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{hoverP.region[locale]}</p>
-                  <p className="mt-0.5 text-[10px] font-semibold text-primary">{hoverP.support}{hoverP.co2 ? ` · ${hoverP.co2}` : ""}</p>
-                </div>
+        <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
+          <ClientOnly
+            fallback={
+              <div className="grid h-full w-full place-items-center bg-gradient-to-br from-primary/5 to-accent/5">
+                <p className="font-mono text-xs text-muted-foreground">
+                  {locale === "zh" ? "地圖載入中…" : "Loading map…"}
+                </p>
               </div>
-              <p className="mt-2 line-clamp-2 text-[11px] leading-snug text-muted-foreground">{hoverP.blurb[locale]}</p>
-            </div>
-          )}
+            }
+          >
+            <Suspense fallback={<div className="h-full w-full bg-surface" />}>
+              <ProducerMapLeaflet producers={mapProducers} activeId={active} onSelect={setActive} />
+            </Suspense>
+          </ClientOnly>
 
-          <div className="absolute bottom-3 left-3 flex flex-wrap gap-2 rounded-lg border border-border bg-white/80 p-2 font-mono text-[10px] backdrop-blur">
+          <div className="pointer-events-none absolute bottom-3 left-3 z-[500] flex flex-wrap gap-2 rounded-lg border border-border bg-white/90 p-2 font-mono text-[10px] backdrop-blur">
             <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-primary" />{locale === "zh" ? "農場" : "Farm"}</span>
             <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-accent" />{locale === "zh" ? "職人" : "Vendor"}</span>
             <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-fuchsia-500" />{locale === "zh" ? "公益" : "Grant"}</span>
           </div>
-          <span className="absolute right-3 top-3 rounded-full border border-border bg-white/80 px-2.5 py-1 font-mono text-[10px] font-bold backdrop-blur">
+          <span className="pointer-events-none absolute right-3 top-3 z-[500] rounded-full border border-border bg-white/90 px-2.5 py-1 font-mono text-[10px] font-bold backdrop-blur">
             🇹🇼 Taiwan
           </span>
         </div>
