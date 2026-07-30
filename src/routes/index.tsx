@@ -57,7 +57,7 @@ function Hero() {
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
             <Link
-              to="/register"
+              to="/onboarding"
               className="inline-flex items-center gap-2 rounded-full border border-border bg-white/80 px-6 py-3 font-semibold text-foreground shadow-soft transition-all hover:shadow-elevated"
             >
               {t("hero.cta.join")}
@@ -217,7 +217,13 @@ function ActivePreorders() {
 function GuestModulesGrid() {
   const { t, locale } = useI18n();
   const cards = [
-    { to: "/onboarding" as const, title: locale === "zh" ? "會員教育啟蒙" : "Member Onboarding", sub: locale === "zh" ? "4 步驟解鎖 30 天通行證＋NT$100 迎新券" : "4-step activation → 30-day pass + NT$100 voucher", badge: "NEW" },
+    {
+      to: "/onboarding" as const,
+      title: locale === "zh" ? "會員教育啟蒙" : "Member Onboarding",
+      sub: locale === "zh" ? "4 步驟解鎖 30 天通行證＋NT$100 迎新券" : "4-step activation → 30-day pass + NT$100 voucher",
+      badge: "NEW",
+      cta: locale === "zh" ? "立即體驗" : "Start trial",
+    },
     { to: "/calculator" as const, title: t("nav.calculator"), sub: locale === "zh" ? "算算成為社員每年能拿回多少" : "See your annual surplus return" },
     { to: "/wishlist" as const, title: t("nav.wishlist"), sub: locale === "zh" ? "為想要的商品集氣 +1" : "+1 the products you want sourced" },
     { to: "/impact" as const, title: t("nav.impact"), sub: locale === "zh" ? "公積金與環境影響的公開帳目" : "Public ledger of reserve fund & impact" },
@@ -248,9 +254,16 @@ function GuestModulesGrid() {
               <h3 className="text-lg font-semibold tracking-tight">{c.title}</h3>
               <p className="mt-1 text-sm text-muted-foreground">{c.sub}</p>
             </div>
-            <span className="mt-6 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-primary transition-transform group-hover:translate-x-1">
-              Explore <ArrowRight className="size-3" />
-            </span>
+            {"cta" in c ? (
+              <span className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-glow transition-transform group-hover:translate-x-1">
+                {c.cta}
+                <ArrowRight className="size-3" />
+              </span>
+            ) : (
+              <span className="mt-6 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-primary transition-transform group-hover:translate-x-1">
+                Explore <ArrowRight className="size-3" />
+              </span>
+            )}
           </Link>
         ))}
       </div>

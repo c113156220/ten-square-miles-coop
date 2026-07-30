@@ -222,6 +222,52 @@ function MembersPage() {
         </p>
       </header>
 
+      <section className="rounded-md border border-border bg-white p-5">
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-bold">會員文件審核</h2>
+            <p className="mt-1 text-sm text-muted-foreground">逐筆檢視學生證與身分證影本，並同步判斷付款與入社資格。</p>
+          </div>
+          <span className="rounded-full bg-accent/10 px-3 py-1 text-[10px] font-bold uppercase text-accent">
+            {pending.length} pending
+          </span>
+        </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          {pending.map((p) => (
+            <div key={p.id} className="rounded border border-border bg-stone-50 p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-semibold">{p.name}</p>
+                  <p className="font-mono text-[11px] text-muted-foreground">{p.id}</p>
+                </div>
+                <button
+                  onClick={() => approve(p)}
+                  disabled={!((p.idOk && p.payOk && p.eduOk))}
+                  className="rounded-sm bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-40"
+                >
+                  {approved[p.id] ? "已核准" : "核准入社"}
+                </button>
+              </div>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                <div className="rounded border border-dashed border-border bg-white p-3">
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Student ID</p>
+                  <div className="mt-2 h-20 rounded bg-stone-100" />
+                </div>
+                <div className="rounded border border-dashed border-border bg-white p-3">
+                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">ID Card</p>
+                  <div className="mt-2 h-20 rounded bg-stone-100" />
+                </div>
+              </div>
+              <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+                <span>付款 {p.payOk ? "✓" : "待補"}</span>
+                <span>學生證 {p.eduOk ? "✓" : "待補"}</span>
+                <span>身分證 {p.idOk ? "✓" : "待補"}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className="rounded-md border border-border bg-white">
         <div className="border-b border-border p-5">
           <h2 className="text-lg font-bold">{t("mem.queue")}</h2>

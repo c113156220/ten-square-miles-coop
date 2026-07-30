@@ -202,7 +202,7 @@ function WishlistPage() {
                       {t("wish.ready")}
                     </p>
                     <p className="mt-1 text-muted-foreground">{t("wish.join")}</p>
-                    <Link to="/register" className="mt-2 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-primary hover:underline">
+                    <Link to="/onboarding" className="mt-2 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-primary hover:underline">
                       {t("hero.cta.join")} <ArrowRight className="size-3" />
                     </Link>
                   </div>
@@ -232,7 +232,7 @@ function WishlistPage() {
           </p>
           <div className="mt-5 flex flex-col gap-2 sm:flex-row">
             <Link
-              to="/register"
+              to="/onboarding"
               className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow transition-all hover:brightness-110"
               onClick={() => setNudgeOpen(false)}
             >

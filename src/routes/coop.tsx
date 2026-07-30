@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { SiteShell, PageHeader } from "@/components/site-shell";
+import { CheckoutModal } from "@/components/CheckoutModal";
 import eggsImg from "@/assets/product-eggs.jpg";
 import soyImg from "@/assets/product-soysauce.jpg";
 import vegImg from "@/assets/product-veggies.jpg";
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/coop")({
 });
 
 type Stage = 1 | 2 | 3;
+type TempType = "cold" | "ambient";
 type Campaign = {
   img: string;
   name: { zh: string; en: string };
@@ -31,6 +33,7 @@ type Campaign = {
   memberPrice: number;
   regularPrice: number;
   taxExempt: boolean;
+  tempType: TempType;
   // stage 1
   intentResponses?: number;
   intentTarget?: number;
@@ -54,6 +57,7 @@ const CAMPAIGNS: Campaign[] = [
     memberPrice: 320,
     regularPrice: 420,
     taxExempt: false,
+    tempType: "ambient",
     intentResponses: 68,
     intentTarget: 120,
   },
@@ -65,6 +69,7 @@ const CAMPAIGNS: Campaign[] = [
     memberPrice: 180,
     regularPrice: 240,
     taxExempt: true,
+    tempType: "cold",
     ordered: 142,
     threshold: 200,
     deposit: 180,
@@ -79,6 +84,7 @@ const CAMPAIGNS: Campaign[] = [
     memberPrice: 480,
     regularPrice: 620,
     taxExempt: true,
+    tempType: "cold",
     fulfillStep: 1,
     pickupDate: "2026.07.31 (Fri)",
   },
@@ -144,8 +150,10 @@ function DualPrice({ member, regular, exempt, locale }: {
   );
 }
 
-function CampaignCard({ c }: { c: Campaign }) {
+function CampaignCard({ c, onAddToCart }: { c: Campaign; onAddToCart: (campaign: Campaign) => void }) {
   const { locale } = useI18n();
+  const tempLabel = c.tempType === "cold" ? (locale === "zh" ? "冷鏈" : "Cold chain") : locale === "zh" ? "常溫" : "Ambient";
+
   return (
     <article className="flex flex-col gap-4 rounded-md border border-border bg-white p-4 shadow-sm">
       <div className="relative overflow-hidden rounded">
@@ -164,6 +172,14 @@ function CampaignCard({ c }: { c: Campaign }) {
         <p className="text-xs text-muted-foreground">{c.vendor[locale]}</p>
       </div>
       <StageBar stage={c.stage} locale={locale} />
+      <div className="flex items-center justify-between rounded border border-black/5 bg-stone-50 px-3 py-2 text-xs">
+        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+          {locale === "zh" ? "配送層級" : "Handling"}
+        </span>
+        <span className={`rounded-full px-2 py-0.5 font-bold ${c.tempType === "cold" ? "bg-primary/10 text-primary" : "bg-stone-200 text-muted-foreground"}`}>
+          {tempLabel}
+        </span>
+      </div>
       <DualPrice member={c.memberPrice} regular={c.regularPrice} exempt={c.taxExempt} locale={locale} />
 
       {c.stage === 1 && (
@@ -231,6 +247,13 @@ function CampaignCard({ c }: { c: Campaign }) {
           <p className="font-mono text-sm">{c.pickupDate}</p>
         </div>
       )}
+
+      <button
+        onClick={() => onAddToCart(c)}
+        className="rounded-sm bg-primary px-3 py-2 text-sm font-bold text-primary-foreground hover:brightness-110"
+      >
+        {locale === "zh" ? "加入購物車" : "Add to cart"}
+      </button>
     </article>
   );
 }
@@ -371,7 +394,7 @@ function NonMemberNudge() {
           : "🎯 Become a member today to unlock co-op pricing and earn annual surplus rebates."}
       </span>
       <a
-        href="/register"
+        href="/onboarding"
         className="self-start rounded-sm bg-accent px-4 py-2 text-xs font-bold text-accent-foreground hover:brightness-110"
       >
         {locale === "zh" ? "入社申請" : "Apply now"}
@@ -380,8 +403,126 @@ function NonMemberNudge() {
   );
 }
 
+type CartItem = { id: string; name: string; price: number; tempType: TempType };
+
+function CartCheckoutPanel({
+  cart,
+  checkoutMessage,
+  onCheckout,
+  onClear,
+}: {
+  cart: CartItem[];
+  checkoutMessage: string | null;
+  onCheckout: () => void;
+  onClear: () => void;
+}) {
+  const { locale } = useI18n();
+  const mixed = cart.some((item) => item.tempType === "cold") && cart.some((item) => item.tempType === "ambient");
+  const total = cart.reduce((sum, item) => sum + item.price, 0);
+
+  return (
+    <section className="mb-16 rounded-md border border-border bg-white p-6 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-extrabold">{locale === "zh" ? "結帳示範" : "Checkout demo"}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {locale === "zh"
+              ? "加入購物車後，若混合冷鏈與常溫商品，系統會提示你分開安排取貨。"
+              : "If cold-chain and ambient items are combined, the demo warns you to separate pickup handling."}
+          </p>
+        </div>
+        <div className="rounded-full bg-stone-100 px-3 py-1 font-mono text-xs font-bold text-muted-foreground">
+          {cart.length} {locale === "zh" ? "項" : "items"}
+        </div>
+      </div>
+
+      {cart.length === 0 ? (
+        <p className="mt-5 rounded border border-dashed border-border p-4 text-sm text-muted-foreground">
+          {locale === "zh" ? "先加入一個商品，看看結帳警示。" : "Add an item to see the checkout warning."}
+        </p>
+      ) : (
+        <div className="mt-5 space-y-3">
+          {cart.map((item) => (
+            <div key={item.id} className="flex items-center justify-between rounded border border-border bg-stone-50 px-3 py-2 text-sm">
+              <div>
+                <p className="font-semibold">{item.name}</p>
+                <p className="text-[11px] uppercase tracking-widest text-muted-foreground">{item.tempType === "cold" ? "Cold chain" : "Ambient"}</p>
+              </div>
+              <span className="font-mono font-bold">${item.price}</span>
+            </div>
+          ))}
+          <div className="flex items-center justify-between rounded border border-primary/20 bg-primary/5 px-3 py-3 text-sm">
+            <span>{locale === "zh" ? "小計" : "Subtotal"}</span>
+            <span className="font-mono font-extrabold">${total}</span>
+          </div>
+        </div>
+      )}
+
+      {mixed && (
+        <div className="mt-4 rounded border border-accent/30 bg-accent/10 p-3 text-sm text-accent">
+          ⚠️ {locale === "zh" ? "偵測到混溫訂單，將分成冷鏈與常溫兩段取貨。" : "Mixed-temperature order detected. Pickup will be split into cold-chain and ambient handling."}
+        </div>
+      )}
+
+      {checkoutMessage && (
+        <div className="mt-4 rounded border border-primary/20 bg-primary/5 p-3 text-sm text-primary">
+          ✓ {checkoutMessage}
+        </div>
+      )}
+
+      <div className="mt-5 flex flex-wrap gap-3">
+        <button
+          onClick={onCheckout}
+          disabled={cart.length === 0}
+          className="rounded-sm bg-primary px-4 py-2 text-sm font-bold text-primary-foreground disabled:opacity-40"
+        >
+          {locale === "zh" ? "提交結帳" : "Submit checkout"}
+        </button>
+        <button
+          onClick={onClear}
+          className="rounded-sm border border-border bg-white px-4 py-2 text-sm font-semibold hover:bg-stone-100"
+        >
+          {locale === "zh" ? "清空購物車" : "Clear cart"}
+        </button>
+      </div>
+    </section>
+  );
+}
+
 function CoopPage() {
   const { locale } = useI18n();
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [checkoutMessage, setCheckoutMessage] = useState<string | null>(null);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(1280);
+
+  function addToCart(campaign: Campaign) {
+    setCart((prev) => [
+      ...prev,
+      {
+        id: `${campaign.name.en}-${Date.now()}`,
+        name: campaign.name[locale],
+        price: campaign.memberPrice,
+        tempType: campaign.tempType,
+      },
+    ]);
+    setCheckoutMessage(null);
+  }
+
+  function handleCheckout() {
+    if (cart.length === 0) return;
+    const mixed = cart.some((item) => item.tempType === "cold") && cart.some((item) => item.tempType === "ambient");
+    setCheckoutMessage(
+      mixed
+        ? locale === "zh"
+          ? "已建立混溫配送提醒，將分別安排行程。"
+          : "Mixed-temperature checkout logged. Pickup will be split into separate lanes."
+        : locale === "zh"
+          ? "結帳成立，冷鏈商品將由合作社協助安排。"
+          : "Checkout confirmed. Cold-chain items will be routed through the co-op handling team.",
+    );
+  }
+
   return (
     <SiteShell>
       <PageHeader
@@ -399,9 +540,30 @@ function CoopPage() {
 
       <section className="mb-16 grid gap-6 md:grid-cols-3">
         {CAMPAIGNS.map((c) => (
-          <CampaignCard key={c.name.en} c={c} />
+          <CampaignCard key={c.name.en} c={c} onAddToCart={addToCart} />
         ))}
       </section>
+
+      <CartCheckoutPanel
+        cart={cart}
+        checkoutMessage={checkoutMessage}
+        onCheckout={handleCheckout}
+        onOpenCheckout={() => setCheckoutOpen(true)}
+        onClear={() => {
+          setCart([]);
+          setCheckoutMessage(null);
+        }}
+      />
+
+      <CheckoutModal
+        open={checkoutOpen}
+        onClose={() => setCheckoutOpen(false)}
+        cart={cart}
+        walletBalance={walletBalance}
+        onWalletDebit={(amount) => setWalletBalance((balance) => Math.max(0, balance - amount))}
+        onPaid={(message) => setCheckoutMessage(message)}
+        ecpayEndpoint={import.meta.env.VITE_ECPAY_CHECKOUT_URL ?? "http://localhost:54321/functions/v1/ecpay-checkout"}
+      />
 
       <WishlistPromo />
       <EcoCheckoutStrip />

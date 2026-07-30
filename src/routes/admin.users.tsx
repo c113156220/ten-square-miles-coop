@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import {
   useAuth,
@@ -8,6 +8,7 @@ import {
   trialExpiryDate,
   type AuthUser,
 } from "@/lib/auth";
+import { listSupportThreads, type SupportThread } from "@/lib/support-chat";
 
 export const Route = createFileRoute("/admin/users")({
   component: UsersDirectoryPage,
@@ -42,6 +43,19 @@ function UsersDirectoryPage() {
   const { users } = useAuth();
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
+  const [supportThreads, setSupportThreads] = useState<SupportThread[]>([]);
+
+  useEffect(() => {
+    setSupportThreads(listSupportThreads());
+    const onStorage = () => setSupportThreads(listSupportThreads());
+    const onUpdate = () => setSupportThreads(listSupportThreads());
+    window.addEventListener("storage", onStorage);
+    window.addEventListener("tsm-support-chat-updated", onUpdate);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      window.removeEventListener("tsm-support-chat-updated", onUpdate);
+    };
+  }, []);
 
   const filtered = useMemo(() => {
     return users.filter((u) => {
@@ -178,6 +192,49 @@ function UsersDirectoryPage() {
               )}
             </tbody>
           </table>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-border bg-white shadow-soft">
+        <div className="border-b border-border px-5 py-4">
+          <h2 className="text-lg font-bold">{locale === "zh" ? "AI客服與聊天紀錄" : "AI support conversation logs"}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {locale === "zh" ? "後台可查看使用者與 AI客服 / 聊天機器人的完整詢問過程。" : "Admins can review the full AI support and chatbot conversation history."}
+          </p>
+        </div>
+        <div className="grid gap-4 p-5 lg:grid-cols-2">
+          {supportThreads.length === 0 ? (
+            <p className="rounded-2xl border border-dashed border-border p-5 text-sm text-muted-foreground lg:col-span-2">
+              {locale === "zh" ? "目前還沒有客服對話紀錄。" : "No support conversations have been logged yet."}
+            </p>
+          ) : (
+            supportThreads.map((thread) => (
+              <article key={thread.id} className="rounded-2xl border border-border bg-surface/40 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold">{thread.userName}</p>
+                    <p className="font-mono text-[11px] text-muted-foreground">{thread.userEmail}</p>
+                  </div>
+                  <span className="rounded-full bg-primary/10 px-2.5 py-1 font-mono text-[10px] font-bold uppercase text-primary">
+                    {thread.mode === "ai" ? "AI客服" : "Bot"}
+                  </span>
+                </div>
+                <div className="mt-3 space-y-2">
+                  {thread.messages.slice(-4).map((message) => (
+                    <div
+                      key={message.id}
+                      className={`rounded-xl px-3 py-2 text-sm ${message.role === "user" ? "bg-white" : "bg-primary/5 text-primary"}`}
+                    >
+                      <span className="mr-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                        {message.role === "user" ? "User" : "AI"}
+                      </span>
+                      {message.text}
+                    </div>
+                  ))}
+                </div>
+              </article>
+            ))
+          )}
         </div>
       </section>
     </div>

@@ -4,12 +4,15 @@ import { useI18n, type Locale } from "@/lib/i18n";
 import { Sparkles, ShoppingBag, Landmark } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { TrialBadge } from "@/components/auth-modals";
+import { AiSupportWidget } from "@/components/ai-support";
 
 type NavItem = { to: string; label: { zh: string; en: string } };
 
 const STORE_NAV: NavItem[] = [
   { to: "/", label: { zh: "共同購買", en: "Shop" } },
   { to: "/coop", label: { zh: "共購流程", en: "Co-op Buying" } },
+  { to: "/member-center", label: { zh: "會員中心", en: "Member Center" } },
+  { to: "/orders", label: { zh: "訂單紀錄", en: "Orders" } },
   { to: "/wishlist", label: { zh: "願望清單", en: "Wishlist" } },
   { to: "/calculator", label: { zh: "分紅試算", en: "Calculator" } },
 ];
@@ -17,7 +20,7 @@ const STORE_NAV: NavItem[] = [
 const GOVERNANCE_NAV: NavItem[] = [
   { to: "/governance", label: { zh: "社務大廳", en: "Governance" } },
   { to: "/impact", label: { zh: "社會影響力", en: "Impact" } },
-  { to: "/register", label: { zh: "註冊入社", en: "Register" } },
+  { to: "/onboarding", label: { zh: "註冊入社", en: "Register" } },
 ];
 
 function LangSwitch({ locale, setLocale }: { locale: Locale; setLocale: (l: Locale) => void }) {
@@ -73,7 +76,7 @@ export function SiteNav() {
   const { user, isAdmin, openLogin, logout } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const mode: "store" | "governance" =
-    pathname.startsWith("/governance") || pathname.startsWith("/impact") || pathname.startsWith("/register")
+    pathname.startsWith("/governance") || pathname.startsWith("/impact") || pathname.startsWith("/onboarding")
       ? "governance"
       : "store";
   const items = mode === "governance" ? GOVERNANCE_NAV : STORE_NAV;
@@ -100,7 +103,7 @@ export function SiteNav() {
                 to={item.to}
                 activeOptions={{ exact: true }}
                 activeProps={{ className: "bg-surface text-foreground" }}
-                className="rounded-full px-3 py-1.5 text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
+                className="whitespace-nowrap rounded-full px-3 py-1.5 text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
               >
                 {item.label[locale]}
               </Link>
@@ -196,6 +199,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
       <SiteNav />
       <main className="mx-auto max-w-7xl px-4 py-12">{children}</main>
       <SiteFooter />
+      <AiSupportWidget />
     </div>
   );
 }

@@ -85,7 +85,7 @@ export function LoginModal() {
           </button>
           <p className="text-center text-xs text-muted-foreground">
             No account?{" "}
-            <Link to="/register" onClick={closeLogin} className="font-bold text-primary hover:underline">
+            <Link to="/onboarding" onClick={closeLogin} className="font-bold text-primary hover:underline">
               Register here
             </Link>
           </p>
@@ -225,7 +225,7 @@ export function ExpiredTrialOverlay() {
         <div className="mt-5 flex flex-col gap-2">
           <button
             onClick={() => {
-              router.navigate({ to: "/register" });
+              router.navigate({ to: "/onboarding" });
             }}
             className="w-full rounded-full bg-primary py-2.5 text-sm font-bold text-primary-foreground hover:brightness-110"
           >

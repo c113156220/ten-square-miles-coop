@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/admin/finance")({
@@ -22,6 +23,7 @@ const taxable = [
 
 function FinancePage() {
   const { t } = useI18n();
+  const [exported, setExported] = useState(false);
   const warn = ratio >= cap * 0.8;
   return (
     <div className="space-y-8">
@@ -35,6 +37,23 @@ function FinancePage() {
       <section
         className={`rounded-md border p-6 ${warn ? "border-accent/40 bg-accent/5" : "border-border bg-white"}`}
       >
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold">財務報表示範</h2>
+            <p className="mt-1 text-sm text-muted-foreground">可切換到匯出狀態，讓主管更容易理解報表流程與文件交付節奏。</p>
+          </div>
+          <button
+            onClick={() => setExported((prev) => !prev)}
+            className="rounded-sm bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"
+          >
+            {exported ? "已匯出報表" : "匯出示範報表"}
+          </button>
+        </div>
+        {exported && (
+          <div className="mb-4 rounded border border-primary/20 bg-primary/5 p-3 text-sm text-primary">
+            ✓ 2026-07-29 已產出 PDF 與 CSV 匯出檔，供審核會議使用。
+          </div>
+        )}
         <div className="flex items-baseline justify-between">
           <h2 className="text-lg font-bold">{t("fin.cap")}</h2>
           <span className="font-mono text-2xl font-extrabold">{ratio}%</span>

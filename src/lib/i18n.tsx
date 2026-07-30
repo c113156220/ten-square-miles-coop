@@ -287,7 +287,7 @@ export const dict = {
   // Roles / user types
   "user.role.admin": { zh: "管理員", en: "Admin" },
   "user.role.member": { zh: "正式社員", en: "Verified Member" },
-  "user.role.trial": { zh: "體驗非社員", en: "Guest / Trial" },
+  "user.role.trial": { zh: "體驗社員", en: "Guest / Trial" },
 
   // Universal directory
   "users.title": { zh: "全體註冊使用者總表", en: "All Registered Users Directory" },

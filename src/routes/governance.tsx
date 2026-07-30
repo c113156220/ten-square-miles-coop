@@ -209,7 +209,7 @@ function VotingWall() {
                 : "Join as a verified member to cast your vote and influence our co-op's decisions."}
             </p>
             <a
-              href="/register"
+              href="/onboarding"
               className="mt-5 block rounded-full bg-foreground py-2.5 text-center text-sm font-semibold text-background hover:shadow-elevated"
             >
               {locale === "zh" ? "立即註冊入社" : "Register as member"}
@@ -681,7 +681,7 @@ function EventsBoard() {
     <section id="events" className="space-y-6">
       <div>
         <p className="font-mono text-[10px] uppercase tracking-widest text-accent">05 · Workshops & Events</p>
-        <h2 className="mt-1 text-3xl font-bold tracking-tight">
+        <h2 className="mt-1 whitespace-nowrap text-2xl font-bold tracking-tight md:text-3xl">
           {locale === "zh" ? "社員專屬社務活動" : "Co-op Events & Tasting Workshops"}
         </h2>
         <p className="text-sm text-muted-foreground">
@@ -786,6 +786,7 @@ function GovernancePage() {
       { id: "meetings", icon: FileText, label: { zh: "會議紀錄", en: "Meetings" } },
       { id: "producers", icon: MapPin, label: { zh: "小農地圖", en: "Producer Map" } },
       { id: "events", icon: CalendarDays, label: { zh: "社務活動", en: "Events" } },
+      { id: "wishes", icon: Sparkles, label: { zh: "社員許願", en: "Member Wishes" } },
     ],
     [],
   );
@@ -824,7 +825,122 @@ function GovernancePage() {
         <MeetingHub />
         <ProducerMap />
         <EventsBoard />
+        <MemberWishBoard />
       </div>
     </SiteShell>
+  );
+}
+
+function MemberWishBoard() {
+  const { locale } = useI18n();
+  const { user, openLogin } = useAuth();
+  const isMember = user?.role === "member" || user?.role === "admin";
+  const [title, setTitle] = useState("");
+  const [detail, setDetail] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  const wishes = [
+    { title: { zh: "低醣餐盒", en: "Low-carb bento" }, votes: 148, state: { zh: "提案中", en: "In review" } },
+    { title: { zh: "冷泡茶組合", en: "Cold brew tea set" }, votes: 96, state: { zh: "蒐集需求", en: "Gathering interest" } },
+    { title: { zh: "在地水果箱", en: "Seasonal fruit box" }, votes: 84, state: { zh: "待上架", en: "Queued" } },
+  ];
+
+  return (
+    <section id="wishes" className="space-y-6">
+      <div>
+        <p className="font-mono text-[10px] uppercase tracking-widest text-accent">06 · Member Wishes</p>
+        <h2 className="mt-1 text-3xl font-bold tracking-tight">
+          {locale === "zh" ? "社員許願提案區" : "Member wish submission"}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          {locale === "zh" ? "比照許願清單，社員可直接提出希望導入的商品或活動。" : "Members can submit products or events they want the co-op to source."}
+        </p>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[1fr_1.1fr]">
+        <section className="rounded-2xl border border-border bg-white/80 p-5 shadow-soft backdrop-blur">
+          {isMember ? (
+            <form
+              className="space-y-4"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (!title.trim() || !detail.trim()) return;
+                setSubmitted(true);
+              }}
+            >
+              <div>
+                <h3 className="text-lg font-bold">{locale === "zh" ? "提出新許願" : "Submit a wish"}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {locale === "zh" ? "把你想要的商品、活動或合作提案寫下來，會進入共購評估流程。" : "Write the item, event, or collaboration you want to see next."}
+                </p>
+              </div>
+
+              <label className="block">
+                <span className="mb-1 block text-xs font-bold text-muted-foreground">{locale === "zh" ? "願望標題" : "Wish title"}</span>
+                <input
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+                  placeholder={locale === "zh" ? "例如：小農鮮奶優格" : "e.g. Local yogurt"}
+                />
+              </label>
+
+              <label className="block">
+                <span className="mb-1 block text-xs font-bold text-muted-foreground">{locale === "zh" ? "說明" : "Detail"}</span>
+                <textarea
+                  value={detail}
+                  onChange={(event) => setDetail(event.target.value)}
+                  rows={4}
+                  className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+                  placeholder={locale === "zh" ? "說明想要的規格、預估數量或希望開團的時間" : "Add specs, quantity, or preferred campaign timing"}
+                />
+              </label>
+
+              {submitted ? (
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-sm text-primary">
+                  ✓ {locale === "zh" ? "許願已送出，將進入提案池。" : "Wish submitted and added to the proposal pool."}
+                </div>
+              ) : null}
+
+              <button className="rounded-full bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-soft hover:brightness-110">
+                {locale === "zh" ? "送出許願" : "Send wish"}
+              </button>
+            </form>
+          ) : (
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold">{locale === "zh" ? "登入後可許願" : "Login to submit wishes"}</h3>
+              <p className="text-sm text-muted-foreground">
+                {locale === "zh" ? "只有正式社員與管理員可以送出提案。" : "Only verified members and admins can submit proposals."}
+              </p>
+              <button onClick={openLogin} className="rounded-full bg-foreground px-5 py-2.5 text-sm font-bold text-background">
+                {locale === "zh" ? "社員登入" : "Member login"}
+              </button>
+            </div>
+          )}
+        </section>
+
+        <section className="rounded-2xl border border-border bg-white/80 p-5 shadow-soft backdrop-blur">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold">{locale === "zh" ? "許願清單預覽" : "Wish list preview"}</h3>
+            <span className="rounded-full bg-accent/10 px-3 py-1 font-mono text-[10px] font-bold uppercase text-accent">
+              {wishes.length} items
+            </span>
+          </div>
+          <div className="mt-4 space-y-3">
+            {wishes.map((wish) => (
+              <article key={wish.title.zh} className="rounded-xl border border-border bg-surface/40 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <h4 className="font-semibold">{wish.title[locale]}</h4>
+                  <span className="rounded-full bg-primary/10 px-2.5 py-1 font-mono text-[10px] font-bold uppercase text-primary">
+                    {wish.votes} votes
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">{locale === "zh" ? wish.state.zh : wish.state.en}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      </div>
+    </section>
   );
 }
