@@ -17,7 +17,7 @@
 ---
 
 #### 📦 核心模組一：電子商務與供應鏈（零庫存預購與共同購買） [cite: 3]
-1.  **社員願望清單與需求彙整 (Member Wishlist & Demand Pooling)** [cite: 3]：
+1.  **願望清單與需求彙整 (Member Wishlist & Demand Pooling)** [cite: 3]：
     *   社員可以提交商品想法或願望清單，成功採購將獲得獎勵點數（積點） [cite: 3]。
     *   在正式下單前提供「線上意向調查」小工具，以預測廠商庫存 [cite: 3]。
 2.  **無庫存預購機制 (Pre-order Flow)** [cite: 3]：
