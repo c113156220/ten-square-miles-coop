@@ -85,7 +85,7 @@ export function LoginModal() {
           </button>
           <p className="text-center text-xs text-muted-foreground">
             No account?{" "}
-            <Link to="/onboarding" onClick={closeLogin} className="font-bold text-primary hover:underline">
+            <Link to="/register" onClick={closeLogin} className="font-bold text-primary hover:underline">
               Register here
             </Link>
           </p>

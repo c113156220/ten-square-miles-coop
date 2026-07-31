@@ -1,9 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { lazy, Suspense, useMemo, useState } from "react";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { SiteShell, PageHeader } from "@/components/site-shell";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
+import { requireAuthAndEligibility } from "@/lib/eligibility";
 
 const ProducerMapLeaflet = lazy(() => import("@/components/producer-map"));
 import producerFarmImg from "@/assets/producer-farm.jpg";
@@ -209,7 +210,7 @@ function VotingWall() {
                 : "Join as a verified member to cast your vote and influence our co-op's decisions."}
             </p>
             <a
-              href="/onboarding"
+              href="/register?from=governance&next=%2Fgovernance&reason=auth_required"
               className="mt-5 block rounded-full bg-foreground py-2.5 text-center text-sm font-semibold text-background hover:shadow-elevated"
             >
               {locale === "zh" ? "立即註冊入社" : "Register as member"}
@@ -779,6 +780,16 @@ function EventsBoard() {
 
 function GovernancePage() {
   const { locale } = useI18n();
+  const router = useRouter();
+  const { user } = useAuth();
+  // Unified gate: governance now enters through /register -> /onboarding when auth/eligibility is missing.
+  const gate = useMemo(() => requireAuthAndEligibility(user, "governance"), [user]);
+  useEffect(() => {
+    if (gate.allowed) return;
+    router.navigate({ to: "/register", search: gate.search, replace: true });
+  }, [gate, router]);
+  if (!gate.allowed) return null;
+
   const sections = useMemo(
     () => [
       { id: "voting-wall", icon: Vote, label: { zh: "投票牆", en: "Voting Wall" } },
@@ -833,7 +844,8 @@ function GovernancePage() {
 
 function MemberWishBoard() {
   const { locale } = useI18n();
-  const { user, openLogin } = useAuth();
+  const router = useRouter();
+  const { user } = useAuth();
   const isMember = user?.role === "member" || user?.role === "admin";
   const [title, setTitle] = useState("");
   const [detail, setDetail] = useState("");
@@ -912,7 +924,15 @@ function MemberWishBoard() {
               <p className="text-sm text-muted-foreground">
                 {locale === "zh" ? "只有正式社員與管理員可以送出提案。" : "Only verified members and admins can submit proposals."}
               </p>
-              <button onClick={openLogin} className="rounded-full bg-foreground px-5 py-2.5 text-sm font-bold text-background">
+              <button
+                onClick={() =>
+                  router.navigate({
+                    to: "/register",
+                    search: { from: "governance", next: "/governance", reason: "auth_required" },
+                  })
+                }
+                className="rounded-full bg-foreground px-5 py-2.5 text-sm font-bold text-background"
+              >
                 {locale === "zh" ? "社員登入" : "Member login"}
               </button>
             </div>

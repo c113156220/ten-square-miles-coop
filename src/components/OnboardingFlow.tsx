@@ -23,6 +23,11 @@ type QuizQuestion = {
   options: QuizOption[];
 };
 
+type EntryNotice = {
+  title: string;
+  body: string;
+};
+
 const LECTURE_CARDS: LectureCard[] = [
   {
     icon: "🗳️",
@@ -186,10 +191,19 @@ function create6DigitCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-export function OnboardingFlow() {
+export function OnboardingFlow({
+  entryNotice,
+  nextPath,
+  fromModule,
+}: {
+  entryNotice?: EntryNotice;
+  nextPath?: string;
+  fromModule?: "governance" | "surplus";
+}) {
   const router = useRouter();
   const locale: "zh" | "en" = typeof document !== "undefined" && document.documentElement.lang.startsWith("en") ? "en" : "zh";
   const [step, setStep] = useState(1);
+  const safeNextPath = nextPath === "/governance" || nextPath === "/calculator" ? nextPath : "/";
 
   const [fullName, setFullName] = useState("");
   const [idNumber, setIdNumber] = useState("");
@@ -314,6 +328,19 @@ export function OnboardingFlow() {
       />
 
       <div className="mx-auto max-w-5xl space-y-6">
+        {entryNotice && (
+          <section className="rounded-2xl border border-primary/25 bg-primary/5 p-4 md:p-5">
+            <h2 className="text-base font-bold text-primary">{entryNotice.title}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {entryNotice.body}
+              {fromModule
+                ? locale === "zh"
+                  ? `（來源模組：${fromModule === "governance" ? "社務大廳" : "合作社結餘分配"}）`
+                  : ` (Source: ${fromModule})`
+                : ""}
+            </p>
+          </section>
+        )}
         <div className="grid grid-cols-4 gap-2 rounded-3xl border border-border bg-white/75 p-2 shadow-soft backdrop-blur">
           {[
             { zh: "身分驗證", en: "Identity" },
@@ -739,10 +766,14 @@ export function OnboardingFlow() {
               <div className="mt-8 flex flex-wrap justify-center gap-3">
                 <button
                   type="button"
-                  onClick={() => router.navigate({ to: "/" })}
+                  onClick={() => router.navigate({ to: safeNextPath })}
                   className="inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3 text-base font-bold text-background shadow-elevated transition-all hover:brightness-110"
                 >
-                  {locale === "zh" ? "去逛預購商品" : "Browse pre-orders"}
+                  {safeNextPath === "/governance"
+                    ? locale === "zh" ? "前往社務大廳" : "Go to governance"
+                    : safeNextPath === "/calculator"
+                      ? locale === "zh" ? "前往結餘分配" : "Go to surplus module"
+                      : locale === "zh" ? "去逛預購商品" : "Browse pre-orders"}
                   <ArrowRight className="size-4" />
                 </button>
                 <button

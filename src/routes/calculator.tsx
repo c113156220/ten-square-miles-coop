@@ -1,7 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import { useI18n, type DictKey } from "@/lib/i18n";
 import { SiteShell, PageHeader } from "@/components/site-shell";
+import { useAuth } from "@/lib/auth";
+import { requireAuthAndEligibility } from "@/lib/eligibility";
 
 export const Route = createFileRoute("/calculator")({
   head: () => ({
@@ -26,6 +28,16 @@ function fmt(n: number) {
 }
 
 function CalcPage() {
+  const router = useRouter();
+  const { user } = useAuth();
+  // Stricter surplus gate: only verified formal members/admins can enter this module.
+  const gate = useMemo(() => requireAuthAndEligibility(user, "surplus"), [user]);
+  useEffect(() => {
+    if (gate.allowed) return;
+    router.navigate({ to: "/register", search: gate.search, replace: true });
+  }, [gate, router]);
+  if (!gate.allowed) return null;
+
   const { t } = useI18n();
   const [monthly, setMonthly] = useState(3000);
   const [catKey, setCatKey] = useState<"bento" | "produce" | "pantry">("bento");
@@ -94,7 +106,8 @@ function CalcPage() {
           </div>
 
           <Link
-            to="/trial"
+            to="/register"
+            search={{ from: "surplus", next: "/calculator", reason: "auth_required" }}
             className="block rounded-sm bg-primary py-3 text-center text-sm font-semibold text-primary-foreground transition-all hover:brightness-110"
           >
             {t("calc.cta")} →
