@@ -15,9 +15,7 @@ import { Route as CalculatorRouteImport } from './routes/calculator'
 import { Route as CoopRouteImport } from './routes/coop'
 import { Route as GovernanceRouteImport } from './routes/governance'
 import { Route as ImpactRouteImport } from './routes/impact'
-import { Route as MemberCenterRouteImport } from './routes/member-center'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as TrialRouteImport } from './routes/trial'
 import { Route as VerifyRouteImport } from './routes/verify'
@@ -63,19 +61,9 @@ const ImpactRoute = ImpactRouteImport.update({
   path: '/impact',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MemberCenterRoute = MemberCenterRouteImport.update({
-  id: '/member-center',
-  path: '/member-center',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OrdersRoute = OrdersRouteImport.update({
-  id: '/orders',
-  path: '/orders',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -361,25 +349,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ImpactRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/member-center': {
-      id: '/member-center'
-      path: '/member-center'
-      fullPath: '/member-center'
-      preLoaderRoute: typeof MemberCenterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/onboarding': {
       id: '/onboarding'
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/orders': {
-      id: '/orders'
-      path: '/orders'
-      fullPath: '/orders'
-      preLoaderRoute: typeof OrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
