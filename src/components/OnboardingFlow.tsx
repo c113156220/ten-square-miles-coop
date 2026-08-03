@@ -4,6 +4,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import confetti from "canvas-confetti";
 import { ArrowRight, ChevronLeft, ChevronRight, Lock, RotateCcw, Sparkles } from "lucide-react";
 import { SiteShell, PageHeader } from "@/components/site-shell";
+import { supabase } from "@/integrations/supabase/client";
 
 type LectureCard = {
   icon: string;
@@ -194,6 +195,7 @@ export function OnboardingFlow() {
   const [fullName, setFullName] = useState("");
   const [idNumber, setIdNumber] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("")
   const [verificationCode, setVerificationCode] = useState("");
   const [sentCode, setSentCode] = useState<string | null>(null);
   const [otpVisible, setOtpVisible] = useState(false);
@@ -250,7 +252,7 @@ export function OnboardingFlow() {
     setOtpHint(locale === "zh" ? `系統已寄出模擬驗證碼：${code}` : `Mock code sent: ${code}`);
   }
 
-  function verifyCode() {
+  async function verifyCode() {
     const compact = verificationCode.trim();
     if (!/^\d{6}$/.test(compact)) {
       setOtpHint(locale === "zh" ? "請輸入 6 位數驗證碼。" : "Please enter a 6-digit code.");
@@ -260,6 +262,23 @@ export function OnboardingFlow() {
       setOtpHint(locale === "zh" ? "驗證碼錯誤，請再試一次。" : "Wrong code, please try again.");
       return;
     }
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName, // 將姓名存入 metadata
+          student_id: idNumber, // 將學號存入 metadata
+        }
+      }
+    });
+
+    if (error) {
+      setOtpHint(`註冊失敗：${error.message}`);
+      return;
+    }
+
+    // 註冊成功，清空提示並進入下一步
     setOtpHint(null);
     setStep(2);
   }
@@ -404,11 +423,24 @@ export function OnboardingFlow() {
                   />
                 </label>
 
+                <label className="block">
+                  <span className="mb-2 block text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                    {locale === "zh" ? "設定密碼" : "Password"}
+                  </span>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none transition-all focus:border-primary focus:ring-4 focus:ring-primary/10"
+                    placeholder={locale === "zh" ? "至少 6 碼" : "At least 6 characters"}
+                  />
+                </label>
+
                 <div className="flex flex-wrap gap-3 pt-1">
                   <button
                     type="button"
                     onClick={sendCode}
-                    disabled={!fullName.trim() || !idNumber.trim() || !email.trim()}
+                    disabled={!fullName.trim() || !idNumber.trim() || !email.trim() || !password.trim()}
                     className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-glow transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45"
                   >
                     {locale === "zh" ? "發送驗證碼" : "Send verification code"}

@@ -1,242 +1,306 @@
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { useI18n } from "@/lib/i18n";
-import {
-  useAuth,
-  isTrialExpired,
-  trialRemainingDays,
-  trialExpiryDate,
-  type AuthUser,
-} from "@/lib/auth";
-import { listSupportThreads, type SupportThread } from "@/lib/support-chat";
+import { 
+  listSupportThreads, 
+  addAdminReply, 
+  resolveSupportThread, 
+  type SupportThread 
+} from "@/lib/support-chat";
+import { Bell, CheckCheck, MessageSquare, Users } from "lucide-react";
 
 export const Route = createFileRoute("/admin/users")({
-  component: UsersDirectoryPage,
+  component: AdminUsersPage,
 });
 
-type Filter = "all" | "trial" | "member" | "admin" | "expired";
+export function AdminUsersPage() {
+  const [activeTab, setActiveTab] = useState<"users" | "support">("users");
 
-function fmtDate(ts?: number | null) {
-  if (!ts) return "—";
-  return new Date(ts).toISOString().slice(0, 10);
-}
+  // --- 客服對話與通知 State ---
+  const [threads, setThreads] = useState<SupportThread[]>([]);
+  const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [showNotifMenu, setShowNotifMenu] = useState(false);
+  const [notifications, setNotifications] = useState<Array<{
+    id: string;
+    title: string;
+    body: string;
+    threadId: string;
+    createdAt: number;
+    read: boolean;
+  }>>([]);
 
-function roleLabel(u: AuthUser, t: ReturnType<typeof useI18n>["t"]) {
-  if (u.role === "admin") return t("user.role.admin");
-  if (u.role === "member") return t("user.role.member");
-  return t("user.role.trial");
-}
+  // 同步對話與建立通知
+  const syncData = () => {
+    try {
+      const latestThreads = listSupportThreads() || [];
+      setThreads(latestThreads);
 
-function statusOf(u: AuthUser) {
-  if (u.role === "admin") return { key: "admin", tone: "primary" as const };
-  if (u.role === "member") {
-    return u.verified
-      ? { key: "verified", tone: "primary" as const }
-      : { key: "pending", tone: "accent" as const };
-  }
-  if (isTrialExpired(u)) return { key: "expired", tone: "red" as const };
-  return { key: "active", tone: "accent" as const };
-}
+      // 掃描最新訊息產生通知
+      const newNotifs: typeof notifications = [];
+      latestThreads.forEach((t) => {
+        if (!t?.messages || t.messages.length === 0) return;
+        const lastMsg = t.messages[t.messages.length - 1];
+        if (lastMsg && lastMsg.role === "user") {
+          newNotifs.push({
+            id: `${t.id}_${lastMsg.createdAt}`,
+            title: `💬 新客服訊息 (${t.userName || "社員"})`,
+            body: lastMsg.text || "",
+            threadId: t.id,
+            createdAt: lastMsg.createdAt,
+            read: false,
+          });
+        }
+      });
 
-function UsersDirectoryPage() {
-  const { t, locale } = useI18n();
-  const { users } = useAuth();
-  const [filter, setFilter] = useState<Filter>("all");
-  const [query, setQuery] = useState("");
-  const [supportThreads, setSupportThreads] = useState<SupportThread[]>([]);
+      setNotifications((prev) => {
+        const existing = new Set(prev.map((n) => n.id));
+        return [...newNotifs.filter((n) => !existing.has(n.id)), ...prev];
+      });
+    } catch (e) {
+      console.error("Sync data error:", e);
+    }
+  };
 
   useEffect(() => {
-    setSupportThreads(listSupportThreads());
-    const onStorage = () => setSupportThreads(listSupportThreads());
-    const onUpdate = () => setSupportThreads(listSupportThreads());
-    window.addEventListener("storage", onStorage);
-    window.addEventListener("tsm-support-chat-updated", onUpdate);
+    syncData();
+    window.addEventListener("tsm-support-chat-updated", syncData);
+    window.addEventListener("storage", syncData);
     return () => {
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener("tsm-support-chat-updated", onUpdate);
+      window.removeEventListener("tsm-support-chat-updated", syncData);
+      window.removeEventListener("storage", syncData);
     };
   }, []);
 
-  const filtered = useMemo(() => {
-    return users.filter((u) => {
-      if (query) {
-        const q = query.toLowerCase();
-        if (!u.name.toLowerCase().includes(q) && !u.email.toLowerCase().includes(q) && !u.phone.includes(query)) {
-          return false;
-        }
-      }
-      if (filter === "all") return true;
-      if (filter === "admin") return u.role === "admin";
-      if (filter === "member") return u.role === "member";
-      if (filter === "trial") return u.role === "trial" && !isTrialExpired(u);
-      if (filter === "expired") return u.role === "trial" && isTrialExpired(u);
-      return true;
-    });
-  }, [users, filter, query]);
+  const selectedThread = threads.find((t) => t.id === selectedThreadId);
 
-  const chips: { key: Filter; label: string }[] = [
-    { key: "all", label: t("users.filter.all") },
-    { key: "trial", label: t("users.filter.trial") },
-    { key: "member", label: t("users.filter.member") },
-    { key: "admin", label: t("users.filter.admin") },
-    { key: "expired", label: t("users.filter.expired") },
-  ];
+  const handleSendReply = () => {
+    if (!selectedThreadId || !replyText.trim()) return;
+    addAdminReply(selectedThreadId, replyText);
+    setReplyText("");
+    syncData();
+  };
+
+  const handleNotifClick = (notif: typeof notifications[0]) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n))
+    );
+    setActiveTab("support");
+    setSelectedThreadId(notif.threadId);
+    setShowNotifMenu(false);
+  };
+
+  const unreadNotifCount = notifications.filter((n) => !n.read).length;
+  const openTicketCount = threads.filter((t) => t.status === "open").length;
 
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-3xl font-extrabold">{t("users.title")}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t("users.sub")}</p>
-      </header>
-
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex flex-wrap gap-1 rounded-full border border-border bg-white p-1">
-          {chips.map((c) => (
-            <button
-              key={c.key}
-              onClick={() => setFilter(c.key)}
-              className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-                filter === c.key
-                  ? "bg-foreground text-background"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {c.label}
-            </button>
-          ))}
+    <div className="p-6 space-y-6">
+      {/* 頂部頁籤與 🔔 通知中心列 */}
+      <div className="flex items-center justify-between border-b border-border bg-white rounded-t-2xl px-6 pt-4 shadow-sm">
+        <div className="flex gap-2">
+          <button
+            onClick={() => setActiveTab("users")}
+            className={`px-5 py-3 font-bold text-sm rounded-t-xl transition-all flex items-center gap-2 ${
+              activeTab === "users"
+                ? "bg-primary/10 text-primary border-b-2 border-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Users className="size-4" /> 全體使用者總表
+          </button>
+          <button
+            onClick={() => setActiveTab("support")}
+            className={`px-5 py-3 font-bold text-sm rounded-t-xl transition-all flex items-center gap-2 ${
+              activeTab === "support"
+                ? "bg-primary/10 text-primary border-b-2 border-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <MessageSquare className="size-4" /> 客服工單管理
+            {openTicketCount > 0 && (
+              <span className="bg-amber-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full">
+                {openTicketCount}
+              </span>
+            )}
+          </button>
         </div>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={locale === "zh" ? "搜尋姓名／Email／手機…" : "Search name / email / phone…"}
-          className="flex-1 min-w-[240px] rounded-full border border-border bg-white px-4 py-2 text-sm outline-none focus:border-primary"
-        />
-        <span className="rounded-full bg-surface px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-          {t("users.count").replace("{n}", String(filtered.length))}
-        </span>
-      </div>
 
-      <section className="rounded-2xl border border-border bg-white shadow-soft">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-surface/70 text-left font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                <th className="px-4 py-3">{t("common.name")}</th>
-                <th className="px-4 py-3">{t("common.email")}</th>
-                <th className="px-4 py-3">{t("common.phone")}</th>
-                <th className="px-4 py-3">{t("common.role")}</th>
-                <th className="px-4 py-3">{t("trial.col.registered")}</th>
-                <th className="px-4 py-3">{t("trial.col.expiry")}</th>
-                <th className="px-4 py-3">{t("common.status")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {filtered.map((u) => {
-                const st = statusOf(u);
-                const expiry = trialExpiryDate(u);
-                const remain = u.role === "trial" ? trialRemainingDays(u) : null;
-                const statusText =
-                  st.key === "admin"
-                    ? t("user.role.admin")
-                    : st.key === "verified"
-                    ? t("common.verified")
-                    : st.key === "pending"
-                    ? t("common.pending")
-                    : st.key === "expired"
-                    ? t("trial.status.expired")
-                    : t("trial.status.active");
-                const toneCls =
-                  st.tone === "primary"
-                    ? "bg-primary/10 text-primary"
-                    : st.tone === "red"
-                    ? "bg-red-100 text-red-700"
-                    : "bg-accent/15 text-accent";
-                return (
-                  <tr key={u.id} className="hover:bg-surface/40">
-                    <td className="px-4 py-3 font-semibold">
-                      {u.name}
-                      {u.convertedToMember && (
-                        <span className="ml-2 rounded-full bg-primary/15 px-2 py-0.5 font-mono text-[9px] uppercase text-primary">
-                          {t("trial.status.upgraded")}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{u.email}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{u.phone || "—"}</td>
-                    <td className="px-4 py-3">
-                      <span className="rounded-full border border-border bg-white px-2 py-0.5 font-mono text-[10px] uppercase">
-                        {roleLabel(u, t)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs">{fmtDate(u.createdAt)}</td>
-                    <td className="px-4 py-3 font-mono text-xs">
-                      {expiry ? fmtDate(expiry.getTime()) : "—"}
-                      {remain !== null && (
-                        <span className="ml-1 text-muted-foreground">({remain}d)</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`rounded-full px-2 py-0.5 font-mono text-[10px] font-bold uppercase ${toneCls}`}>
-                        {statusText}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-              {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-sm text-muted-foreground">
-                    {locale === "zh" ? "沒有符合條件的使用者。" : "No users match this filter."}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+        {/* 🔔 通知中心選單 */}
+        <div className="relative pb-2">
+          <button
+            onClick={() => setShowNotifMenu(!showNotifMenu)}
+            className="relative p-2.5 rounded-full border border-border bg-slate-50 hover:bg-slate-100 transition-all shadow-sm"
+            title="通知中心"
+          >
+            <Bell className="size-5 text-foreground" />
+            {unreadNotifCount > 0 && (
+              <span className="absolute -top-1 -right-1 grid size-5 place-items-center rounded-full bg-red-500 text-[10px] font-extrabold text-white ring-2 ring-white animate-pulse">
+                {unreadNotifCount}
+              </span>
+            )}
+          </button>
 
-      <section className="rounded-2xl border border-border bg-white shadow-soft">
-        <div className="border-b border-border px-5 py-4">
-          <h2 className="text-lg font-bold">{locale === "zh" ? "AI客服與聊天紀錄" : "AI support conversation logs"}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {locale === "zh" ? "後台可查看使用者與 AI客服 / 聊天機器人的完整詢問過程。" : "Admins can review the full AI support and chatbot conversation history."}
-          </p>
-        </div>
-        <div className="grid gap-4 p-5 lg:grid-cols-2">
-          {supportThreads.length === 0 ? (
-            <p className="rounded-2xl border border-dashed border-border p-5 text-sm text-muted-foreground lg:col-span-2">
-              {locale === "zh" ? "目前還沒有客服對話紀錄。" : "No support conversations have been logged yet."}
-            </p>
-          ) : (
-            supportThreads.map((thread) => (
-              <article key={thread.id} className="rounded-2xl border border-border bg-surface/40 p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold">{thread.userName}</p>
-                    <p className="font-mono text-[11px] text-muted-foreground">{thread.userEmail}</p>
-                  </div>
-                  <span className="rounded-full bg-primary/10 px-2.5 py-1 font-mono text-[10px] font-bold uppercase text-primary">
-                    {thread.mode === "ai" ? "AI客服" : "Bot"}
-                  </span>
-                </div>
-                <div className="mt-3 space-y-2">
-                  {thread.messages.slice(-4).map((message) => (
+          {showNotifMenu && (
+            <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-border bg-white shadow-elevated z-50 overflow-hidden">
+              <div className="flex items-center justify-between border-b px-4 py-3 bg-slate-50">
+                <span className="font-bold text-sm">🔔 後端即時通知中心</span>
+                {unreadNotifCount > 0 && (
+                  <button
+                    onClick={() => setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))}
+                    className="text-[11px] text-primary hover:underline flex items-center gap-1 font-semibold"
+                  >
+                    <CheckCheck className="size-3" /> 全部已讀
+                  </button>
+                )}
+              </div>
+
+              <div className="max-h-72 overflow-y-auto divide-y">
+                {notifications.length === 0 ? (
+                  <p className="p-4 text-center text-xs text-muted-foreground">目前尚無新通知。</p>
+                ) : (
+                  notifications.map((n) => (
                     <div
-                      key={message.id}
-                      className={`rounded-xl px-3 py-2 text-sm ${message.role === "user" ? "bg-white" : "bg-primary/5 text-primary"}`}
+                      key={n.id}
+                      onClick={() => handleNotifClick(n)}
+                      className={`p-3.5 cursor-pointer text-xs transition-all hover:bg-slate-50 ${
+                        !n.read ? "bg-amber-50/70 font-semibold border-l-4 border-amber-500" : ""
+                      }`}
                     >
-                      <span className="mr-2 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-                        {message.role === "user" ? "User" : "AI"}
-                      </span>
-                      {message.text}
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-foreground font-bold">{n.title}</span>
+                        <span className="text-[10px] text-muted-foreground font-mono">
+                          {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <p className="text-muted-foreground truncate">{n.body}</p>
                     </div>
-                  ))}
-                </div>
-              </article>
-            ))
+                  ))
+                )}
+              </div>
+            </div>
           )}
         </div>
-      </section>
+      </div>
+
+      {/* TAB 1：全體使用者總表 */}
+      {activeTab === "users" && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {threads.length === 0 ? (
+              <div className="col-span-2 p-8 text-center text-muted-foreground border border-dashed rounded-2xl bg-white">
+                尚無使用者紀錄
+              </div>
+            ) : (
+              threads.map((thread) => (
+                <div key={thread.id} className="p-4 rounded-2xl border border-border bg-white shadow-sm space-y-3">
+                  <div className="flex justify-between items-center border-b pb-2">
+                    <div>
+                      <h4 className="font-bold text-base">{thread.userName || "社員"}</h4>
+                      <p className="text-xs text-muted-foreground">{thread.userEmail}</p>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-bold uppercase">
+                      {thread.mode}
+                    </span>
+                  </div>
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    {(thread.messages || []).map((m) => (
+                      <div key={m.id} className={`p-2.5 rounded-xl text-xs ${m.role === "user" ? "bg-slate-900 text-white" : "bg-emerald-50 text-emerald-900 border border-emerald-200"}`}>
+                        <span className="font-bold uppercase text-[9px] opacity-70 block mb-0.5">{m.role}</span>
+                        {m.text}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 2：真人幹部接手對話視窗 */}
+      {activeTab === "support" && (
+        <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="border-r border-border pr-4 space-y-2 max-h-[500px] overflow-y-auto">
+              <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground mb-3">對話總表 ({threads.length})</h4>
+              {threads.map((thread) => (
+                <div
+                  key={thread.id}
+                  onClick={() => setSelectedThreadId(thread.id)}
+                  className={`p-3 rounded-xl cursor-pointer border transition-all ${
+                    selectedThreadId === thread.id ? "border-primary bg-primary/5 shadow-sm ring-2 ring-primary/20" : "border-border hover:bg-slate-50"
+                  }`}
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-sm">{thread.userName || "社員"}</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono ${thread.status === "open" ? "bg-amber-100 text-amber-700 font-bold" : "bg-slate-100 text-slate-500"}`}>
+                      {thread.status === "open" ? "待處理" : "已結案"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1 truncate">
+                    {thread.messages?.[thread.messages.length - 1]?.text || ""}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="md:col-span-2 flex flex-col justify-between min-h-[420px] bg-slate-50/50 p-4 rounded-xl border border-border">
+              {selectedThread ? (
+                <>
+                  <div>
+                    <div className="flex justify-between items-center border-b pb-3 mb-4 bg-white p-3 rounded-lg border">
+                      <div>
+                        <h4 className="font-bold text-base">{selectedThread.userName || "社員"}</h4>
+                        <p className="text-xs text-muted-foreground">{selectedThread.userEmail}</p>
+                      </div>
+                      {selectedThread.status === "open" && (
+                        <button 
+                          onClick={() => {
+                            resolveSupportThread(selectedThread.id);
+                            syncData();
+                          }} 
+                          className="px-3 py-1.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-lg border border-emerald-200 hover:bg-emerald-100 transition-all"
+                        >
+                          ✓ 標示為已結案
+                        </button>
+                      )}
+                    </div>
+                    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+                      {(selectedThread.messages || []).map((msg) => (
+                        <div key={msg.id} className={`flex flex-col ${msg.role === "user" ? "items-start" : "items-end"}`}>
+                          <span className="text-[10px] text-muted-foreground mb-1 px-1">
+                            {msg.role === "user" ? selectedThread.userName || "社員" : msg.role === "admin" ? "👨‍💼 真人幹部" : "🤖 AI 阿方"}
+                          </span>
+                          <div className={`p-3 rounded-2xl max-w-[85%] text-sm shadow-sm leading-relaxed ${
+                            msg.role === "user" ? "bg-white border text-foreground" : msg.role === "admin" ? "bg-emerald-600 text-white font-medium" : "bg-primary/10 text-primary border border-primary/20"
+                          }`}>
+                            {msg.text}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="pt-3 border-t border-border mt-4 flex gap-2">
+                    <input
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleSendReply()}
+                      placeholder="輸入幹部回覆訊息..."
+                      className="flex-1 border rounded-full px-4 py-2.5 text-sm bg-white outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all"
+                    />
+                    <button onClick={handleSendReply} className="bg-foreground text-background px-5 py-2.5 rounded-full text-sm font-bold hover:brightness-110 transition-all">
+                      傳送回覆
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="grid place-items-center h-full text-muted-foreground text-xs py-12">
+                  👈 請從左側點選對話以進行查看與真人回覆
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

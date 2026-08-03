@@ -143,15 +143,27 @@ function ProductCard({ p }: { p: Product }) {
               <div className="h-full rounded-full bg-gradient-to-r from-primary to-primary-glow transition-all duration-1000" style={{ width: `${p.progress}%` }} />
             </div>
             <div className="flex items-end justify-between border-t border-border pt-3">
-              <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-                {t("card.deadline")}<br />
-                <span className="font-semibold text-foreground">{t("card.daysLeft")}</span>
+                <div className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                  {t("card.deadline")}<br />
+                  <span className="font-semibold text-foreground">{t("card.daysLeft")}</span>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <span className="block text-[10px] uppercase tracking-wider text-muted-foreground">{t("card.deposit")}</span>
+                    <span className="font-mono text-xl font-semibold tracking-tight">${p.deposit}</span>
+                  </div>
+                  
+                    {/* ✅ 新增帶有商品 ID 的預購按鈕 */}
+                    <Link
+                      to="/coop"
+                      hash={p.nameKey.includes("eggs") ? "product-eggs" : "product-item"}
+                      className="rounded-full bg-foreground px-3.5 py-1.5 text-xs font-semibold text-background shadow-soft transition-all hover:bg-foreground/80 hover:shadow-elevated whitespace-nowrap"
+                    >
+                      立即預購
+                    </Link>
+                </div>
               </div>
-              <div className="text-right">
-                <span className="block text-[10px] uppercase tracking-wider text-muted-foreground">{t("card.deposit")}</span>
-                <span className="font-mono text-xl font-semibold tracking-tight">${p.deposit}</span>
-              </div>
-            </div>
           </div>
         )}
 

@@ -28,7 +28,7 @@ function LangSwitch({ locale, setLocale }: { locale: Locale; setLocale: (l: Loca
     <div className="flex overflow-hidden rounded-full border border-border bg-white/60 p-0.5 font-mono text-[11px] backdrop-blur">
       <button
         onClick={() => setLocale("zh")}
-        className={`rounded-full px-2.5 py-1 transition-all ${
+        className={`whitespace-nowrap rounded-full px-2.5 py-1 transition-all ${
           locale === "zh" ? "bg-foreground text-background shadow-sm" : "text-muted-foreground hover:text-foreground"
         }`}
       >
@@ -36,7 +36,7 @@ function LangSwitch({ locale, setLocale }: { locale: Locale; setLocale: (l: Loca
       </button>
       <button
         onClick={() => setLocale("en")}
-        className={`rounded-full px-2.5 py-1 transition-all ${
+        className={`whitespace-nowrap rounded-full px-2.5 py-1 transition-all ${
           locale === "en" ? "bg-foreground text-background shadow-sm" : "text-muted-foreground hover:text-foreground"
         }`}
       >
@@ -51,7 +51,7 @@ function SystemSwitcher({ mode, locale }: { mode: "store" | "governance"; locale
     <div className="hidden overflow-hidden rounded-full border border-border bg-white/60 p-0.5 shadow-soft backdrop-blur md:flex">
       <Link
         to="/"
-        className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest transition-all ${
+        className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest transition-all ${
           mode === "store" ? "bg-foreground text-background shadow-soft" : "text-muted-foreground hover:text-foreground"
         }`}
       >
@@ -60,7 +60,7 @@ function SystemSwitcher({ mode, locale }: { mode: "store" | "governance"; locale
       </Link>
       <Link
         to="/governance"
-        className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest transition-all ${
+        className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest transition-all ${
           mode === "governance" ? "bg-foreground text-background shadow-soft" : "text-muted-foreground hover:text-foreground"
         }`}
       >
@@ -84,13 +84,13 @@ export function SiteNav() {
     <nav className="sticky top-0 z-50 border-b border-border/70 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
         <div className="flex items-center gap-6">
-          <Link to="/" className="flex items-center gap-2">
-            <span className="grid size-8 place-items-center rounded-lg bg-foreground text-background shadow-soft">
+          <Link to="/" className="flex items-center gap-2 shrink-0 whitespace-nowrap">
+            <span className="grid size-8 place-items-center rounded-lg bg-foreground text-background shadow-soft shrink-0">
               <Sparkles className="size-4" />
             </span>
             <span className="flex flex-col leading-none">
-              <span className="text-lg font-bold tracking-tight">十圓方里</span>
-              <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+              <span className="text-lg font-bold tracking-tight whitespace-nowrap">十圓方里</span>
+              <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground whitespace-nowrap">
                 Ten Sq Miles
               </span>
             </span>
@@ -112,31 +112,31 @@ export function SiteNav() {
         </div>
         <div className="flex items-center gap-2">
           <TrialBadge />
-          {isAdmin && (
-            <Link
-              to="/admin"
-              className="hidden rounded-full border border-border bg-white/60 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground backdrop-blur transition-all hover:text-foreground md:inline-block"
-            >
-              {t("nav.admin")}
-            </Link>
-          )}
-          <LangSwitch locale={locale} setLocale={setLocale} />
-          {user ? (
-            <div className="flex items-center gap-2">
-              <span className="hidden text-xs font-semibold md:inline">
-                {user.name}
-                <span className="ml-1 rounded-full bg-surface px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
-                  {user.role}
-                </span>
-              </span>
-              <button
-                onClick={logout}
-                className="rounded-full border border-border bg-white/60 px-3 py-1.5 text-xs font-semibold hover:bg-surface"
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className="hidden whitespace-nowrap rounded-full border border-border bg-white/60 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-muted-foreground backdrop-blur transition-all hover:text-foreground md:inline-block"
               >
-                Sign out
-              </button>
-            </div>
-          ) : (
+                {t("nav.admin")}
+              </Link>
+            )}
+            <LangSwitch locale={locale} setLocale={setLocale} />
+            {user ? (
+              <div className="flex items-center gap-2">
+                <span className="hidden items-center gap-1.5 whitespace-nowrap text-xs font-semibold md:inline-flex">
+                  <span className="whitespace-nowrap">{user.name}</span>
+                  <span className="rounded-full bg-surface px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-muted-foreground whitespace-nowrap">
+                    {user.role}
+                  </span>
+                </span>
+                <button
+                  onClick={logout}
+                  className="whitespace-nowrap rounded-full border border-border bg-white/60 px-3 py-1.5 text-xs font-semibold hover:bg-surface"
+                >
+                  登出
+                </button>
+              </div>
+            ) : (
             <button
               onClick={openLogin}
               className="rounded-full bg-foreground px-4 py-1.5 text-sm font-semibold text-background shadow-soft transition-all hover:shadow-elevated"

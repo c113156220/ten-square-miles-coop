@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n";
 import { SiteShell, PageHeader } from "@/components/site-shell";
 import { CheckoutModal } from "@/components/CheckoutModal";
@@ -155,7 +155,10 @@ function CampaignCard({ c, onAddToCart }: { c: Campaign; onAddToCart: (campaign:
   const tempLabel = c.tempType === "cold" ? (locale === "zh" ? "冷鏈" : "Cold chain") : locale === "zh" ? "常溫" : "Ambient";
 
   return (
-    <article className="flex flex-col gap-4 rounded-md border border-border bg-white p-4 shadow-sm">
+    <article 
+  id={c.name.en.includes("Eggs") ? "product-eggs" : `product-${c.name.en.toLowerCase().replace(/\s+/g, '-')}`}
+  className="flex flex-col gap-4 rounded-md border border-border bg-white p-4 shadow-sm transition-all duration-500"
+>
       <div className="relative overflow-hidden rounded">
         <img src={c.img} alt={c.name[locale]} className="aspect-[4/3] w-full object-cover" />
         {c.hot && (
@@ -408,12 +411,12 @@ type CartItem = { id: string; name: string; price: number; tempType: TempType };
 function CartCheckoutPanel({
   cart,
   checkoutMessage,
-  onCheckout,
+  onOpenCheckout,
   onClear,
 }: {
   cart: CartItem[];
   checkoutMessage: string | null;
-  onCheckout: () => void;
+  onOpenCheckout: () => void;
   onClear: () => void;
 }) {
   const { locale } = useI18n();
@@ -472,11 +475,11 @@ function CartCheckoutPanel({
 
       <div className="mt-5 flex flex-wrap gap-3">
         <button
-          onClick={onCheckout}
+          onClick={onOpenCheckout}
           disabled={cart.length === 0}
-          className="rounded-sm bg-primary px-4 py-2 text-sm font-bold text-primary-foreground disabled:opacity-40"
+          className="rounded-sm bg-primary px-4 py-2 text-sm font-bold text-primary-foreground shadow-glow hover:brightness-110 disabled:opacity-40"
         >
-          {locale === "zh" ? "提交結帳" : "Submit checkout"}
+          {locale === "zh" ? "前往結帳" : "Proceed to Checkout"}
         </button>
         <button
           onClick={onClear}
@@ -495,6 +498,29 @@ function CoopPage() {
   const [checkoutMessage, setCheckoutMessage] = useState<string | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [walletBalance, setWalletBalance] = useState(1280);
+  useEffect(() => {
+    const hash = window.location.hash.replace("#", "");
+    if (hash) {
+      const timer = setTimeout(() => {
+        const targetElement = document.getElementById(hash);
+        if (targetElement) {
+          // 1. 自動平滑捲動至畫面中央
+          targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
+
+          // 2. 加上綠色高亮與脈衝閃爍動畫
+          targetElement.classList.add("ring-4", "ring-primary", "animate-pulse");
+
+          // 3. 2.5 秒後自動停止閃爍並恢復原狀
+          setTimeout(() => {
+            targetElement.classList.remove("ring-4", "ring-primary", "animate-pulse");
+          }, 2500);
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
 
   function addToCart(campaign: Campaign) {
     setCart((prev) => [
@@ -507,20 +533,6 @@ function CoopPage() {
       },
     ]);
     setCheckoutMessage(null);
-  }
-
-  function handleCheckout() {
-    if (cart.length === 0) return;
-    const mixed = cart.some((item) => item.tempType === "cold") && cart.some((item) => item.tempType === "ambient");
-    setCheckoutMessage(
-      mixed
-        ? locale === "zh"
-          ? "已建立混溫配送提醒，將分別安排行程。"
-          : "Mixed-temperature checkout logged. Pickup will be split into separate lanes."
-        : locale === "zh"
-          ? "結帳成立，冷鏈商品將由合作社協助安排。"
-          : "Checkout confirmed. Cold-chain items will be routed through the co-op handling team.",
-    );
   }
 
   return (
@@ -547,7 +559,6 @@ function CoopPage() {
       <CartCheckoutPanel
         cart={cart}
         checkoutMessage={checkoutMessage}
-        onCheckout={handleCheckout}
         onOpenCheckout={() => setCheckoutOpen(true)}
         onClear={() => {
           setCart([]);
