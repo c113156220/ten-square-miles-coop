@@ -126,7 +126,7 @@ export function SiteNav() {
                 <span className="hidden items-center gap-1.5 whitespace-nowrap text-xs font-semibold md:inline-flex">
                   <span className="whitespace-nowrap">{user.name}</span>
                   <span className="rounded-full bg-surface px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-muted-foreground whitespace-nowrap">
-                    {user.role}
+                    {user.memberId ?? user.role}
                   </span>
                 </span>
                 <button

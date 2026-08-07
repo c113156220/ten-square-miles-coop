@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SiteShell, PageHeader } from "@/components/site-shell";
 import { generatePickupQRCodeValue } from "@/lib/logistics-utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,8 +9,8 @@ export const Route = createFileRoute("/orders")({
   component: OrdersPage,
 });
 
-type OrderStatus = "packed" | "ready" | "cancelled";
-
+type OrderStatus = "packed" | "ready" | "cancelled" | "paid";
+type OrderLine = { name: string; qty: number; price: number; tempType?: string };
 type OrderItem = {
   id: string;
   name: string;
@@ -18,64 +18,125 @@ type OrderItem = {
   status: OrderStatus;
   refund: number;
   canCancel: boolean;
+  createdAt: string;
+  deliveryMethod?: string;
+  memberId?: string;
+  items?: OrderLine[];
+  pickupCode?: string;
 };
 
-// 預設 Demo 假資料
 const MOCK_ORDERS: OrderItem[] = [
-  { id: "O-2401", name: "放牧土雞蛋 12入", amount: 180, status: "packed", refund: 180, canCancel: true },
-  { id: "O-2402", name: "旬味蔬菜箱", amount: 480, status: "ready", refund: 480, canCancel: false },
-  { id: "O-2403", name: "柴燒手工醬油", amount: 320, status: "packed", refund: 320, canCancel: true },
+  {
+    id: "F0001-20260803-abc5566",
+    name: "會員訂單",
+    amount: 180,
+    status: "packed",
+    refund: 180,
+    canCancel: true,
+    createdAt: new Date().toISOString(),
+    deliveryMethod: "合作社門市自取",
+    memberId: "F0001",
+    items: [{ name: "放牧土雞蛋 12入", qty: 1, price: 180, tempType: "cold" }],
+    pickupCode: "COOP-PICKUP:F0001-20260803-abc5566:1710000000",
+  },
 ];
+
+function formatEstimatedArrival(order: OrderItem) {
+  const createdAt = new Date(order.createdAt ?? Date.now());
+  const base = new Date(createdAt);
+  const shipping = order.deliveryMethod ?? "合作社門市自取";
+  if (shipping.includes("超商") || shipping.includes("7-11") || shipping.includes("全家")) {
+    base.setDate(base.getDate() + 2);
+  } else if (shipping.includes("宅配")) {
+    base.setDate(base.getDate() + 3);
+  } else {
+    base.setDate(base.getDate() + 1);
+  }
+  return `預估到達：${base.toLocaleDateString("zh-TW", { month: "numeric", day: "numeric", weekday: "short" })}`;
+}
 
 function OrdersPage() {
   const [walletBalance, setWalletBalance] = useState(1280);
   const [orders, setOrders] = useState<OrderItem[]>(MOCK_ORDERS);
-
-  // 控制 QR Code Modal 的狀態
   const [activeQrCode, setActiveQrCode] = useState<{ orderId: string; codeValue: string } | null>(null);
 
-  // 🔄 進入頁面時從 Supabase 抓取最新訂單
   useEffect(() => {
     async function fetchDatabaseOrders() {
+      const localOrdersRaw = localStorage.getItem("tsm_orders_v1");
+      const localOrders = localOrdersRaw ? JSON.parse(localOrdersRaw) : [];
+      const normalizedLocalOrders: OrderItem[] = localOrders.map((item: any) => ({
+        id: item.orderId || item.id,
+        name: `會員訂單 · ${item.deliveryMethod || "門市自提"}`,
+        amount: item.amount || 0,
+        status: item.status === "已取消" ? "cancelled" : item.status === "可取貨 / 已完成" ? "ready" : "packed",
+        refund: item.amount || 0,
+        canCancel: item.status !== "已取消" && item.status !== "可取貨 / 已完成",
+        createdAt: item.createdAt || new Date().toISOString(),
+        deliveryMethod: item.deliveryMethod || "合作社門市自取",
+        memberId: item.memberId || "F0001",
+        items: Array.isArray(item.items) ? item.items : [{ name: item.items || "會員購物", qty: 1, price: item.amount || 0 }],
+        pickupCode: item.pickupCode || `COOP-PICKUP:${item.orderId || item.id}:${Date.now()}`,
+      }));
+
       try {
         const { data, error } = await supabase
           .from("orders")
           .select(`
-            id, total_amount, delivery_method, created_at,
-            logistics ( status )
+            id, member_id, total_amount, delivery_method, created_at,
+            logistics ( id, status, recipient_name, temp_layer, delivery_address, store_code_711 ),
+            order_items ( quantity, unit_price, product_id, tax_type ),
+            payments ( invoice_number, payment_method, status )
           `)
           .order("created_at", { ascending: false });
 
-        if (!error && data && data.length > 0) {
-          const dbOrders: OrderItem[] = data.map((item) => {
-            const currentStatus = item.logistics?.[0]?.status;
-            let orderStatus: OrderStatus = "packed";
-
-            if (currentStatus === "completed") {
-              orderStatus = "ready";
-            } else if (currentStatus === "cancelled") {
-              orderStatus = "cancelled";
-            }
-
-            return {
-              id: item.id,
-              name: `社員購物訂單 (${item.delivery_method || "門市自提"})`,
-              amount: item.total_amount || 0,
-              status: orderStatus,
-              refund: item.total_amount || 0,
-              canCancel: currentStatus !== "completed" && currentStatus !== "cancelled",
-            };
-          });
-
-          setOrders([...dbOrders, ...MOCK_ORDERS]);
+        if (error || !data) {
+          setOrders([...normalizedLocalOrders, ...MOCK_ORDERS]);
+          return;
         }
+
+        const dbOrders: OrderItem[] = data.map((item) => {
+          const currentStatus = item.logistics?.[0]?.status;
+          let orderStatus: OrderStatus = "packed";
+          if (currentStatus === "completed") orderStatus = "ready";
+          else if (currentStatus === "cancelled") orderStatus = "cancelled";
+          else if (currentStatus === "paid") orderStatus = "paid";
+
+          return {
+            id: item.payments?.[0]?.invoice_number || item.id,
+            name: `會員訂單 · ${item.delivery_method || "門市自提"}`,
+            amount: item.total_amount || 0,
+            status: orderStatus,
+            refund: item.total_amount || 0,
+            canCancel: currentStatus !== "completed" && currentStatus !== "cancelled",
+            createdAt: item.created_at || new Date().toISOString(),
+            deliveryMethod: item.delivery_method || "合作社門市自取",
+            memberId: item.member_id || "F0001",
+            items: (item.order_items || []).map((line: any) => ({
+              name: `商品 ${line.product_id}`,
+              qty: line.quantity || 1,
+              price: line.unit_price || 0,
+              tempType: line.tax_type || "ambient",
+            })),
+            pickupCode: `COOP-PICKUP:${item.payments?.[0]?.invoice_number || item.id}:${Date.now()}`,
+          };
+        });
+
+        const merged = [...normalizedLocalOrders, ...dbOrders, ...MOCK_ORDERS];
+        const uniqueOrders = merged.filter((order, index, arr) => arr.findIndex((candidate) => candidate.id === order.id) === index);
+        setOrders(uniqueOrders);
       } catch (e) {
         console.error("Fetch DB orders error:", e);
+        setOrders([...normalizedLocalOrders, ...MOCK_ORDERS]);
       }
     }
 
     fetchDatabaseOrders();
   }, []);
+
+  const summary = useMemo(() => {
+    const total = orders.reduce((sum, order) => sum + (order.status === "cancelled" ? 0 : order.amount), 0);
+    return { total };
+  }, [orders]);
 
   function cancelOrder(orderId: string) {
     setOrders((prev) =>
@@ -98,12 +159,15 @@ function OrdersPage() {
       />
 
       <section className="mb-8 rounded-md border border-border bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-4">
           <div>
             <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Wallet balance</p>
             <h2 className="mt-1 text-2xl font-extrabold">可用儲值金</h2>
           </div>
-          <p className="font-mono text-3xl font-extrabold text-primary">NT${walletBalance.toLocaleString()}</p>
+          <div className="text-right">
+            <p className="font-mono text-3xl font-extrabold text-primary">NT${walletBalance.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground">已出現訂單總值：NT${summary.total.toLocaleString()}</p>
+          </div>
         </div>
       </section>
 
@@ -114,20 +178,22 @@ function OrdersPage() {
         <div className="divide-y divide-border">
           {orders.map((order) => {
             const qrValue = generatePickupQRCodeValue(order.id);
+            const ETA = formatEstimatedArrival(order);
             return (
               <div key={order.id} className="p-5 space-y-3">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div>
                     <p className="font-semibold">{order.name}</p>
                     <p className="mt-1 font-mono text-sm text-muted-foreground">{order.id}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">會員 ID：{order.memberId || "F0001"} · {ETA}</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-3">
                     <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${
-                      order.status === "cancelled" 
-                        ? "bg-stone-200 text-muted-foreground" 
-                        : order.status === "ready" 
-                        ? "bg-emerald-100 text-emerald-800" 
-                        : "bg-accent/10 text-accent"
+                      order.status === "cancelled"
+                        ? "bg-stone-200 text-muted-foreground"
+                        : order.status === "ready"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : "bg-accent/10 text-accent"
                     }`}>
                       {order.status === "cancelled" ? "已取消" : order.status === "ready" ? "可取貨 / 已完成" : "已打包"}
                     </span>
@@ -146,30 +212,36 @@ function OrdersPage() {
                   </div>
                 </div>
 
-                {/* 📱 點擊後跳出 QR Code 圖片的顯示框 */}
-                {order.status !== "cancelled" && (
-                  <div className="p-2.5 bg-slate-50/80 border rounded-xl flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">📱 現場自提取貨驗證碼：</span>
-                    <button
-                      type="button"
-                      onClick={() => setActiveQrCode({ orderId: order.id, codeValue: qrValue })}
-                      className="group flex items-center gap-1.5 font-mono font-bold text-emerald-800 bg-white hover:bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 transition-all shadow-sm hover:scale-[1.02] active:scale-[0.98]"
-                    >
-                      <QrCode className="size-3.5 text-emerald-600 group-hover:rotate-12 transition-transform" />
-                      <span>{qrValue}</span>
-                      <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded ml-1 font-sans font-normal">
-                        點擊顯示 QR Code
-                      </span>
-                    </button>
-                  </div>
-                )}
+                <div className="rounded-xl border border-border bg-slate-50/80 p-3 text-xs space-y-2">
+                  <p className="font-semibold text-foreground">訂單明細</p>
+                  {(order.items ?? []).map((line, idx) => (
+                    <div key={`${order.id}-${line.name}-${idx}`} className="flex justify-between gap-3 rounded border border-border bg-white px-2 py-1.5">
+                      <span>{line.name} × {line.qty}</span>
+                      <span className="font-mono">NT${line.price * line.qty}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="p-2.5 bg-slate-50/80 border rounded-xl flex items-center justify-between text-xs gap-3">
+                  <span className="text-muted-foreground">📱 現場自提取貨驗證碼：</span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveQrCode({ orderId: order.id, codeValue: order.pickupCode ?? qrValue })}
+                    className="group flex items-center gap-1.5 font-mono font-bold text-emerald-800 bg-white hover:bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 transition-all shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <QrCode className="size-3.5 text-emerald-600 group-hover:rotate-12 transition-transform" />
+                    <span>{order.pickupCode ?? qrValue}</span>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded ml-1 font-sans font-normal">
+                      點擊顯示 QR Code
+                    </span>
+                  </button>
+                </div>
               </div>
             );
           })}
         </div>
       </section>
 
-      {/* 🔍 QR Code 大圖彈窗 Modal */}
       {activeQrCode && (
         <div 
           className="fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in"
@@ -192,7 +264,6 @@ function OrdersPage() {
               </button>
             </div>
 
-            {/* QR Code 圖片 (自動繪製) */}
             <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex justify-center">
               <img
                 src={`https://quickchart.io/qr?text=${encodeURIComponent(activeQrCode.codeValue)}&size=240&margin=1`}

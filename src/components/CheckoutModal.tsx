@@ -1,8 +1,9 @@
 ﻿import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useState } from "react";
-import { CreditCard, Wallet, Truck, MapPin, X, ShieldCheck, Package, CheckCircle2, Clock3, Building2, Store } from "lucide-react";
+import { CreditCard, Wallet, Truck, MapPin, X, ShieldCheck, Package, CheckCircle2, Clock3, Building2, Store, Minus, Plus } from "lucide-react";
 import { ECPayLogisticsModal, type LogisticsStore } from "@/components/ECPayLogisticsModal";
 import { useI18n } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth";
 
 export type CheckoutItem = {
   id: string;
@@ -22,6 +23,7 @@ type CheckoutModalProps = {
   walletBalance: number;
   onWalletDebit: (amount: number) => void;
   onPaid: (message: string) => void;
+  onUpdateCartQuantity?: (itemId: string, delta: number) => void;
   ecpayEndpoint: string;
 };
 
@@ -46,10 +48,6 @@ const PAYMENT_LABELS: Record<PaymentType, { zh: string; en: string; desc: string
   COD: { zh: "超商取貨付款", en: "Cash on Delivery", desc: "貨到超商門市再付款" },
 };
 
-function buildOrderId() {
-  return `TSM${Date.now().toString().slice(-10)}`;
-}
-
 export function CheckoutModal({
   open,
   onClose,
@@ -57,9 +55,11 @@ export function CheckoutModal({
   walletBalance,
   onWalletDebit,
   onPaid,
+  onUpdateCartQuantity,
   ecpayEndpoint,
 }: CheckoutModalProps) {
   const { locale } = useI18n();
+  const { user } = useAuth();
   const [shippingType, setShippingType] = useState<ShippingType>("COOP_PICKUP");
   const [paymentType, setPaymentType] = useState<PaymentType>("ECPAY");
   const [bankLastFive, setBankLastFive] = useState("");
@@ -72,7 +72,20 @@ export function CheckoutModal({
   const hasColdItems = cart.some((item) => item.tempType === "cold");
   const hasAmbientItems = cart.some((item) => item.tempType === "ambient");
   const hasMixedTemp = hasColdItems && hasAmbientItems;
-  const disallowPickup = hasColdItems && (shippingType === "UNIMARTC2C" || shippingType === "FAMILY");
+  const memberId = user?.memberId ?? "F0001";
+  const itemGroups = useMemo(() => {
+    const groups = new Map<string, CheckoutItem>();
+    cart.forEach((item) => {
+      const key = `${item.id}-${item.tempType}`;
+      const existing = groups.get(key);
+      if (!existing) {
+        groups.set(key, { ...item, qty: item.qty ?? 1 });
+      } else {
+        groups.set(key, { ...existing, qty: (existing.qty ?? 1) + (item.qty ?? 1) });
+      }
+    });
+    return Array.from(groups.values());
+  }, [cart]);
 
   // 金額計算
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * (item.qty ?? 1), 0), [cart]);
@@ -94,42 +107,149 @@ export function CheckoutModal({
     onClose();
   }
 
-  // 💾 寫入 Supabase 資料庫 Helper
-  async function saveOrderToDatabase(newOrderId: string) {
+  function readLocalOrders(): any[] {
     try {
-      const { error: orderErr } = await supabase.from("orders").insert({
-        id: newOrderId,
-        total_amount: total,
-        delivery_method: SHIPPING_LABELS[shippingType].zh,
-        created_at: new Date().toISOString(),
-      });
-
-      if (orderErr) console.warn("寫入 orders 提示:", orderErr);
-
-      const { error: logErr } = await supabase.from("logistics").insert({
-        order_id: newOrderId,
-        recipient_name: "Demo 測試社員",
-        status: "preparing",
-        temp_layer: hasColdItems ? "frozen" : "normal",
-      });
-
-      if (logErr) console.warn("寫入 logistics 提示:", logErr);
-    } catch (e) {
-      console.error("Save to Supabase error:", e);
+      return JSON.parse(localStorage.getItem("tsm_orders_v1") || "[]");
+    } catch {
+      return [];
     }
   }
 
-  async function submit() {
-    if (cart.length === 0 || disallowPickup) return;
+  function writeLocalOrders(nextOrders: any[]) {
+    localStorage.setItem("tsm_orders_v1", JSON.stringify(nextOrders));
+    window.dispatchEvent(new Event("storage"));
+  }
 
-    setBusy(true);
-    const nextOrderId = buildOrderId();
+  const canUseSupabase = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
+
+  // 💾 寫入 Supabase 資料庫與 LocalStorage 同步 Helper
+  async function saveOrderToDatabase(): Promise<string> {
+    const today = new Date();
+    const ymd = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, "0")}${String(today.getDate()).padStart(2, "0")}`;
+    const randomSuffix = Math.random().toString(36).slice(2, 8);
+    const displayOrderId = `${memberId}-${ymd}-${randomSuffix}`;
+    const newLocalItem = {
+      id: displayOrderId,
+      dbOrderId: null,
+      orderId: displayOrderId,
+      items: cart.map((c) => ({ name: c.name, qty: c.qty ?? 1, price: c.price, tempType: c.tempType })),
+      amount: total,
+      status: "已打包",
+      paymentMethod: paymentType,
+      deliveryMethod: SHIPPING_LABELS[shippingType].zh,
+      pickupCode: `COOP-PICKUP:${displayOrderId}:${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      memberId,
+      selectedStore: selectedStore ? selectedStore.CVSStoreName : null,
+      selectedStoreType: selectedStore?.LogisticsSubType ?? shippingType,
+    };
 
     try {
-      // 1. 先把訂單寫入 Supabase
-      await saveOrderToDatabase(nextOrderId);
+      const existingLocalOrders = readLocalOrders();
+      writeLocalOrders([newLocalItem, ...existingLocalOrders]);
+    } catch (lsErr) {
+      console.warn("LocalStorage 同步提醒:", lsErr);
+    }
 
-      // 2. 根據四種付款方式進行 Demo 處理
+    if (!canUseSupabase) {
+      console.info("Supabase 未配置或缺少環境變數，僅保留本地訂單暫存。", { displayOrderId });
+      return displayOrderId;
+    }
+
+    try {
+      const { data: newOrder, error: orderErr } = await (supabase as any)
+        .from("orders")
+        .insert({
+          total_amount: total,
+          status: "paid",
+          delivery_method: shippingType,
+          created_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (orderErr) {
+        console.error("❌ Supabase Orders 寫入失敗:", orderErr);
+        return displayOrderId;
+      }
+
+      const createdOrderId = String(newOrder.id);
+      newLocalItem.dbOrderId = createdOrderId;
+      newLocalItem.id = displayOrderId;
+      newLocalItem.orderId = displayOrderId;
+      const nextLocalOrders = [newLocalItem, ...readLocalOrders().filter((item: any) => item.orderId !== displayOrderId)];
+      writeLocalOrders(nextLocalOrders);
+
+      const { error: paymentErr } = await (supabase as any)
+        .from("payments")
+        .insert({
+          order_id: createdOrderId,
+          payment_method: paymentType,
+          status: "paid",
+          bank_last_five: paymentType === "BANK_TRANSFER" ? bankLastFive.trim() || "88888" : null,
+          invoice_number: displayOrderId,
+          paid_at: new Date().toISOString(),
+        });
+
+      if (paymentErr) {
+        console.error("❌ Supabase Payments 寫入失敗:", paymentErr);
+      }
+
+      const orderItemsPayload = cart.map((item) => ({
+        order_id: createdOrderId,
+        product_id: item.id,
+        quantity: item.qty ?? 1,
+        unit_price: item.price,
+        tax_type: item.tempType === "cold" ? "cold_chain" : "ambient",
+      }));
+
+      const { error: itemsErr } = await (supabase as any)
+        .from("order_items")
+        .insert(orderItemsPayload);
+
+      if (itemsErr) {
+        console.error("❌ Supabase order_items 寫入失敗:", itemsErr);
+      }
+
+      const { error: logErr } = await (supabase as any)
+        .from("logistics")
+        .insert({
+          order_id: createdOrderId,
+          recipient_name: user?.name ?? "Demo 測試社員",
+          recipient_phone: user?.phone ?? "0900000000",
+          delivery_address: selectedStore
+            ? `${selectedStore.LogisticsSubType} | ${selectedStore.CVSStoreName} | ${selectedStore.CVSAddress}`
+            : null,
+          store_code_711: selectedStore?.CVSStoreID ?? null,
+          shipment_no: selectedStore?.CVSStoreID ?? null,
+          status: "preparing",
+          temp_layer: hasColdItems ? "frozen" : "normal",
+        });
+
+      if (logErr) {
+        console.error("❌ Supabase Logistics 寫入失敗:", logErr);
+      }
+    } catch (e) {
+      console.error("Save to Supabase Exception:", e);
+    }
+
+    return displayOrderId;
+  }
+
+  async function submit() {
+    if (cart.length === 0) return;
+    if ((shippingType === "UNIMARTC2C" || shippingType === "FAMILY") && !selectedStore) {
+      alert(locale === "zh" ? "請先選擇超商門市後，再進行付款。" : "Please choose a store before paying.");
+      return;
+    }
+
+    setBusy(true);
+
+    try {
+      // 1. 先寫入 Supabase 與 LocalStorage，取得真實訂單 ID
+      const nextOrderId = await saveOrderToDatabase();
+
+      // 2. 根據四種付款方式進行處理
       if (paymentType === "WALLET") {
         if (walletBalance < total) {
           alert(locale === "zh" ? "儲值金餘額不足，請改選其他付款方式。" : "Insufficient wallet balance.");
@@ -137,15 +257,14 @@ export function CheckoutModal({
           return;
         }
         onWalletDebit(total);
-        onPaid(locale === "zh" ? `已使用儲值金扣款完成，訂單 ${nextOrderId} 已成立。` : `Wallet payment completed.`);
+        onPaid(locale === "zh" ? `已使用儲值金扣款完成，訂單 #${nextOrderId} 已成立。` : `Wallet payment completed.`);
       } else if (paymentType === "BANK_TRANSFER") {
         const lastFive = bankLastFive.trim() || "88888";
-        onPaid(locale === "zh" ? `轉帳訂單 ${nextOrderId} 已建立 (對帳碼: ${lastFive})。` : `Bank transfer order created.`);
+        onPaid(locale === "zh" ? `轉帳訂單 #${nextOrderId} 已建立 (對帳碼: ${lastFive})。` : `Bank transfer order created.`);
       } else if (paymentType === "COD") {
-        onPaid(locale === "zh" ? `超商取貨付款訂單 ${nextOrderId} 已成立。` : `COD order confirmed.`);
+        onPaid(locale === "zh" ? `超商取貨付款訂單 #${nextOrderId} 已成立。` : `COD order confirmed.`);
       } else {
-        // ECPAY 綠界信用卡 Demo
-        onPaid(locale === "zh" ? `綠界線上刷卡成功！訂單 ${nextOrderId} 已成立。` : `ECPay payment successful.`);
+        onPaid(locale === "zh" ? `綠界線上刷卡成功！訂單 #${nextOrderId} 已成立。` : `ECPay payment successful.`);
       }
 
       setOrderId(nextOrderId);
@@ -197,18 +316,42 @@ export function CheckoutModal({
                   {locale === "zh" ? "購物車明細" : "Cart details"}
                 </h3>
                 <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
-                  {cart.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between rounded-2xl border border-border bg-stone-50 px-3.5 py-3 text-sm">
-                      <div className="space-y-1">
-                        <p className="font-semibold">{item.name}</p>
-                        <div className="inline-flex items-center gap-1.5">
-                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary">
-                            {item.tempType === "cold" ? (locale === "zh" ? "❄️ 冷鏈" : "Cold chain") : locale === "zh" ? "🌱 常溫" : "Ambient"}
-                          </span>
-                          <span className="text-xs text-muted-foreground">x{item.qty ?? 1}</span>
+                  {itemGroups.map((item) => (
+                    <div key={`${item.id}-${item.tempType}`} className="rounded-2xl border border-border bg-stone-50 px-3.5 py-3 text-sm">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="space-y-1">
+                          <p className="font-semibold">{item.name}</p>
+                          <div className="inline-flex items-center gap-1.5">
+                            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary">
+                              {item.tempType === "cold" ? (locale === "zh" ? "❄️ 冷鏈" : "Cold chain") : locale === "zh" ? "🌱 常溫" : "Ambient"}
+                            </span>
+                            <span className="text-xs text-muted-foreground">x{item.qty ?? 1}</span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-mono font-bold text-primary">NT${item.price}</p>
+                          <p className="text-[11px] text-muted-foreground">{locale === "zh" ? "小計" : "Total"} NT${item.price * (item.qty ?? 1)}</p>
                         </div>
                       </div>
-                      <span className="font-mono font-bold">NT${item.price * (item.qty ?? 1)}</span>
+                      {onUpdateCartQuantity && (
+                        <div className="mt-3 flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => onUpdateCartQuantity(item.id, -1)}
+                            className="grid size-7 place-items-center rounded-full border border-border bg-white text-muted-foreground hover:text-foreground"
+                          >
+                            <Minus className="size-3.5" />
+                          </button>
+                          <span className="min-w-8 text-center font-mono font-bold">{item.qty ?? 1}</span>
+                          <button
+                            type="button"
+                            onClick={() => onUpdateCartQuantity(item.id, 1)}
+                            className="grid size-7 place-items-center rounded-full border border-border bg-white text-muted-foreground hover:text-foreground"
+                          >
+                            <Plus className="size-3.5" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -226,17 +369,15 @@ export function CheckoutModal({
                 </h3>
                 <div className="grid gap-3 md:grid-cols-2">
                   {(Object.keys(SHIPPING_LABELS) as ShippingType[]).map((type) => {
-                    const disabled = hasColdItems && (type === "UNIMARTC2C" || type === "FAMILY");
                     const active = shippingType === type;
                     return (
                       <button
                         key={type}
                         type="button"
-                        disabled={disabled}
                         onClick={() => setShippingType(type)}
                         className={`rounded-2xl border p-4 text-left transition ${
                           active ? "border-primary bg-primary/5 ring-2 ring-primary/20" : "border-border bg-white hover:border-primary/40"
-                        } ${disabled ? "cursor-not-allowed opacity-50 bg-slate-50" : ""}`}
+                        }`}
                       >
                         <div className="flex items-center gap-2">
                           <Truck className="size-4 text-primary" />
@@ -247,9 +388,9 @@ export function CheckoutModal({
                     );
                   })}
                 </div>
-                {disallowPickup && (
+                {hasMixedTemp && (
                   <div className="mt-3 rounded-2xl border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800">
-                    ❄️ {locale === "zh" ? "冷鏈商品目前僅支援合作社門市自取或黑貓冷鏈宅配。" : "Cold-chain items current support co-op pickup."}
+                    ❄️ {locale === "zh" ? "混溫訂單將依商品屬性分開安排配送與取貨。" : "Mixed-temperature orders will be handled separately by temperature and fulfillment mode."}
                   </div>
                 )}
               </div>
@@ -284,7 +425,6 @@ export function CheckoutModal({
                   })}
                 </div>
 
-                {/* 銀行轉帳備註 */}
                 {paymentType === "BANK_TRANSFER" && (
                   <div className="mt-3 rounded-2xl border border-border bg-stone-50 p-4 text-xs space-y-2 animate-fade-in">
                     <p className="font-bold text-foreground">匯款帳號：(808) 0012-9876-54321 (玉山銀行)</p>
@@ -300,7 +440,6 @@ export function CheckoutModal({
                 )}
               </div>
 
-              {/* 超商門市選擇 */}
               {(shippingType === "UNIMARTC2C" || shippingType === "FAMILY") && (
                 <div className="rounded-2xl border border-border bg-slate-50 p-4">
                   <div className="flex items-center justify-between gap-3">
@@ -327,7 +466,7 @@ export function CheckoutModal({
               <button
                 type="button"
                 onClick={submit}
-                disabled={busy || cart.length === 0 || disallowPickup}
+                disabled={busy || cart.length === 0}
                 className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-bold text-primary-foreground disabled:opacity-50 hover:brightness-110 transition-all shadow-md"
               >
                 <ShieldCheck className="size-4" />
@@ -360,10 +499,17 @@ export function CheckoutModal({
                   <span className="font-mono text-primary text-lg">NT${total}</span>
                 </div>
               </div>
-              <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-xs font-semibold text-primary">
-                {locale === "zh"
-                  ? `目前儲值金餘額：NT$${walletBalance.toLocaleString()}`
-                  : `Wallet balance: NT$${walletBalance.toLocaleString()}`}
+              <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-xs font-semibold text-primary space-y-1">
+                <div>
+                  {locale === "zh"
+                    ? `會員 ID：${memberId}`
+                    : `Member ID: ${memberId}`}
+                </div>
+                <div>
+                  {locale === "zh"
+                    ? `目前儲值金餘額：NT$${walletBalance.toLocaleString()}`
+                    : `Wallet balance: NT$${walletBalance.toLocaleString()}`}
+                </div>
               </div>
             </aside>
           </div>
@@ -376,7 +522,7 @@ export function CheckoutModal({
                   <p className="font-mono text-[10px] uppercase tracking-widest text-primary">
                     {locale === "zh" ? "訂單成立" : "Order confirmed"}
                   </p>
-                  <h3 className="text-lg font-extrabold">{orderId || "TSM-ORDER"}</h3>
+                  <h3 className="text-lg font-extrabold">#{orderId || "TSM-ORDER"}</h3>
                 </div>
                 <span className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold text-white">
                   {locale === "zh" ? "處理中" : "Processing"}
@@ -389,7 +535,7 @@ export function CheckoutModal({
                 <div className="p-3 bg-white rounded-xl border font-mono text-xs font-extrabold text-emerald-700 select-all">
                   COOP-PICKUP:{orderId}:{Date.now()}
                 </div>
-                <p className="text-[11px] text-muted-foreground">（提示：您可以複製此碼至後台「物流管理」進行一鍵核銷）</p>
+                <p className="text-[11px] text-muted-foreground">（提示：您可複製此驗證碼至後台「物流與訂單管理」輸入框進行一鍵核銷）</p>
               </div>
 
               <div className="space-y-4">
@@ -408,7 +554,7 @@ export function CheckoutModal({
                         <p className="mt-1 text-xs text-muted-foreground">
                           {idx === 0
                             ? locale === "zh"
-                              ? "系統已收到訂單並寫入資料庫。"
+                              ? "系統已收到訂單並成功寫入資料庫。"
                               : "Order created successfully."
                             : idx === 1
                               ? locale === "zh"

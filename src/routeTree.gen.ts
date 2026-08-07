@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CalculatorRouteImport } from './routes/calculator'
 import { Route as CoopRouteImport } from './routes/coop'
+import { Route as DividendRouteImport } from './routes/dividend'
 import { Route as GovernanceRouteImport } from './routes/governance'
 import { Route as ImpactRouteImport } from './routes/impact'
 import { Route as MemberCenterRouteImport } from './routes/member-center'
@@ -25,6 +26,7 @@ import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminFinanceRouteImport } from './routes/admin.finance'
 import { Route as AdminForecastingRouteImport } from './routes/admin.forecasting'
+import { Route as AdminLogisticsRouteImport } from './routes/admin.logistics'
 import { Route as AdminMembersRouteImport } from './routes/admin.members'
 import { Route as AdminPreordersRouteImport } from './routes/admin.preorders'
 import { Route as AdminRolesRouteImport } from './routes/admin.roles'
@@ -51,6 +53,11 @@ const CalculatorRoute = CalculatorRouteImport.update({
 const CoopRoute = CoopRouteImport.update({
   id: '/coop',
   path: '/coop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DividendRoute = DividendRouteImport.update({
+  id: '/dividend',
+  path: '/dividend',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GovernanceRoute = GovernanceRouteImport.update({
@@ -113,6 +120,11 @@ const AdminForecastingRoute = AdminForecastingRouteImport.update({
   path: '/forecasting',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminLogisticsRoute = AdminLogisticsRouteImport.update({
+  id: '/logistics',
+  path: '/logistics',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminMembersRoute = AdminMembersRouteImport.update({
   id: '/members',
   path: '/members',
@@ -154,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/calculator': typeof CalculatorRoute
   '/coop': typeof CoopRoute
+  '/dividend': typeof DividendRoute
   '/governance': typeof GovernanceRoute
   '/impact': typeof ImpactRoute
   '/member-center': typeof MemberCenterRoute
@@ -165,6 +178,7 @@ export interface FileRoutesByFullPath {
   '/wishlist': typeof WishlistRoute
   '/admin/finance': typeof AdminFinanceRoute
   '/admin/forecasting': typeof AdminForecastingRoute
+  '/admin/logistics': typeof AdminLogisticsRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/preorders': typeof AdminPreordersRoute
   '/admin/roles': typeof AdminRolesRoute
@@ -178,6 +192,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/calculator': typeof CalculatorRoute
   '/coop': typeof CoopRoute
+  '/dividend': typeof DividendRoute
   '/governance': typeof GovernanceRoute
   '/impact': typeof ImpactRoute
   '/member-center': typeof MemberCenterRoute
@@ -189,6 +204,7 @@ export interface FileRoutesByTo {
   '/wishlist': typeof WishlistRoute
   '/admin/finance': typeof AdminFinanceRoute
   '/admin/forecasting': typeof AdminForecastingRoute
+  '/admin/logistics': typeof AdminLogisticsRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/preorders': typeof AdminPreordersRoute
   '/admin/roles': typeof AdminRolesRoute
@@ -204,6 +220,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/calculator': typeof CalculatorRoute
   '/coop': typeof CoopRoute
+  '/dividend': typeof DividendRoute
   '/governance': typeof GovernanceRoute
   '/impact': typeof ImpactRoute
   '/member-center': typeof MemberCenterRoute
@@ -215,6 +232,7 @@ export interface FileRoutesById {
   '/wishlist': typeof WishlistRoute
   '/admin/finance': typeof AdminFinanceRoute
   '/admin/forecasting': typeof AdminForecastingRoute
+  '/admin/logistics': typeof AdminLogisticsRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/preorders': typeof AdminPreordersRoute
   '/admin/roles': typeof AdminRolesRoute
@@ -231,6 +249,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/calculator'
     | '/coop'
+    | '/dividend'
     | '/governance'
     | '/impact'
     | '/member-center'
@@ -242,6 +261,7 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/admin/finance'
     | '/admin/forecasting'
+    | '/admin/logistics'
     | '/admin/members'
     | '/admin/preorders'
     | '/admin/roles'
@@ -255,6 +275,7 @@ export interface FileRouteTypes {
     | '/'
     | '/calculator'
     | '/coop'
+    | '/dividend'
     | '/governance'
     | '/impact'
     | '/member-center'
@@ -266,6 +287,7 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/admin/finance'
     | '/admin/forecasting'
+    | '/admin/logistics'
     | '/admin/members'
     | '/admin/preorders'
     | '/admin/roles'
@@ -280,6 +302,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/calculator'
     | '/coop'
+    | '/dividend'
     | '/governance'
     | '/impact'
     | '/member-center'
@@ -291,6 +314,7 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/admin/finance'
     | '/admin/forecasting'
+    | '/admin/logistics'
     | '/admin/members'
     | '/admin/preorders'
     | '/admin/roles'
@@ -306,6 +330,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   CalculatorRoute: typeof CalculatorRoute
   CoopRoute: typeof CoopRoute
+  DividendRoute: typeof DividendRoute
   GovernanceRoute: typeof GovernanceRoute
   ImpactRoute: typeof ImpactRoute
   MemberCenterRoute: typeof MemberCenterRoute
@@ -345,6 +370,13 @@ declare module '@tanstack/react-router' {
       path: '/coop'
       fullPath: '/coop'
       preLoaderRoute: typeof CoopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dividend': {
+      id: '/dividend'
+      path: '/dividend'
+      fullPath: '/dividend'
+      preLoaderRoute: typeof DividendRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/governance': {
@@ -431,6 +463,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminForecastingRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/logistics': {
+      id: '/admin/logistics'
+      path: '/logistics'
+      fullPath: '/admin/logistics'
+      preLoaderRoute: typeof AdminLogisticsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/members': {
       id: '/admin/members'
       path: '/members'
@@ -486,6 +525,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminFinanceRoute: typeof AdminFinanceRoute
   AdminForecastingRoute: typeof AdminForecastingRoute
+  AdminLogisticsRoute: typeof AdminLogisticsRoute
   AdminMembersRoute: typeof AdminMembersRoute
   AdminPreordersRoute: typeof AdminPreordersRoute
   AdminRolesRoute: typeof AdminRolesRoute
@@ -499,6 +539,7 @@ interface AdminRouteChildren {
 const AdminRouteChildren: AdminRouteChildren = {
   AdminFinanceRoute: AdminFinanceRoute,
   AdminForecastingRoute: AdminForecastingRoute,
+  AdminLogisticsRoute: AdminLogisticsRoute,
   AdminMembersRoute: AdminMembersRoute,
   AdminPreordersRoute: AdminPreordersRoute,
   AdminRolesRoute: AdminRolesRoute,
@@ -516,6 +557,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   CalculatorRoute: CalculatorRoute,
   CoopRoute: CoopRoute,
+  DividendRoute: DividendRoute,
   GovernanceRoute: GovernanceRoute,
   ImpactRoute: ImpactRoute,
   MemberCenterRoute: MemberCenterRoute,

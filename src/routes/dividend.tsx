@@ -4,8 +4,8 @@ import { SiteShell, PageHeader } from "@/components/site-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { Calculator, Wallet, ArrowUpRight, ArrowDownLeft, Sparkles } from "lucide-react";
 
-export const Route = createFileRoute("/calculator")({
-  component: CalculatorPage,
+export const Route = createFileRoute("/dividend")({
+  component: DividendPage,
 });
 
 type Transaction = {
@@ -24,7 +24,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
   { id: "tx-4", amount: 180, type: "dividend", description: "上一年度合作社結餘社員消費分紅", created_at: "2026-08-02 12:00" },
 ];
 
-function CalculatorPage() {
+function DividendPage() {
   // 分紅試算狀態
   const [monthlySpend, setMonthlySpend] = useState<number>(3000);
   const [category, setCategory] = useState<string>("bento");
@@ -156,7 +156,7 @@ function CalculatorPage() {
           </div>
         </section>
 
-        {/* 2. 儲值金變動帳單歷史明細 */}
+        {/* 2. 儲值金變動帳單歷史明細（全新整合區塊） */}
         <section className="rounded-3xl border border-border bg-white p-6 shadow-sm space-y-4">
           <div className="flex items-center justify-between border-b pb-4">
             <div className="flex items-center gap-2">

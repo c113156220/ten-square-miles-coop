@@ -27,34 +27,118 @@ export function AdminLogisticsManager() {
 
   // --- QR Code 核銷輸入框狀態 ---
   const [pickupCodeInput, setPickupCodeInput] = useState("");
+  const [orderSearch, setOrderSearch] = useState("");
 
   // --- 1. 訂單與物流狀態 ---
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
 
+  // 🔔 寫入 Supabase 通知表 Helper 函式
+  async function sendNotification(orderId: string, statusText: string) {
+    try {
+      await (supabase as any)
+        .from("notifications")
+        .insert({
+          title: `訂單 #${orderId} 狀態更新`,
+          message: `您的訂單狀態已更新為：【${statusText}】，請隨時確認！`,
+        });
+      console.log(`Notification sent for order #${orderId}`);
+    } catch (e) {
+      console.error("Failed to send notification:", e);
+    }
+  }
+
   async function fetchOrders() {
     setLoadingOrders(true);
     try {
+      const localOrdersRaw = localStorage.getItem("tsm_orders_v1");
+      const localOrders = localOrdersRaw ? JSON.parse(localOrdersRaw) : [];
+      const fallbackOrders = localOrders.map((item: any) => ({
+        id: item.dbOrderId || item.orderId || item.id,
+        member_id: item.memberId || "F0001",
+        total_amount: item.amount || 0,
+        delivery_method: item.deliveryMethod || "合作社門市自取",
+        created_at: item.createdAt || new Date().toISOString(),
+        logistics: [{
+          id: item.pickupCode || `COOP-PICKUP:${item.orderId || item.id}:${Date.now()}`,
+          status: item.status === "已取消" ? "cancelled" : item.status === "可取貨 / 已完成" ? "completed" : "preparing",
+          recipient_name: item.memberId || "Demo 測試社員",
+          temp_layer: item.items?.some((line: any) => line.tempType === "cold") ? "frozen" : "normal",
+          delivery_address: item.selectedStore ? `${item.selectedStoreType || "門市"} | ${item.selectedStore}` : null,
+          store_code_711: item.selectedStore || null,
+        }],
+        payments: [{
+          invoice_number: item.orderId || item.id,
+          payment_method: item.paymentMethod || "ECPAY",
+          status: "paid",
+        }],
+      }));
+
       const { data, error } = await supabase
         .from("orders")
         .select(`
-          id, total_amount, delivery_method, created_at,
-          logistics ( id, status, recipient_name, temp_layer )
+          id, member_id, total_amount, delivery_method, created_at,
+          logistics ( id, status, recipient_name, temp_layer, delivery_address, store_code_711 ),
+          payments ( invoice_number, payment_method, status )
         `)
         .order("created_at", { ascending: false });
 
-      if (!error && data) setOrders(data);
+      if (error || !data) {
+        setOrders(fallbackOrders);
+        return;
+      }
+
+      setOrders([...fallbackOrders, ...data]);
     } catch (e) {
       console.error("Fetch orders error:", e);
+      const localOrdersRaw = localStorage.getItem("tsm_orders_v1");
+      const localOrders = localOrdersRaw ? JSON.parse(localOrdersRaw) : [];
+      setOrders(localOrders.map((item: any) => ({
+        id: item.dbOrderId || item.orderId || item.id,
+        member_id: item.memberId || "F0001",
+        total_amount: item.amount || 0,
+        delivery_method: item.deliveryMethod || "合作社門市自取",
+        created_at: item.createdAt || new Date().toISOString(),
+        logistics: [{
+          id: item.pickupCode || `COOP-PICKUP:${item.orderId || item.id}:${Date.now()}`,
+          status: item.status === "已取消" ? "cancelled" : item.status === "可取貨 / 已完成" ? "completed" : "preparing",
+          recipient_name: item.memberId || "Demo 測試社員",
+          temp_layer: item.items?.some((line: any) => line.tempType === "cold") ? "frozen" : "normal",
+          delivery_address: item.selectedStore ? `${item.selectedStoreType || "門市"} | ${item.selectedStore}` : null,
+          store_code_711: item.selectedStore || null,
+        }],
+        payments: [{
+          invoice_number: item.orderId || item.id,
+          payment_method: item.paymentMethod || "ECPAY",
+          status: "paid",
+        }],
+      })));
     } finally {
       setLoadingOrders(false);
     }
   }
 
-  async function updateStatus(logisticsId: string, newStatus: string) {
+  async function updateStatus(logisticsId: string, newStatus: string, orderId?: string) {
     if (!logisticsId) return;
     try {
       await supabase.from("logistics").update({ status: newStatus }).eq("id", logisticsId);
+      
+      // 狀態文字對照
+      const statusTextMap: Record<string, string> = {
+        preparing: "📦 備貨中",
+        shipped: "🚚 廠商已出貨",
+        arrived: "🏪 已達門市/待自取",
+        completed: "✅ 已完成取貨",
+        cancelled: "已取消",
+      };
+
+      const displayText = statusTextMap[newStatus] || newStatus;
+
+      // 🟢 同步寫入通知至 Supabase
+      if (orderId) {
+        await sendNotification(orderId, displayText);
+      }
+
       fetchOrders();
     } catch (e) {
       console.error("Update status error:", e);
@@ -62,7 +146,7 @@ export function AdminLogisticsManager() {
   }
 
   // 📷 現場幹部 QR Code 核銷處理
-  const handleQRCodeVerify = () => {
+  const handleQRCodeVerify = async () => {
     const raw = pickupCodeInput.trim();
     if (!raw) return;
 
@@ -73,8 +157,8 @@ export function AdminLogisticsManager() {
       // 比對找到該筆訂單與物流 ID
       const targetOrder = orders.find((o) => String(o.id) === String(targetOrderId));
       if (targetOrder?.logistics?.[0]?.id) {
-        updateStatus(targetOrder.logistics[0].id, "completed");
-        alert(`✅ 核銷成功！訂單 #${targetOrderId} 狀態已更新為「已完成取貨」。`);
+        await updateStatus(targetOrder.logistics[0].id, "completed", String(targetOrderId));
+        alert(`✅ 核銷成功！訂單 #${targetOrderId} 狀態已更新為「已完成取貨」，並已向顧客推播通知。`);
       } else {
         alert(`⚠️ 已解析訂單編號 #${targetOrderId}，已重新載入最新列表中。`);
         fetchOrders();
@@ -170,6 +254,22 @@ export function AdminLogisticsManager() {
 
   const unreadNotifCount = notifications.filter((n) => !n.read).length;
   const openTicketCount = threads.filter((t) => t.status === "open").length;
+  const filteredOrders = orders.filter((o) => {
+    const q = orderSearch.trim().toLowerCase();
+    if (!q) return true;
+    return [
+      String(o.id),
+      String(o.member_id ?? ""),
+      String(o.payments?.[0]?.invoice_number ?? ""),
+      String(o.logistics?.[0]?.recipient_name ?? ""),
+      String(o.logistics?.[0]?.store_code_711 ?? ""),
+      String(o.delivery_method ?? ""),
+      String(o.logistics?.[0]?.delivery_address ?? "")
+    ]
+      .join(" ")
+      .toLowerCase()
+      .includes(q);
+  });
 
   return (
     <div className="space-y-6">
@@ -294,26 +394,34 @@ export function AdminLogisticsManager() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between border-b pb-3 pt-2">
+          <div className="flex items-center justify-between border-b pb-3 pt-2 gap-3">
             <h3 className="text-lg font-bold">🛠️ 顧客訂單與出貨狀況控制面板</h3>
-            <button
-              onClick={fetchOrders}
-              className="rounded border px-3 py-1 text-xs font-semibold hover:bg-stone-100 transition-all"
-            >
-              {loadingOrders ? "載入中..." : "重新整理"}
-            </button>
+            <div className="flex items-center gap-2">
+              <input
+                value={orderSearch}
+                onChange={(e) => setOrderSearch(e.target.value)}
+                placeholder="搜尋訂單 / 會員 ID / 顧客姓名"
+                className="w-72 rounded border border-border px-3 py-1.5 text-xs outline-none focus:ring-2 focus:ring-primary/20"
+              />
+              <button
+                onClick={fetchOrders}
+                className="rounded border px-3 py-1 text-xs font-semibold hover:bg-stone-100 transition-all"
+              >
+                {loadingOrders ? "載入中..." : "重新整理"}
+              </button>
+            </div>
           </div>
 
           <div className="divide-y border rounded-lg overflow-hidden">
-            {orders.length === 0 ? (
-              <p className="p-4 text-xs text-muted-foreground text-center">目前尚無已寫入的訂單資料。</p>
+            {filteredOrders.length === 0 ? (
+              <p className="p-4 text-xs text-muted-foreground text-center">目前尚無符合搜尋條件的訂單資料。</p>
             ) : (
-              orders.map((o) => (
+              filteredOrders.map((o) => (
                 <div key={o.id} className="flex flex-col md:flex-row items-start md:items-center justify-between p-3 text-xs gap-2">
                   <div>
-                    <p className="font-mono font-bold text-primary">訂單編號 #{o.id}</p>
+                    <p className="font-mono font-bold text-primary">訂單編號 #{o.payments?.[0]?.invoice_number || o.id}</p>
                     <p className="text-muted-foreground mt-0.5">
-                      物流：{o.delivery_method} | 收件人：{o.logistics?.[0]?.recipient_name || "張社員"}
+                      會員 ID：{o.member_id || "F0001"} | 物流：{o.delivery_method} | 門市：{o.logistics?.[0]?.store_code_711 || "未選擇"} | 收件人：{o.logistics?.[0]?.recipient_name || "張社員"}
                     </p>
                   </div>
 
@@ -321,7 +429,7 @@ export function AdminLogisticsManager() {
                     <span className="font-mono font-extrabold text-sm">NT${o.total_amount}</span>
                     <select
                       value={o.logistics?.[0]?.status || "preparing"}
-                      onChange={(e) => updateStatus(o.logistics?.[0]?.id, e.target.value)}
+                      onChange={(e) => updateStatus(o.logistics?.[0]?.id, e.target.value, String(o.id))}
                       className="rounded border border-border px-2.5 py-1.5 bg-stone-50 font-bold text-xs outline-none focus:ring-2 focus:ring-primary/20"
                     >
                       <option value="preparing">📦 備貨中</option>
@@ -337,7 +445,7 @@ export function AdminLogisticsManager() {
         </div>
       )}
 
-      {/* TAB 2：客服對話與真人幹部回覆 */}
+      {/* TAB 2：客服對話與真人回覆 */}
       {activeTab === "support" && (
         <div className="rounded-xl border border-border bg-white p-5 shadow-sm space-y-4">
           <div className="flex items-center justify-between border-b pb-3">

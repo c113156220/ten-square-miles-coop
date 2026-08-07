@@ -179,10 +179,12 @@ function Check({ ok }: { ok: boolean }) {
 
 function MembersPage() {
   const { t, locale } = useI18n();
-  const { users, extendTrial, forceConvert } = useAuth();
+  const { users, extendTrial, forceConvert, topupWallet } = useAuth();
   const [pending, setPending] = useState(initialPending);
   const [approved, setApproved] = useState<Record<string, string>>({});
   const [query, setQuery] = useState("");
+  const [topupAmount, setTopupAmount] = useState(500);
+  const [activeTopupUserId, setActiveTopupUserId] = useState<string | null>(null);
   const [editUser, setEditUser] = useState<AuthUser | null>(null);
 
   const trialUsers = users.filter((u) => u.role === "trial");
@@ -212,6 +214,25 @@ function MembersPage() {
   const filtered = directory.filter(
     (d) => !query || d.name.toLowerCase().includes(query.toLowerCase()) || d.mid.includes(query),
   );
+
+  const memberSearchResults = users.filter((u) => {
+    const q = query.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      u.name.toLowerCase().includes(q) ||
+      u.email.toLowerCase().includes(q) ||
+      (u.memberId ?? "").toLowerCase().includes(q) ||
+      u.phone.includes(q)
+    );
+  });
+
+  const topup = (userId: string) => {
+    const amount = Number(topupAmount) || 0;
+    if (amount <= 0) return;
+    topupWallet(userId, amount, `後台儲值金補款：NT$${amount}`);
+    setActiveTopupUserId(null);
+    setTopupAmount(500);
+  };
 
   return (
     <div className="space-y-8">
@@ -444,6 +465,7 @@ function MembersPage() {
                 <th className="px-4 py-2">{t("mem.col.shares")}</th>
                 <th className="px-4 py-2">{t("mem.col.points")}</th>
                 <th className="px-4 py-2">{t("mem.col.status")}</th>
+                <th className="px-4 py-2 text-right">補值</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -464,19 +486,24 @@ function MembersPage() {
                       {d.status}
                     </span>
                   </td>
+                  <td className="px-4 py-3 text-right">
+                    <button className="rounded-sm border border-border bg-white px-3 py-1 text-xs font-semibold hover:bg-surface">
+                      +500
+                    </button>
+                  </td>
                 </tr>
               ))}
-              {registeredMembers.map((u, i) => (
+              {memberSearchResults.map((u, i) => (
                 <tr key={u.id} className="bg-primary/5">
-                  <td className="px-4 py-3 font-mono">M-{String(500 + i).padStart(4, "0")}</td>
+                  <td className="px-4 py-3 font-mono">{u.memberId ?? `F-${String(500 + i).padStart(4, "0")}`}</td>
                   <td className="px-4 py-3 font-semibold">
                     {u.name}
                     <span className="ml-2 rounded-full bg-primary/20 px-2 py-0.5 font-mono text-[9px] font-bold uppercase text-primary">
-                      new
+                      {u.role}
                     </span>
                   </td>
                   <td className="px-4 py-3 font-mono">—</td>
-                  <td className="px-4 py-3 font-mono">0</td>
+                  <td className="px-4 py-3 font-mono">{(u.walletBalance ?? 0).toLocaleString()}</td>
                   <td className="px-4 py-3">
                     <span
                       className={`rounded-sm px-2 py-0.5 text-[10px] font-bold uppercase ${
@@ -487,6 +514,32 @@ function MembersPage() {
                     >
                       {u.verified ? "Active" : "Pending verify"}
                     </span>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {activeTopupUserId === u.id ? (
+                      <div className="flex items-center justify-end gap-2">
+                        <input
+                          type="number"
+                          min={0}
+                          value={topupAmount}
+                          onChange={(e) => setTopupAmount(Number(e.target.value) || 0)}
+                          className="w-20 rounded-sm border border-border bg-white px-2 py-1 text-xs"
+                        />
+                        <button
+                          onClick={() => topup(u.id)}
+                          className="rounded-sm bg-primary px-2 py-1 text-[11px] font-semibold text-primary-foreground"
+                        >
+                          確定
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setActiveTopupUserId(u.id)}
+                        className="rounded-sm border border-border bg-white px-3 py-1 text-xs font-semibold hover:bg-surface"
+                      >
+                        +500
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

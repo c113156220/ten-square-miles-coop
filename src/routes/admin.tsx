@@ -19,11 +19,12 @@ export const Route = createFileRoute("/admin")({
 
 type Role = "admin" | "board" | "auditor";
 
-const NAV: { to: string; key: DictKey; roles: Role[] }[] = [
+const NAV: { to: string; key: string; roles: Role[] }[] = [
   { to: "/admin", key: "admin.nav.dashboard", roles: ["admin", "board", "auditor"] },
   { to: "/admin/members", key: "admin.nav.members", roles: ["admin", "board"] },
   { to: "/admin/users", key: "admin.nav.users", roles: ["admin", "board", "auditor"] },
   { to: "/admin/preorders", key: "admin.nav.preorders", roles: ["admin", "board"] },
+  { to: "/admin/logistics", key: "📦 物流與訂單管理", roles: ["admin", "board"] }, // 👈 新增：現場 QR Code 核銷與物流通知管理
   { to: "/admin/forecasting", key: "admin.nav.forecasting", roles: ["admin", "board"] },
   { to: "/admin/finance", key: "admin.nav.finance", roles: ["admin", "board", "auditor"] },
   { to: "/admin/voting", key: "admin.nav.voting", roles: ["admin", "board"] },
@@ -123,6 +124,8 @@ function AdminLayout() {
           <nav className="p-2">
             {visible.map((n) => {
               const active = pathname === n.to;
+              const labelText = n.key.startsWith("admin.") ? t(n.key as DictKey) : n.key;
+
               return (
                 <Link
                   key={n.to}
@@ -130,10 +133,10 @@ function AdminLayout() {
                   className={`flex items-center gap-2 rounded-sm px-3 py-2 text-sm font-medium transition-colors ${
                     active ? "bg-primary text-primary-foreground" : "hover:bg-stone-100"
                   }`}
-                  title={t(n.key)}
+                  title={labelText}
                 >
                   <span className={`size-1.5 rounded-full ${active ? "bg-white" : "bg-primary/40"}`} />
-                  {open && <span className="truncate">{t(n.key)}</span>}
+                  {open && <span className="truncate">{labelText}</span>}
                 </Link>
               );
             })}

@@ -406,22 +406,33 @@ function NonMemberNudge() {
   );
 }
 
-type CartItem = { id: string; name: string; price: number; tempType: TempType };
+type CartItem = { id: string; name: string; price: number; tempType: TempType; qty: number };
 
 function CartCheckoutPanel({
   cart,
   checkoutMessage,
   onOpenCheckout,
   onClear,
+  onUpdateQuantity,
 }: {
   cart: CartItem[];
   checkoutMessage: string | null;
   onOpenCheckout: () => void;
   onClear: () => void;
+  onUpdateQuantity: (itemId: string, delta: number) => void;
 }) {
   const { locale } = useI18n();
   const mixed = cart.some((item) => item.tempType === "cold") && cart.some((item) => item.tempType === "ambient");
-  const total = cart.reduce((sum, item) => sum + item.price, 0);
+  const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const groupedCart = cart.reduce<Record<string, CartItem>>((acc, item) => {
+    const key = `${item.name}-${item.tempType}`;
+    if (!acc[key]) {
+      acc[key] = { ...item };
+    } else {
+      acc[key] = { ...acc[key], qty: acc[key].qty + item.qty };
+    }
+    return acc;
+  }, {});
 
   return (
     <section className="mb-16 rounded-md border border-border bg-white p-6 shadow-sm">
@@ -445,18 +456,40 @@ function CartCheckoutPanel({
         </p>
       ) : (
         <div className="mt-5 space-y-3">
-          {cart.map((item) => (
-            <div key={item.id} className="flex items-center justify-between rounded border border-border bg-stone-50 px-3 py-2 text-sm">
-              <div>
-                <p className="font-semibold">{item.name}</p>
-                <p className="text-[11px] uppercase tracking-widest text-muted-foreground">{item.tempType === "cold" ? "Cold chain" : "Ambient"}</p>
+          {Object.values(groupedCart).map((item) => (
+            <div key={`${item.id}-${item.tempType}`} className="rounded border border-border bg-stone-50 px-3 py-3 text-sm">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="font-semibold">{item.name}</p>
+                  <p className="text-[11px] uppercase tracking-widest text-muted-foreground">{item.tempType === "cold" ? "Cold chain" : "Ambient"}</p>
+                </div>
+                <span className="font-mono font-bold">NT${item.price}</span>
               </div>
-              <span className="font-mono font-bold">${item.price}</span>
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onUpdateQuantity(item.id, -1)}
+                    className="grid size-7 place-items-center rounded border border-border bg-white text-sm font-bold"
+                  >
+                    −
+                  </button>
+                  <span className="min-w-8 text-center font-mono font-bold">x{item.qty}</span>
+                  <button
+                    type="button"
+                    onClick={() => onUpdateQuantity(item.id, 1)}
+                    className="grid size-7 place-items-center rounded border border-border bg-white text-sm font-bold"
+                  >
+                    +
+                  </button>
+                </div>
+                <span className="font-mono font-bold text-primary">NT${item.price * item.qty}</span>
+              </div>
             </div>
           ))}
           <div className="flex items-center justify-between rounded border border-primary/20 bg-primary/5 px-3 py-3 text-sm">
             <span>{locale === "zh" ? "小計" : "Subtotal"}</span>
-            <span className="font-mono font-extrabold">${total}</span>
+            <span className="font-mono font-extrabold">NT${total}</span>
           </div>
         </div>
       )}
@@ -523,16 +556,36 @@ function CoopPage() {
 
 
   function addToCart(campaign: Campaign) {
-    setCart((prev) => [
-      ...prev,
-      {
-        id: `${campaign.name.en}-${Date.now()}`,
-        name: campaign.name[locale],
-        price: campaign.memberPrice,
-        tempType: campaign.tempType,
-      },
-    ]);
+    setCart((prev) => {
+      const dup = prev.find((item) => item.id === campaign.name.en);
+      if (dup) {
+        return prev.map((item) =>
+          item.id === campaign.name.en ? { ...item, qty: item.qty + 1 } : item,
+        );
+      }
+      return [
+        ...prev,
+        {
+          id: campaign.name.en,
+          name: campaign.name[locale],
+          price: campaign.memberPrice,
+          tempType: campaign.tempType,
+          qty: 1,
+        },
+      ];
+    });
     setCheckoutMessage(null);
+  }
+
+  function updateCartQuantity(itemId: string, delta: number) {
+    setCart((prev) => {
+      const next = prev.map((item) => {
+        if (item.id !== itemId) return item;
+        const nextQty = Math.max(0, item.qty + delta);
+        return { ...item, qty: nextQty };
+      });
+      return next.filter((item) => item.qty > 0);
+    });
   }
 
   return (
@@ -564,6 +617,7 @@ function CoopPage() {
           setCart([]);
           setCheckoutMessage(null);
         }}
+        onUpdateQuantity={updateCartQuantity}
       />
 
       <CheckoutModal
@@ -573,6 +627,7 @@ function CoopPage() {
         walletBalance={walletBalance}
         onWalletDebit={(amount) => setWalletBalance((balance) => Math.max(0, balance - amount))}
         onPaid={(message) => setCheckoutMessage(message)}
+        onUpdateCartQuantity={updateCartQuantity}
         ecpayEndpoint={import.meta.env.VITE_ECPAY_CHECKOUT_URL ?? "http://localhost:54321/functions/v1/ecpay-checkout"}
       />
 

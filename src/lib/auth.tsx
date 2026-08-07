@@ -4,6 +4,7 @@ export type Role = "admin" | "member" | "trial";
 
 export type AuthUser = {
   id: string;
+  memberId?: string;
   email: string;
   phone: string;
   name: string;
@@ -11,6 +12,7 @@ export type AuthUser = {
   role: Role;
   verified: boolean;
   createdAt: number;
+  walletBalance?: number;
   trialStart?: number;
   trialDays?: number; // snapshot of config at signup
   trialBlocked?: boolean; // trial expired, cannot re-trial
@@ -31,9 +33,43 @@ type StoreShape = {
 const STORAGE_KEY = "tsm_auth_v2";
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+const MEMBER_ID_PREFIX: Record<Role, string> = {
+  admin: "A",
+  member: "F",
+  trial: "E",
+};
+
+function makeMemberId(role: Role, counter: number) {
+  return `${MEMBER_ID_PREFIX[role]}${String(counter).padStart(4, "0")}`;
+}
+
+function normalizeUsers(users: AuthUser[]): AuthUser[] {
+  const used = new Set<string>();
+  const nextCounter: Record<Role, number> = { admin: 1, member: 1, trial: 1 };
+
+  return users.map((user) => {
+    const nextRoleCounter = nextCounter[user.role] ?? 1;
+    let memberId = user.memberId?.trim();
+
+    if (!memberId) {
+      memberId = makeMemberId(user.role, nextRoleCounter);
+    }
+
+    if (used.has(memberId)) {
+      memberId = makeMemberId(user.role, nextRoleCounter + 1);
+    }
+
+    used.add(memberId);
+    nextCounter[user.role] = Math.max(nextRoleCounter + 1, nextCounter[user.role]);
+
+    return { ...user, memberId };
+  });
+}
+
 const SEED_USERS: AuthUser[] = [
   {
     id: "u_admin",
+    memberId: "A0001",
     email: "admin@coop.tw",
     phone: "0900000001",
     name: "Super Admin",
@@ -44,6 +80,7 @@ const SEED_USERS: AuthUser[] = [
   },
   {
     id: "u_demo_admin",
+    memberId: "A0002",
     email: "demo@tensqmiles.coop",
     phone: "0900000002",
     name: "Demo Admin",
@@ -54,6 +91,7 @@ const SEED_USERS: AuthUser[] = [
   },
   {
     id: "u_member",
+    memberId: "F0001",
     email: "member@coop.tw",
     phone: "0900000003",
     name: "Test Member",
@@ -61,6 +99,7 @@ const SEED_USERS: AuthUser[] = [
     role: "member",
     verified: true,
     createdAt: Date.now(),
+    walletBalance: 1280,
   },
 ];
 
@@ -85,7 +124,8 @@ function loadStore(): StoreShape {
     for (const s of SEED_USERS) {
       if (!merged.users.find((u) => u.email === s.email)) merged.users.push(s);
     }
-    return merged;
+    const normalizedUsers = normalizeUsers(merged.users);
+    return { ...merged, users: normalizedUsers };
   } catch {
     return emptyStore();
   }
@@ -141,6 +181,7 @@ type AuthCtx = {
   setTrialExpiryDate: (userId: string, date: Date, note?: string) => void;
   adjustTrialDays: (userId: string, delta: number, note?: string) => void;
   forceExpireTrial: (userId: string, note?: string) => void;
+  topupWallet: (userId: string, amount: number, note?: string) => void;
   forceConvert: (userId: string) => void;
   adminNotes: Record<string, { ts: number; text: string; adminId: string | null }[]>;
 };
@@ -217,8 +258,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       const id = "u_" + mkToken();
       const token = mkToken();
+      const nextTrialSeq = store.users.filter((u) => u.role === "trial").length + 1;
       const newUser: AuthUser = {
         id,
+        memberId: makeMemberId("trial", nextTrialSeq),
         email: input.email,
         phone: input.phone,
         name: input.name,
@@ -226,6 +269,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: "trial",
         verified: false,
         createdAt: Date.now(),
+        walletBalance: 0,
         trialStart: Date.now(),
         trialDays: store.trialDays,
       };
@@ -253,8 +297,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       const id = "u_" + mkToken();
       const token = mkToken();
+      const nextMemberSeq = store.users.filter((u) => u.role === "member").length + 1;
       const newUser: AuthUser = {
         id,
+        memberId: makeMemberId("member", nextMemberSeq),
         email: input.email,
         phone: input.phone,
         name: input.name,
@@ -262,6 +308,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: "member",
         verified: false,
         createdAt: Date.now(),
+        walletBalance: 0,
       };
       const link = mkLink(token);
       setStore((s) => ({
@@ -392,13 +439,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
           : s.adminNotes,
       })),
+    topupWallet: (userId, amount, note) =>
+      setStore((s) => ({
+        ...s,
+        users: s.users.map((u) =>
+          u.id === userId
+            ? { ...u, walletBalance: Math.max(0, (u.walletBalance ?? 0) + Math.max(0, amount)) }
+            : u,
+        ),
+        adminNotes: note
+          ? {
+              ...s.adminNotes,
+              [userId]: [
+                ...(s.adminNotes[userId] ?? []),
+                { ts: Date.now(), text: note, adminId: s.currentUserId },
+              ],
+            }
+          : s.adminNotes,
+      })),
     adminNotes: store.adminNotes,
     forceConvert: (userId) =>
       setStore((s) => ({
         ...s,
         users: s.users.map((u) =>
           u.id === userId
-            ? { ...u, role: "member", convertedToMember: true, verified: true, trialBlocked: false }
+            ? { ...u, role: "member", convertedToMember: true, verified: true, trialBlocked: false, walletBalance: u.walletBalance ?? 0 }
             : u,
         ),
       })),
