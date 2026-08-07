@@ -12,4 +12,10 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    server: {
+      port: 8080,
+      strictPort: true, // 若 8080 被佔用會直接報錯阻止自動切換 Port，方便確認佔用狀況
+    },
+  },
 });

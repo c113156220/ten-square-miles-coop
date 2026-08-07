@@ -1,114 +1,115 @@
-# 專案
+# 十里方圓智慧合作社與電商系統 (Ten Square Miles Co-op) ── 專案規格說明書
 
-### Project Overview
+本專案致力於建立一個結合 **「社務行政管理 (社務系統)」** 與 **「零庫存預購共同購買 (業務系統)」** 的雙軌制智慧合作社營運平台，全名為 **「有限責任臺灣城鄉永續生活消費合作社」**（簡稱 **十里方圓**）。
 
-Create a web-based Co-operative Management & E-commerce System called "十圓方里" (Ten Square Miles Co-op). 
+本系統為 **Lovable** 驅動之 Web 應用程式，後端搭配 **Supabase (PostgreSQL)** 雲端資料庫，旨在透過資訊科技實踐「民主經濟」、「合理計稅」與「無庫存預購」等現代永續生活轉型實驗。
 
-The system operates as a hybrid platform serving three core identities: Member (社員), Customer (顧客), and Shareholder (股東). It must support dual workflows: "Co-op Administration (社務系統)" and "E-commerce & Pre-order Operation (業務系統)".
-
----
-
-### Language & i18n Support (多國語言支援)
-
-- **Bilingual Interface**: Support full internationalization (i18n) with an instant language switcher in the navbar/header for **Traditional Chinese (繁體中文)** and **English (EN)**.
-
-- All system labels, menu items, status badges, and user workflows must seamlessly render based on the selected language.
+* **線上展示網址 (Live App)**: [https://ten-square-miles-coop.lovable.app](https://ten-square-miles-coop.lovable.app) 
 
 ---
 
-### Key Roles & Authentication
+## 🗺️ 專案概述 (Project Overview)
 
-1. **User Roles**: 
+本系統作為一個混合型平台，服務三種核心身分：**社員 (Member)**、**一般顧客/訪客 (Customer)** 與 **股東 (Shareholder)** ，並提供以下雙核心模組架構 ：
 
-   - Guest / Non-member (非社員)
-
-   - Verified Member (社員)
-
-   - Board / Admin (理監事 / 管理員)
-
-2. **Member Onboarding & Identity**:
-
-   - Real-name verification (實名認證) workflow.
-
-   - Application Form -> Admin Backend Review -> mandatory "Co-op Educational Training (社務教育)" tracking -> Board Approval -> Stock Share issuing & Unique Member ID assignment.
+1. **社務與治理系統 (Co-op Administration)**：處理社員實名入社、十講教育闖關、投票治理及理監事審核後台 。
+2. **業務與預購營運系統 (E-commerce & Pre-order Operation)**：處理無庫存商品預購、線上意向調查、智能溫層物流、自動化多軌金流與符合《合作社法》的動態計稅發票開立 。
 
 ---
 
-### Core Module 1: E-commerce & Supply Chain (零庫存預購與共同購買)
+## 🌐 多國語言支援 (Language & i18n Support)
 
-1. **Member Wishlist & Demand Pooling (願望清單與需求預測)**:
-
-   - Members can submit product ideas/wishlists. Successful sourcing awards reward points (積點).
-
-   - "Demand Survey (線上意象調查)" widget before formal order placement to forecast vendor stock.
-
-2. **Pre-order Flow (無庫存預購機制)**:
-
-   - Display real-time pre-order counts and "Hot Items (熱銷商品)".
-
-   - Members must pay a deposit/full amount to lock in order before the deadline. Orders close -> Purchase from vendor.
-
-3. **Product & Tax Matrix (稅務與商品分類引擎)**:
-
-   - **Primary Agricultural Products (一級農產品)**: Tax-exempt (免稅).
-
-   - **Processed Foods / Healthy Bento Boxes (加工食品/健康餐盒)**: Standard Tax Rate (應稅).
-
-   - **Sales Cap Guardian**: Track non-member sales limit (must remain ≤ 30% of total revenue). Auto-apply tax & Third-party Payment Invoice (第三方支付發票串接) for non-member transactions.
-
-4. **Special Inventory & Logistics (特殊商品進銷存與配送)**:
-
-   - Temperature/Handling flags for different SKUs (e.g., Fresh Eggs vs. Soy Sauce).
-
-   - Delivery methods: Self-pickup (現場取貨) or Home Delivery (宅配).
+* **雙語介面**：導覽列與頁首設有即時語言切換器，支援 **繁體中文 (Traditional Chinese)** 與 **英文 (English)** 之間的流暢切換 。
+* 系統中所有的欄位標籤、選單項目、訂單狀態徽章、錯誤提示以及使用者操作流程，皆必須完美對應並切換所選語系 。
 
 ---
 
-### Core Module 2: Co-op Governance & Surplus Distribution (社務與結餘分配)
+## 🔐 關鍵角色與身分驗證 (Key Roles & Authentication)
 
-1. **Governance Dashboard (民主治理與會議管理)**:
+### 1. 使用者角色 (User Roles)
+* **訪客 / 非社員 (Guest / Non-member)**：可瀏覽商品，以「非社員價」進行預購，但無法參與社務投票。
+* **實習社員 (Trial Member)**：繳納 $100 元保證金即可加入，不配發正式編號，可於 30 天內體驗社員優惠價 。
+* **正式社員 (Verified Member)**：通過實名制與教育訓練審核、繳納正式股金（學生 $500 元、一般人 $1,000~$10,000 元）的擁有者，享有免稅社員價及大會投票權 。
+* **理監事 / 管理員 (Board / Admin)**：擁有管理後台權限，可審核新社員、管理商品上架、調度物流與開立電子發票。
 
-   - Annual General Meeting (社員大會) tracker: 1 member = 1 vote voting module.
-
-   - Bi-annual Board Meeting (社務會議) logger.
-
-   - Member Education Center (社務教育學習專區).
-
-2. **Surplus Engine (結餘與回饋計算機)**:
-
-   - Financial ledger dividing total revenue into Costs, Reserve Fund (50% 合作資本/公積金), and Member Returns.
-
-   - Distribute remaining surplus (50%) based on **Member Purchase Contribution Ratio (消費貢獻度/累積點數)** rather than just stock holding.
+### 2. 實名入社與驗證闖關流程 (Member Onboarding)
+非社員點擊加入時，系統引導進行以下防弊與教育闖關流程：
+1. **填寫基本資料**（新增註冊密碼欄）與 Email 信箱驗證（免去昂貴簡訊費用） 。
+2. **「合作社十講」教育字卡閱讀**（每頁設有 3 秒防快刷鎖定）。
+3. **隨機理念測驗**（系統從 8 題題庫隨機抽取 3 題，必須全對才能過關）。
+4. **理監事後台審核**（理監事於後台核對身分證正面影本、股金/保證金匯款證明） 。
+5. **正式入社**：審核通過，發送通知，正式配發唯一社員 ID 並記錄認購股數 。
 
 ---
 
-### UI / UX Requirements
+## 📦 核心模組一：零庫存預購與共同購買 (E-commerce & Supply Chain)
 
-- Modern, clean, and friendly design reflecting health, sustainability, and community trust.
+### 1. 社員許願池與需求預測 (Wishlist & Demand Pooling)
+* 社員可提交想要的商品或活動構想至許願池，其他人可進行「+1 集氣」。
+* 商品正式上架前，提供「線上意向調查」組件，預估社員潛在需求，提供給供應商進行生產預留。
 
-- Responsive layout with clear single entry point (單一入口) switching between Member Portal and Administrative Control Panel.
+### 2. 無庫存預購機制 (Pre-order Flow)
+* 系統顯示即時預購進度條與「成團門檻數量」（零庫存機制，達門檻才進貨）。
+* 社員必須在截止日期前，進行線上付款以鎖定訂單，截單時間一到，系統自動鎖定並轉入進貨流程。
 
-- Interactive status tags for orders in both Chinese and English: 
+### 3. 商品與動態稅務矩陣 (Product & Tax Matrix)
+* **免稅一級農產品**：不論身分（社員/非社員）購買皆免營業稅（如白米、新鮮蔬菜）。
+* **應稅加工食品/餐盒**：
+  * **正式社員/實習社員**：享有免徵 5% 營業稅之法規福利（顯示社員免稅價）。
+  * **非社員/訪客**：依法必須課徵 5% 營業稅（顯示非社員含稅價） [cite: 8, 43, 51]。
+* **社外限額守護者**：系統自動監控「非社員銷售總額」，確保維持在法規限制的 30% 以下，防止合作社超額課稅。後台需提供開立電子發票之相關載具與統編資訊。
 
-  - [Surveying / 意象調查中] -> [Pre-ordering / 預購中] -> [Sourcing / 廠商進貨中] -> [Ready for Pickup/Delivery / 待取貨].
+### 4. 特殊商品進銷存與物流 (Logistics & Inventory)
+* **物流溫層標記**：商品標記「常溫（如醬油）」、「冷藏（如鮮蛋、生鮮）」等不同配送溫層 。
+* **出貨分流與防呆鎖定**：
+  * 支援「自取（清華水木站）」與「7-11 交貨便（寄送）」。
+  * **付款鎖定**：若物流選擇「交貨便（超商取貨）」，付款方式自動限定為「超商取貨付款」或線上支付；徹底杜絕「自取卻搭配超商付款」等邏輯錯誤！
+  * 交貨便運費由社員自行承擔，商品寄出後系統自動發送通知通知顧客。
 
-This project was built with [Lovable](https://lovable.dev).
+---
 
-**Live app**: https://ten-square-miles-coop.lovable.app
+## 🏛️ 核心模組二：社務治理與結餘分配 (Governance & Surplus Engine)
 
-## Build with Lovable
+### 1. 民主治理與會議管理 (Governance Dashboard)
+* **社員大會追蹤器**：實踐合作社核心「一人一票」民主投票模組（不論出資多寡，每人皆僅有一票）。
+* **合格社員篩選**：自動偵測，當年度消費達 $1,500 元以上且實際參與志工服務者，才具有社員大會投票及理監事選舉權；未達標者自動降為「準社員」並鎖定投票權 [cite: 422]。
+* **會議 Logger**：記錄每半年一次的社務會議與年度大會決策。
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/4e24424d-47a8-4738-b338-9e2b261e0592).
+### 2. 季末結餘分配計算機 (Surplus Engine)
+* **記帳總帳**：自動將總營收扣除 Costs 成本，提撥 30% 公積金 、10% 公益金、10% 理監事與職員酬勞 。
+* **消費貢獻度分配**：剩下 50% 結餘分配金 ，**不按股權比例分紅**，而是依據社員的 **「消費貢獻度（累積積點）」** 比例在季末結算後進行公式化分配與公告。
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+---
 
-## Development
+## 🎨 UI / UX 設計與狀態標籤 (Design & Order Status)
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+* 採用現代、整潔且溫馨的綠色調設計，切實傳達健康、永續、誠信與社區互助的品牌理念。
+* 響應式佈局 (Responsive Layout)，提供單一入口 (Single Entry) 流暢切換「社員入口」與「管理控制後台」。
+* **訂單狀態完整生命週期**：
+  `[Surveying / 意向調查中]` -> `[Pre-ordering / 預購中]` -> `[Sourcing / 廠商進貨中]` -> `[Ready for Pickup/Delivery / 待取貨]` 
 
-```sh
-git clone https://github.com/c113156220/ten-square-miles-coop
+* **新型防弊訂單編號**：格式修正為 `身分證字號首字-生日-電話後四碼` (例如 `A123-1025-5678`)，方便自取站快速對帳與核對身分。
+
+---
+
+## 💻 本地開發步驟 (Development)
+
+本專案使用 **Node.js** 與 **npm** 進行建置（建議使用 **nvm** 來管理 Node 版本）。
+
+請在終端機（Terminal）中依序執行以下指令：
+
+```bash
+# 1. 複製（下載）專案：將 GitHub 上的程式碼下載到本機
+git clone <本專案的 GitHub 儲存庫網址>
+
+# 2. 移動目錄：走進剛剛下載好的專案資料夾中
+cd <專案資料夾名稱>
+
+# 3. 安裝套件：一鍵下載並安裝專案所需的所有第三方依賴套件 (node_modules)
+npm i
+
+# 4. 啟動網頁：在本地端啟動開發伺服器，讓你在瀏覽器即時預覽與測試網頁
 npm run dev
 ```
+
+---
