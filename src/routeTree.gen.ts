@@ -31,6 +31,7 @@ import { Route as AdminMembersRouteImport } from './routes/admin.members'
 import { Route as AdminPreordersRouteImport } from './routes/admin.preorders'
 import { Route as AdminRolesRouteImport } from './routes/admin.roles'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
+import { Route as AdminSupportRouteImport } from './routes/admin.support'
 import { Route as AdminSurplusRouteImport } from './routes/admin.surplus'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminVotingRouteImport } from './routes/admin.voting'
@@ -145,6 +146,11 @@ const AdminSettingsRoute = AdminSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSupportRoute = AdminSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSurplusRoute = AdminSurplusRouteImport.update({
   id: '/surplus',
   path: '/surplus',
@@ -183,6 +189,7 @@ export interface FileRoutesByFullPath {
   '/admin/preorders': typeof AdminPreordersRoute
   '/admin/roles': typeof AdminRolesRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/support': typeof AdminSupportRoute
   '/admin/surplus': typeof AdminSurplusRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/voting': typeof AdminVotingRoute
@@ -209,6 +216,7 @@ export interface FileRoutesByTo {
   '/admin/preorders': typeof AdminPreordersRoute
   '/admin/roles': typeof AdminRolesRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/support': typeof AdminSupportRoute
   '/admin/surplus': typeof AdminSurplusRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/voting': typeof AdminVotingRoute
@@ -237,6 +245,7 @@ export interface FileRoutesById {
   '/admin/preorders': typeof AdminPreordersRoute
   '/admin/roles': typeof AdminRolesRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/support': typeof AdminSupportRoute
   '/admin/surplus': typeof AdminSurplusRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/voting': typeof AdminVotingRoute
@@ -266,6 +275,7 @@ export interface FileRouteTypes {
     | '/admin/preorders'
     | '/admin/roles'
     | '/admin/settings'
+    | '/admin/support'
     | '/admin/surplus'
     | '/admin/users'
     | '/admin/voting'
@@ -292,6 +302,7 @@ export interface FileRouteTypes {
     | '/admin/preorders'
     | '/admin/roles'
     | '/admin/settings'
+    | '/admin/support'
     | '/admin/surplus'
     | '/admin/users'
     | '/admin/voting'
@@ -319,6 +330,7 @@ export interface FileRouteTypes {
     | '/admin/preorders'
     | '/admin/roles'
     | '/admin/settings'
+    | '/admin/support'
     | '/admin/surplus'
     | '/admin/users'
     | '/admin/voting'
@@ -498,6 +510,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSettingsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/support': {
+      id: '/admin/support'
+      path: '/support'
+      fullPath: '/admin/support'
+      preLoaderRoute: typeof AdminSupportRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/surplus': {
       id: '/admin/surplus'
       path: '/surplus'
@@ -530,6 +549,7 @@ interface AdminRouteChildren {
   AdminPreordersRoute: typeof AdminPreordersRoute
   AdminRolesRoute: typeof AdminRolesRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminSupportRoute: typeof AdminSupportRoute
   AdminSurplusRoute: typeof AdminSurplusRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminVotingRoute: typeof AdminVotingRoute
@@ -544,6 +564,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminPreordersRoute: AdminPreordersRoute,
   AdminRolesRoute: AdminRolesRoute,
   AdminSettingsRoute: AdminSettingsRoute,
+  AdminSupportRoute: AdminSupportRoute,
   AdminSurplusRoute: AdminSurplusRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminVotingRoute: AdminVotingRoute,

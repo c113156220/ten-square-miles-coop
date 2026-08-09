@@ -13,7 +13,7 @@ export type CheckoutItem = {
   qty?: number;
 };
 
-export type ShippingType = "COOP_PICKUP" | "UNIMARTC2C" | "FAMILY" | "HOME_DELIVERY";
+export type ShippingType = "COOP_PICKUP" | "EXPRESS_DELIVERY" | "UNIMARTC2C" | "FAMILY";
 export type PaymentType = "ECPAY" | "WALLET" | "BANK_TRANSFER" | "COD";
 
 type CheckoutModalProps = {
@@ -29,23 +29,23 @@ type CheckoutModalProps = {
 
 const SHIPPING_FEES: Record<ShippingType, number> = {
   COOP_PICKUP: 0,
+  EXPRESS_DELIVERY: 120,
   UNIMARTC2C: 60,
   FAMILY: 60,
-  HOME_DELIVERY: 120,
 };
 
 const SHIPPING_LABELS: Record<ShippingType, { zh: string; en: string; desc: string }> = {
-  COOP_PICKUP: { zh: "合作社門市自取 (免費)", en: "Co-op pickup (free)", desc: "合作社門市自取，最適合冷鏈與常溫混配。" },
-  UNIMARTC2C: { zh: "7-11 賣貨便 (運費 $60)", en: "7-ELEVEN delivery ($60)", desc: "7-11 賣貨便，需先選擇門市。" },
+  COOP_PICKUP: { zh: "合作社門市自取 (免費)", en: "Co-op pickup (free)", desc: "合作社現場門市自取，適合冷鏈與常溫。" },
+  EXPRESS_DELIVERY: { zh: "物流公司寄出 (黑貓/新竹貨運 $120)", en: "Express Delivery ($120)", desc: "全程冷鏈與常溫溫控宅配到府。" },
+  UNIMARTC2C: { zh: "7-11 賣貨便 (運費 $60)", en: "7-ELEVEN delivery ($60)", desc: "7-11 超商取貨，需先選擇門市。" },
   FAMILY: { zh: "全家店到店 (運費 $60)", en: "FamilyMart delivery ($60)", desc: "全家便利商店取貨。" },
-  HOME_DELIVERY: { zh: "黑貓冷鏈宅配 (運費 $120)", en: "Cold-chain Home Delivery ($120)", desc: "全程冷鏈控溫宅配到府。" },
 };
 
 const PAYMENT_LABELS: Record<PaymentType, { zh: string; en: string; desc: string }> = {
-  ECPAY: { zh: "綠界信用卡", en: "ECPay credit card", desc: "線上即時刷卡支付" },
+  ECPAY: { zh: "綠界線上刷卡", en: "ECPay credit card", desc: "線上即時刷卡支付" },
   WALLET: { zh: "儲值金扣款", en: "Stored value wallet", desc: "直接從會員儲值金扣款" },
   BANK_TRANSFER: { zh: "銀行轉帳 / 匯款", en: "Bank Transfer", desc: "轉帳後請提供帳號後五碼核對" },
-  COD: { zh: "超商取貨付款", en: "Cash on Delivery", desc: "貨到超商門市再付款" },
+  COD: { zh: "貨到付款 / 超商取貨付款", en: "Cash on Delivery", desc: "包裹送達或到店後現場付款" },
 };
 
 export function CheckoutModal({
@@ -73,6 +73,7 @@ export function CheckoutModal({
   const hasAmbientItems = cart.some((item) => item.tempType === "ambient");
   const hasMixedTemp = hasColdItems && hasAmbientItems;
   const memberId = user?.memberId ?? "F0001";
+
   const itemGroups = useMemo(() => {
     const groups = new Map<string, CheckoutItem>();
     cart.forEach((item) => {
@@ -162,7 +163,7 @@ export function CheckoutModal({
         .insert({
           total_amount: total,
           status: "paid",
-          delivery_method: shippingType,
+          delivery_method: SHIPPING_LABELS[shippingType].zh,
           created_at: new Date().toISOString(),
         })
         .select()
@@ -246,10 +247,8 @@ export function CheckoutModal({
     setBusy(true);
 
     try {
-      // 1. 先寫入 Supabase 與 LocalStorage，取得真實訂單 ID
       const nextOrderId = await saveOrderToDatabase();
 
-      // 2. 根據四種付款方式進行處理
       if (paymentType === "WALLET") {
         if (walletBalance < total) {
           alert(locale === "zh" ? "儲值金餘額不足，請改選其他付款方式。" : "Insufficient wallet balance.");
@@ -262,7 +261,7 @@ export function CheckoutModal({
         const lastFive = bankLastFive.trim() || "88888";
         onPaid(locale === "zh" ? `轉帳訂單 #${nextOrderId} 已建立 (對帳碼: ${lastFive})。` : `Bank transfer order created.`);
       } else if (paymentType === "COD") {
-        onPaid(locale === "zh" ? `超商取貨付款訂單 #${nextOrderId} 已成立。` : `COD order confirmed.`);
+        onPaid(locale === "zh" ? `貨到付款 / 超商取貨付款訂單 #${nextOrderId} 已成立。` : `COD order confirmed.`);
       } else {
         onPaid(locale === "zh" ? `綠界線上刷卡成功！訂單 #${nextOrderId} 已成立。` : `ECPay payment successful.`);
       }
@@ -388,11 +387,6 @@ export function CheckoutModal({
                     );
                   })}
                 </div>
-                {hasMixedTemp && (
-                  <div className="mt-3 rounded-2xl border border-blue-200 bg-blue-50 p-3 text-xs text-blue-800">
-                    ❄️ {locale === "zh" ? "混溫訂單將依商品屬性分開安排配送與取貨。" : "Mixed-temperature orders will be handled separately by temperature and fulfillment mode."}
-                  </div>
-                )}
               </div>
 
               {/* 3. 付款方式 */}

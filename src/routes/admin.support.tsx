@@ -1,10 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { AdminLogisticsManager } from "@/components/AdminLogisticsManager";
 import { Search } from "lucide-react";
 
-export const Route = createFileRoute("/admin/logistics")({
-  component: AdminLogisticsPage,
+export const Route = createFileRoute("/admin/support")({
+  component: AdminSupportPage,
 });
 
 interface Ticket {
@@ -23,44 +22,7 @@ const MOCK_TICKETS: Ticket[] = [
   { id: "3", user: "John Doe", email: "john@coop.tw", lastMessage: "超商取貨如何選擇門市？", status: "pending", role: "真人幹部", updatedAt: "2小時前" },
 ];
 
-function AdminLogisticsPage() {
-  const [activeTab, setActiveTab] = useState<"logistics" | "support">("logistics");
-
-  return (
-    <div className="space-y-6 p-2">
-      {/* 頂部分頁標籤 */}
-      <div className="flex gap-2 border-b border-slate-200 pb-3">
-        <button
-          type="button"
-          onClick={() => setActiveTab("logistics")}
-          className={
-            activeTab === "logistics"
-              ? "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white shadow-sm transition"
-              : "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition"
-          }
-        >
-          🚚 物流與訂單管理
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("support")}
-          className={
-            activeTab === "support"
-              ? "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 text-white shadow-sm transition"
-              : "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition"
-          }
-        >
-          💬 社員客服與工單管理
-          <span className="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">3</span>
-        </button>
-      </div>
-
-      {activeTab === "logistics" ? <AdminLogisticsManager /> : <SupportManagementSection />}
-    </div>
-  );
-}
-
-function SupportManagementSection() {
+function AdminSupportPage() {
   const [selectedTicket, setSelectedTicket] = useState<Ticket>(MOCK_TICKETS[0]);
   const [replyText, setReplyText] = useState<string>("");
   const [search, setSearch] = useState<string>("");
@@ -70,14 +32,14 @@ function SupportManagementSection() {
   );
 
   return (
-    <div className="space-y-4">
+    <div className="p-2 space-y-4">
       <div>
-        <h2 className="text-lg font-bold text-slate-800">🌱 社員客服中心 (真人幹部接手)</h2>
-        <p className="text-xs text-slate-500">點擊左側對話列表，即可於右側檢視歷史對話並進行幹部回覆。</p>
+        <h2 className="text-xl font-bold text-slate-800">💬 社員客服與工單管理</h2>
+        <p className="text-xs text-slate-500 mt-1">獨立客服管理面板：點擊左側對話即可在右側檢視歷史對話並進行幹部回覆。</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* 左側列表區 */}
+        {/* 左側列表 */}
         <div className="border border-slate-200 rounded-2xl bg-white p-4 space-y-3 shadow-sm">
           <div className="relative">
             <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400" />
@@ -90,7 +52,7 @@ function SupportManagementSection() {
             />
           </div>
 
-          <div className="space-y-2 max-h-[520px] overflow-y-auto pr-1">
+          <div className="space-y-2 max-h-[550px] overflow-y-auto pr-1">
             {filteredTickets.map((ticket) => {
               const isSelected = selectedTicket.id === ticket.id;
               const isPending = ticket.status === "pending";
@@ -128,7 +90,7 @@ function SupportManagementSection() {
           </div>
         </div>
 
-        {/* 右側對話面板 */}
+        {/* 右側對話區 */}
         <div className="lg:col-span-2 border border-slate-200 rounded-2xl bg-white p-5 flex flex-col justify-between min-h-[500px] shadow-sm">
           <div className="border-b border-slate-200 pb-3 mb-4 flex justify-between items-center">
             <div>
@@ -143,7 +105,7 @@ function SupportManagementSection() {
             </button>
           </div>
 
-          <div className="flex-1 bg-slate-50 rounded-2xl p-4 space-y-3 overflow-y-auto max-h-[380px] mb-4 border border-slate-100">
+          <div className="flex-1 bg-slate-50 rounded-2xl p-4 space-y-3 overflow-y-auto max-h-[400px] mb-4 border border-slate-100">
             <div className="bg-white p-3 rounded-2xl border border-slate-200 text-xs max-w-[80%] shadow-sm space-y-1">
               <p className="font-bold text-emerald-700 text-[10px]">{selectedTicket.user}</p>
               <p className="text-slate-800">{selectedTicket.lastMessage}</p>
