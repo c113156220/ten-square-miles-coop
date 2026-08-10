@@ -18,6 +18,7 @@ const STORE_NAV: NavItem[] = [
 ];
 
 const GOVERNANCE_NAV: NavItem[] = [
+  { to: "/", label: { zh: "共同購買 / 市集", en: "Shop / Market" } },
   { to: "/governance", label: { zh: "社務大廳", en: "Governance" } },
   { to: "/impact", label: { zh: "社會影響力", en: "Impact" } },
   { to: "/onboarding", label: { zh: "註冊入社", en: "Register" } },

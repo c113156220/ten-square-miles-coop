@@ -54,7 +54,7 @@ export function ECPayLogisticsModal({ open, onClose, onSelect }: Props) {
             <p className="text-sm font-semibold">支援門市類型</p>
             <div className="grid gap-2 text-sm">
               <div className="rounded-xl border border-primary/20 bg-white p-3">
-                <p className="font-semibold">7-11 / UNIMARTC2C</p>
+                <p className="font-semibold">7-11 交貨便 / UNIMARTC2C</p>
                 <p className="text-xs text-muted-foreground">綠界超商交貨便門市取貨</p>
               </div>
               <div className="rounded-xl border border-primary/20 bg-white p-3">
