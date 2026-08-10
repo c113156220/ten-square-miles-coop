@@ -1,7 +1,6 @@
 ﻿import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useState } from "react";
-import { CreditCard, Wallet, Truck, MapPin, X, ShieldCheck, Package, CheckCircle2, Clock3, Building2, Store, Minus, Plus } from "lucide-react";
-import { ECPayLogisticsModal, type LogisticsStore } from "@/components/ECPayLogisticsModal";
+import { CreditCard, Wallet, Truck, X, ShieldCheck, CheckCircle2, Building2, Store, Minus, Plus, Loader2, Lock } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 
@@ -13,7 +12,7 @@ export type CheckoutItem = {
   qty?: number;
 };
 
-export type ShippingType = "COOP_PICKUP" | "EXPRESS_DELIVERY" | "UNIMARTC2C" | "FAMILY";
+export type ShippingType = "COOP_PICKUP" | "EXPRESS_DELIVERY";
 export type PaymentType = "ECPAY" | "WALLET" | "BANK_TRANSFER" | "COD";
 
 type CheckoutModalProps = {
@@ -24,28 +23,24 @@ type CheckoutModalProps = {
   onWalletDebit: (amount: number) => void;
   onPaid: (message: string) => void;
   onUpdateCartQuantity?: (itemId: string, delta: number) => void;
-  ecpayEndpoint: string;
+  ecpayEndpoint?: string;
 };
 
 const SHIPPING_FEES: Record<ShippingType, number> = {
   COOP_PICKUP: 0,
   EXPRESS_DELIVERY: 120,
-  UNIMARTC2C: 60,
-  FAMILY: 60,
 };
 
 const SHIPPING_LABELS: Record<ShippingType, { zh: string; en: string; desc: string }> = {
   COOP_PICKUP: { zh: "合作社門市自取 (免費)", en: "Co-op pickup (free)", desc: "合作社現場門市自取，適合冷鏈與常溫。" },
   EXPRESS_DELIVERY: { zh: "物流公司寄出 (黑貓/新竹貨運 $120)", en: "Express Delivery ($120)", desc: "全程冷鏈與常溫溫控宅配到府。" },
-  UNIMARTC2C: { zh: "7-11 賣貨便 (運費 $60)", en: "7-ELEVEN delivery ($60)", desc: "7-11 超商取貨，需先選擇門市。" },
-  FAMILY: { zh: "全家店到店 (運費 $60)", en: "FamilyMart delivery ($60)", desc: "全家便利商店取貨。" },
 };
 
 const PAYMENT_LABELS: Record<PaymentType, { zh: string; en: string; desc: string }> = {
-  ECPAY: { zh: "綠界線上刷卡", en: "ECPay credit card", desc: "線上即時刷卡支付" },
+  ECPAY: { zh: "綠界線上刷卡", en: "ECPay credit card", desc: "線上即時信用卡刷卡支付" },
   WALLET: { zh: "儲值金扣款", en: "Stored value wallet", desc: "直接從會員儲值金扣款" },
   BANK_TRANSFER: { zh: "銀行轉帳 / 匯款", en: "Bank Transfer", desc: "轉帳後請提供帳號後五碼核對" },
-  COD: { zh: "貨到付款 / 超商取貨付款", en: "Cash on Delivery", desc: "包裹送達或到店後現場付款" },
+  COD: { zh: "貨到付款", en: "Cash on Delivery", desc: "包裹宅配送達時現場付款" },
 };
 
 export function CheckoutModal({
@@ -56,22 +51,23 @@ export function CheckoutModal({
   onWalletDebit,
   onPaid,
   onUpdateCartQuantity,
-  ecpayEndpoint,
 }: CheckoutModalProps) {
   const { locale } = useI18n();
   const { user } = useAuth();
   const [shippingType, setShippingType] = useState<ShippingType>("COOP_PICKUP");
   const [paymentType, setPaymentType] = useState<PaymentType>("ECPAY");
   const [bankLastFive, setBankLastFive] = useState("");
-  const [selectedStore, setSelectedStore] = useState<LogisticsStore | null>(null);
-  const [storePickerOpen, setStorePickerOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [orderId, setOrderId] = useState<string>("");
 
+  const [cardNumber, setCardNumber] = useState("4311 9522 2222 2222");
+  const [cardExp, setCardExp] = useState("12/28");
+  const [cardCvc, setCardCvc] = useState("222");
+  const [otpCode, setOtpCode] = useState("1234");
+  const [processingEcpay, setProcessingEcpay] = useState(false);
+
   const hasColdItems = cart.some((item) => item.tempType === "cold");
-  const hasAmbientItems = cart.some((item) => item.tempType === "ambient");
-  const hasMixedTemp = hasColdItems && hasAmbientItems;
   const memberId = user?.memberId ?? "F0001";
 
   const itemGroups = useMemo(() => {
@@ -88,23 +84,17 @@ export function CheckoutModal({
     return Array.from(groups.values());
   }, [cart]);
 
-  // 金額計算
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * (item.qty ?? 1), 0), [cart]);
   const shippingFee = SHIPPING_FEES[shippingType];
   const total = subtotal + shippingFee;
 
   if (!open) return null;
 
-  function resetState() {
+  function closeModal() {
     setStep(1);
     setBusy(false);
     setOrderId("");
-    setSelectedStore(null);
     setBankLastFive("");
-  }
-
-  function closeModal() {
-    resetState();
     onClose();
   }
 
@@ -123,7 +113,6 @@ export function CheckoutModal({
 
   const canUseSupabase = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
 
-  // 💾 寫入 Supabase 資料庫與 LocalStorage 同步 Helper
   async function saveOrderToDatabase(): Promise<string> {
     const today = new Date();
     const ymd = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, "0")}${String(today.getDate()).padStart(2, "0")}`;
@@ -141,95 +130,62 @@ export function CheckoutModal({
       pickupCode: `COOP-PICKUP:${displayOrderId}:${Date.now()}`,
       createdAt: new Date().toISOString(),
       memberId,
-      selectedStore: selectedStore ? selectedStore.CVSStoreName : null,
-      selectedStoreType: selectedStore?.LogisticsSubType ?? shippingType,
     };
 
     try {
-      const existingLocalOrders = readLocalOrders();
-      writeLocalOrders([newLocalItem, ...existingLocalOrders]);
+      writeLocalOrders([newLocalItem, ...readLocalOrders()]);
     } catch (lsErr) {
       console.warn("LocalStorage 同步提醒:", lsErr);
     }
 
-    if (!canUseSupabase) {
-      console.info("Supabase 未配置或缺少環境變數，僅保留本地訂單暫存。", { displayOrderId });
-      return displayOrderId;
-    }
+    if (!canUseSupabase) return displayOrderId;
 
     try {
       const { data: newOrder, error: orderErr } = await (supabase as any)
         .from("orders")
         .insert({
           total_amount: total,
-          status: "paid",
+          status: paymentType === "ECPAY" ? "pending" : "paid",
           delivery_method: SHIPPING_LABELS[shippingType].zh,
           created_at: new Date().toISOString(),
         })
         .select()
         .single();
 
-      if (orderErr) {
-        console.error("❌ Supabase Orders 寫入失敗:", orderErr);
-        return displayOrderId;
-      }
+      if (orderErr) return displayOrderId;
 
       const createdOrderId = String(newOrder.id);
       newLocalItem.dbOrderId = createdOrderId;
       newLocalItem.id = displayOrderId;
       newLocalItem.orderId = displayOrderId;
-      const nextLocalOrders = [newLocalItem, ...readLocalOrders().filter((item: any) => item.orderId !== displayOrderId)];
-      writeLocalOrders(nextLocalOrders);
+      writeLocalOrders([newLocalItem, ...readLocalOrders().filter((item: any) => item.orderId !== displayOrderId)]);
 
-      const { error: paymentErr } = await (supabase as any)
-        .from("payments")
-        .insert({
-          order_id: createdOrderId,
-          payment_method: paymentType,
-          status: "paid",
-          bank_last_five: paymentType === "BANK_TRANSFER" ? bankLastFive.trim() || "88888" : null,
-          invoice_number: displayOrderId,
-          paid_at: new Date().toISOString(),
-        });
-
-      if (paymentErr) {
-        console.error("❌ Supabase Payments 寫入失敗:", paymentErr);
-      }
-
-      const orderItemsPayload = cart.map((item) => ({
+      await (supabase as any).from("payments").insert({
         order_id: createdOrderId,
-        product_id: item.id,
-        quantity: item.qty ?? 1,
-        unit_price: item.price,
-        tax_type: item.tempType === "cold" ? "cold_chain" : "ambient",
-      }));
+        payment_method: paymentType,
+        status: paymentType === "ECPAY" ? "pending" : "paid",
+        bank_last_five: paymentType === "BANK_TRANSFER" ? bankLastFive.trim() || "88888" : null,
+        invoice_number: displayOrderId,
+        paid_at: paymentType === "ECPAY" ? null : new Date().toISOString(),
+      });
 
-      const { error: itemsErr } = await (supabase as any)
-        .from("order_items")
-        .insert(orderItemsPayload);
-
-      if (itemsErr) {
-        console.error("❌ Supabase order_items 寫入失敗:", itemsErr);
-      }
-
-      const { error: logErr } = await (supabase as any)
-        .from("logistics")
-        .insert({
+      await (supabase as any).from("order_items").insert(
+        cart.map((item) => ({
           order_id: createdOrderId,
-          recipient_name: user?.name ?? "Demo 測試社員",
-          recipient_phone: user?.phone ?? "0900000000",
-          delivery_address: selectedStore
-            ? `${selectedStore.LogisticsSubType} | ${selectedStore.CVSStoreName} | ${selectedStore.CVSAddress}`
-            : null,
-          store_code_711: selectedStore?.CVSStoreID ?? null,
-          shipment_no: selectedStore?.CVSStoreID ?? null,
-          status: "preparing",
-          temp_layer: hasColdItems ? "frozen" : "normal",
-        });
+          product_id: item.id,
+          quantity: item.qty ?? 1,
+          unit_price: item.price,
+          tax_type: item.tempType === "cold" ? "cold_chain" : "ambient",
+        }))
+      );
 
-      if (logErr) {
-        console.error("❌ Supabase Logistics 寫入失敗:", logErr);
-      }
+      await (supabase as any).from("logistics").insert({
+        order_id: createdOrderId,
+        recipient_name: user?.name ?? "Demo 測試社員",
+        recipient_phone: user?.phone ?? "0900000000",
+        status: "preparing",
+        temp_layer: hasColdItems ? "frozen" : "normal",
+      });
     } catch (e) {
       console.error("Save to Supabase Exception:", e);
     }
@@ -239,41 +195,49 @@ export function CheckoutModal({
 
   async function submit() {
     if (cart.length === 0) return;
-    if ((shippingType === "UNIMARTC2C" || shippingType === "FAMILY") && !selectedStore) {
-      alert(locale === "zh" ? "請先選擇超商門市後，再進行付款。" : "Please choose a store before paying.");
-      return;
-    }
-
     setBusy(true);
 
     try {
       const nextOrderId = await saveOrderToDatabase();
+      setOrderId(nextOrderId);
 
       if (paymentType === "WALLET") {
         if (walletBalance < total) {
-          alert(locale === "zh" ? "儲值金餘額不足，請改選其他付款方式。" : "Insufficient wallet balance.");
+          alert("儲值金餘額不足，請改選其他付款方式。");
           setBusy(false);
           return;
         }
         onWalletDebit(total);
-        onPaid(locale === "zh" ? `已使用儲值金扣款完成，訂單 #${nextOrderId} 已成立。` : `Wallet payment completed.`);
+        onPaid(`已使用儲值金扣款完成，訂單 #${nextOrderId} 已成立。`);
+        setStep(4);
       } else if (paymentType === "BANK_TRANSFER") {
         const lastFive = bankLastFive.trim() || "88888";
-        onPaid(locale === "zh" ? `轉帳訂單 #${nextOrderId} 已建立 (對帳碼: ${lastFive})。` : `Bank transfer order created.`);
+        onPaid(`轉帳訂單 #${nextOrderId} 已建立 (對帳碼: ${lastFive})。`);
+        setStep(4);
       } else if (paymentType === "COD") {
-        onPaid(locale === "zh" ? `貨到付款 / 超商取貨付款訂單 #${nextOrderId} 已成立。` : `COD order confirmed.`);
-      } else {
-        onPaid(locale === "zh" ? `綠界線上刷卡成功！訂單 #${nextOrderId} 已成立。` : `ECPay payment successful.`);
+        onPaid(`貨到付款訂單 #${nextOrderId} 已成立。`);
+        setStep(4);
+      } else if (paymentType === "ECPAY") {
+        setStep(2);
+        setTimeout(() => {
+          setStep(3);
+          setBusy(false);
+        }, 2000);
       }
-
-      setOrderId(nextOrderId);
-      setStep(2);
     } catch (error) {
-      onPaid(error instanceof Error ? error.message : locale === "zh" ? "結帳失敗" : "Checkout failed");
-    } finally {
+      onPaid(error instanceof Error ? error.message : "結帳失敗");
       setBusy(false);
     }
   }
+
+  const handleECPayPayNow = () => {
+    setProcessingEcpay(true);
+    setTimeout(() => {
+      setProcessingEcpay(false);
+      onPaid(`綠界線上刷卡成功！訂單 #${orderId} 已完成付款。`);
+      setStep(4);
+    }, 1500);
+  };
 
   const timelineSteps = [
     { zh: "訂單已建立", en: "Order created" },
@@ -282,323 +246,284 @@ export function CheckoutModal({
   ];
 
   return (
-    <div className="fixed inset-0 z-[110] grid place-items-center bg-black/50 p-4 backdrop-blur-sm" onClick={closeModal}>
+    <div className="fixed inset-0 z-[110] grid place-items-center bg-black/50 p-2 sm:p-4 backdrop-blur-sm" onClick={closeModal}>
+      {/* RWD 視窗主體：手機版滿寬 (w-full)，大螢幕 max-w-[1000px] */}
       <div
-        className="w-full max-w-[1000px] max-h-[88vh] overflow-y-auto rounded-[2rem] border border-border bg-white shadow-elevated transition-all"
-        onClick={(event) => event.stopPropagation()}
+        className="w-full max-w-[1000px] max-h-[92vh] sm:max-h-[88vh] overflow-y-auto rounded-2xl sm:rounded-[2rem] border border-border bg-white shadow-elevated transition-all"
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* 頂部標題 */}
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-white/95 px-6 py-4 backdrop-blur-md">
+        {/* RWD 標題邊界與內距 */}
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-white/95 px-4 sm:px-6 py-3 sm:py-4 backdrop-blur-md">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Checkout / Fulfillment</p>
-            <h2 className="text-xl font-extrabold">
-              {step === 1
-                ? locale === "zh"
-                  ? "確認訂單與付款"
-                  : "Confirm order and payment"
-                : locale === "zh"
-                  ? "物流出貨追蹤"
-                  : "Shipment tracking"}
+            <p className="font-mono text-[9px] sm:text-[10px] uppercase tracking-widest text-muted-foreground">Checkout / Fulfillment</p>
+            <h2 className="text-base sm:text-xl font-extrabold text-slate-800">
+              {step === 1 && "確認訂單與付款"}
+              {step === 2 && "正在跳轉至綠界 ECPay 金流..."}
+              {step === 3 && "綠界 ECPay 官方線上收銀台"}
+              {step === 4 && "物流出貨與取貨追蹤"}
             </h2>
           </div>
-          <button onClick={closeModal} className="rounded-full border border-border p-2 text-muted-foreground hover:bg-slate-100 hover:text-foreground">
+          <button onClick={closeModal} className="rounded-full border border-border p-1.5 sm:p-2 text-muted-foreground hover:bg-slate-100">
             <X className="size-4" />
           </button>
         </div>
 
-        {step === 1 ? (
-          <div className="grid gap-6 p-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <section className="space-y-6">
-              {/* 1. 購物車明細 */}
+        {/* 階段 1: 購物車與付款選單 (RWD 改為單欄/雙欄切換) */}
+        {step === 1 && (
+          <div className="grid gap-6 p-4 sm:p-6 lg:grid-cols-[1.1fr_0.9fr]">
+            <section className="space-y-5 sm:space-y-6">
               <div>
-                <h3 className="mb-3 text-sm font-bold uppercase tracking-widest text-muted-foreground">
-                  {locale === "zh" ? "購物車明細" : "Cart details"}
-                </h3>
-                <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                <h3 className="mb-2 sm:mb-3 text-xs sm:text-sm font-bold uppercase tracking-widest text-muted-foreground">購物車明細</h3>
+                <div className="space-y-2 max-h-[180px] sm:max-h-[220px] overflow-y-auto pr-1">
                   {itemGroups.map((item) => (
-                    <div key={`${item.id}-${item.tempType}`} className="rounded-2xl border border-border bg-stone-50 px-3.5 py-3 text-sm">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="space-y-1">
-                          <p className="font-semibold">{item.name}</p>
+                    <div key={`${item.id}-${item.tempType}`} className="rounded-xl sm:rounded-2xl border border-border bg-stone-50 p-3 text-xs sm:text-sm">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="space-y-0.5">
+                          <p className="font-semibold text-slate-800">{item.name}</p>
                           <div className="inline-flex items-center gap-1.5">
-                            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-primary">
-                              {item.tempType === "cold" ? (locale === "zh" ? "❄️ 冷鏈" : "Cold chain") : locale === "zh" ? "🌱 常溫" : "Ambient"}
+                            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] sm:text-[10px] font-bold uppercase text-primary">
+                              {item.tempType === "cold" ? "❄️ 冷鏈" : "🌱 常溫"}
                             </span>
                             <span className="text-xs text-muted-foreground">x{item.qty ?? 1}</span>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-mono font-bold text-primary">NT${item.price}</p>
-                          <p className="text-[11px] text-muted-foreground">{locale === "zh" ? "小計" : "Total"} NT${item.price * (item.qty ?? 1)}</p>
+                          <p className="font-mono font-bold text-primary text-sm sm:text-base">NT${item.price}</p>
                         </div>
                       </div>
                       {onUpdateCartQuantity && (
-                        <div className="mt-3 flex items-center justify-end gap-2">
+                        <div className="mt-2 flex items-center justify-end gap-2">
                           <button
                             type="button"
                             onClick={() => onUpdateCartQuantity(item.id, -1)}
-                            className="grid size-7 place-items-center rounded-full border border-border bg-white text-muted-foreground hover:text-foreground"
+                            className="grid size-6 sm:size-7 place-items-center rounded-full border border-border bg-white"
                           >
-                            <Minus className="size-3.5" />
+                            <Minus className="size-3" />
                           </button>
-                          <span className="min-w-8 text-center font-mono font-bold">{item.qty ?? 1}</span>
+                          <span className="min-w-6 text-center font-mono font-bold text-xs sm:text-sm">{item.qty ?? 1}</span>
                           <button
                             type="button"
                             onClick={() => onUpdateCartQuantity(item.id, 1)}
-                            className="grid size-7 place-items-center rounded-full border border-border bg-white text-muted-foreground hover:text-foreground"
+                            className="grid size-6 sm:size-7 place-items-center rounded-full border border-border bg-white"
                           >
-                            <Plus className="size-3.5" />
+                            <Plus className="size-3" />
                           </button>
                         </div>
                       )}
                     </div>
                   ))}
                 </div>
-                {hasMixedTemp && (
-                  <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-                    ⚠️ {locale === "zh" ? "偵測到混溫訂單，將以冷鏈與常溫分開安排取貨。" : "Mixed-temperature order detected."}
-                  </div>
-                )}
               </div>
 
-              {/* 2. 取貨方式 */}
+              {/* RWD 取貨與付款方式 (手機單欄 grid-cols-1，平板 md:grid-cols-2) */}
               <div>
-                <h3 className="mb-3 text-sm font-bold uppercase tracking-widest text-muted-foreground">
-                  {locale === "zh" ? "取貨方式" : "Pickup method"}
-                </h3>
-                <div className="grid gap-3 md:grid-cols-2">
-                  {(Object.keys(SHIPPING_LABELS) as ShippingType[]).map((type) => {
-                    const active = shippingType === type;
-                    return (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => setShippingType(type)}
-                        className={`rounded-2xl border p-4 text-left transition ${
-                          active ? "border-primary bg-primary/5 ring-2 ring-primary/20" : "border-border bg-white hover:border-primary/40"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Truck className="size-4 text-primary" />
-                          <p className="font-semibold text-sm">{SHIPPING_LABELS[type][locale]}</p>
-                        </div>
-                        <p className="mt-1 text-xs text-muted-foreground">{SHIPPING_LABELS[type].desc}</p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* 3. 付款方式 */}
-              <div>
-                <h3 className="mb-3 text-sm font-bold uppercase tracking-widest text-muted-foreground">
-                  {locale === "zh" ? "付款方式" : "Payment"}
-                </h3>
-                <div className="grid gap-3 md:grid-cols-2">
-                  {(Object.keys(PAYMENT_LABELS) as PaymentType[]).map((type) => {
-                    const active = paymentType === type;
-                    return (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => setPaymentType(type)}
-                        className={`rounded-2xl border p-4 text-left transition ${
-                          active ? "border-primary bg-primary/5 ring-2 ring-primary/20" : "border-border bg-white hover:border-primary/40"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          {type === "ECPAY" && <CreditCard className="size-4 text-primary" />}
-                          {type === "WALLET" && <Wallet className="size-4 text-primary" />}
-                          {type === "BANK_TRANSFER" && <Building2 className="size-4 text-primary" />}
-                          {type === "COD" && <Store className="size-4 text-primary" />}
-                          <p className="font-semibold text-sm">{PAYMENT_LABELS[type][locale]}</p>
-                        </div>
-                        <p className="mt-1 text-xs text-muted-foreground">{PAYMENT_LABELS[type].desc}</p>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {paymentType === "BANK_TRANSFER" && (
-                  <div className="mt-3 rounded-2xl border border-border bg-stone-50 p-4 text-xs space-y-2 animate-fade-in">
-                    <p className="font-bold text-foreground">匯款帳號：(808) 0012-9876-54321 (玉山銀行)</p>
-                    <input
-                      type="text"
-                      maxLength={5}
-                      placeholder="請輸入轉帳帳號後 5 碼 (選填，Demo 預設 88888)"
-                      value={bankLastFive}
-                      onChange={(e) => setBankLastFive(e.target.value)}
-                      className="w-full rounded-lg border border-border bg-white px-3 py-2 text-xs outline-none focus:border-primary"
-                    />
-                  </div>
-                )}
-              </div>
-
-              {(shippingType === "UNIMARTC2C" || shippingType === "FAMILY") && (
-                <div className="rounded-2xl border border-border bg-slate-50 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="size-4 text-primary" />
-                      <div>
-                        <p className="text-sm font-bold">{locale === "zh" ? "選擇門市" : "Choose store"}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {selectedStore ? selectedStore.CVSStoreName : locale === "zh" ? "尚未選擇門市" : "No store selected"}
-                        </p>
-                      </div>
-                    </div>
+                <h3 className="mb-2 sm:mb-3 text-xs sm:text-sm font-bold uppercase tracking-widest text-muted-foreground">取貨方式</h3>
+                <div className="grid gap-2.5 sm:gap-3 grid-cols-1 sm:grid-cols-2">
+                  {(Object.keys(SHIPPING_LABELS) as ShippingType[]).map((type) => (
                     <button
+                      key={type}
                       type="button"
-                      onClick={() => setStorePickerOpen(true)}
-                      className="rounded-full bg-foreground px-4 py-2 text-xs font-bold text-background hover:brightness-110"
+                      onClick={() => setShippingType(type)}
+                      className={`rounded-xl sm:rounded-2xl border p-3 sm:p-4 text-left transition ${
+                        shippingType === type ? "border-primary bg-primary/5 ring-2 ring-primary/20" : "border-border bg-white"
+                      }`}
                     >
-                      {locale === "zh" ? "選擇門市" : "Pick store"}
+                      <div className="flex items-center gap-2">
+                        <Truck className="size-4 text-primary shrink-0" />
+                        <p className="font-semibold text-xs sm:text-sm">{SHIPPING_LABELS[type].zh}</p>
+                      </div>
+                      <p className="mt-1 text-[11px] sm:text-xs text-muted-foreground">{SHIPPING_LABELS[type].desc}</p>
                     </button>
-                  </div>
+                  ))}
                 </div>
-              )}
+              </div>
+
+              <div>
+                <h3 className="mb-2 sm:mb-3 text-xs sm:text-sm font-bold uppercase tracking-widest text-muted-foreground">付款方式</h3>
+                <div className="grid gap-2.5 sm:gap-3 grid-cols-1 sm:grid-cols-2">
+                  {(Object.keys(PAYMENT_LABELS) as PaymentType[]).map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setPaymentType(type)}
+                      className={`rounded-xl sm:rounded-2xl border p-3 sm:p-4 text-left transition ${
+                        paymentType === type ? "border-primary bg-primary/5 ring-2 ring-primary/20" : "border-border bg-white"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        {type === "ECPAY" && <CreditCard className="size-4 text-primary shrink-0" />}
+                        {type === "WALLET" && <Wallet className="size-4 text-primary shrink-0" />}
+                        {type === "BANK_TRANSFER" && <Building2 className="size-4 text-primary shrink-0" />}
+                        {type === "COD" && <Store className="size-4 text-primary shrink-0" />}
+                        <p className="font-semibold text-xs sm:text-sm">{PAYMENT_LABELS[type].zh}</p>
+                      </div>
+                      <p className="mt-1 text-[11px] sm:text-xs text-muted-foreground">{PAYMENT_LABELS[type].desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               <button
                 type="button"
                 onClick={submit}
                 disabled={busy || cart.length === 0}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-bold text-primary-foreground disabled:opacity-50 hover:brightness-110 transition-all shadow-md"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 sm:py-3.5 text-xs sm:text-sm font-bold text-primary-foreground disabled:opacity-50 hover:brightness-110 shadow-md transition-all"
               >
                 <ShieldCheck className="size-4" />
-                {busy
-                  ? locale === "zh"
-                    ? "處理中..."
-                    : "Processing..."
-                  : locale === "zh"
-                    ? "確認付款"
-                    : "Confirm payment"}
+                {busy ? "系統處理中..." : "確認付款 / 前往綠界刷卡"}
               </button>
             </section>
 
-            {/* 右側摘要 */}
-            <aside className="space-y-4 rounded-3xl border border-border bg-slate-50/50 p-5 h-fit">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
-                {locale === "zh" ? "訂單摘要" : "Order summary"}
-              </h3>
-              <div className="rounded-2xl border border-border bg-white p-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>{locale === "zh" ? "小計" : "Subtotal"}</span>
-                  <span className="font-mono">NT${subtotal}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span>{locale === "zh" ? "運費" : "Shipping"}</span>
-                  <span className="font-mono">NT${shippingFee}</span>
-                </div>
-                <div className="mt-3 flex justify-between border-t border-border pt-3 text-base font-bold">
-                  <span>{locale === "zh" ? "應付總額" : "Total"}</span>
-                  <span className="font-mono text-primary text-lg">NT${total}</span>
+            {/* 右側金額摘要 */}
+            <aside className="space-y-4 rounded-2xl sm:rounded-3xl border border-border bg-slate-50/50 p-4 sm:p-5 h-fit">
+              <h3 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-muted-foreground">訂單摘要</h3>
+              <div className="rounded-xl sm:rounded-2xl border border-border bg-white p-3.5 sm:p-4 space-y-2 text-xs sm:text-sm">
+                <div className="flex justify-between"><span>小計</span><span className="font-mono">NT${subtotal}</span></div>
+                <div className="flex justify-between"><span>運費</span><span className="font-mono">NT${shippingFee}</span></div>
+                <div className="mt-2.5 flex justify-between border-t border-border pt-2.5 text-sm sm:text-base font-bold">
+                  <span>應付總額</span><span className="font-mono text-primary text-base sm:text-lg">NT${total}</span>
                 </div>
               </div>
-              <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-xs font-semibold text-primary space-y-1">
-                <div>
-                  {locale === "zh"
-                    ? `會員 ID：${memberId}`
-                    : `Member ID: ${memberId}`}
-                </div>
-                <div>
-                  {locale === "zh"
-                    ? `目前儲值金餘額：NT$${walletBalance.toLocaleString()}`
-                    : `Wallet balance: NT$${walletBalance.toLocaleString()}`}
-                </div>
-              </div>
-            </aside>
-          </div>
-        ) : (
-          /* 第二階段：出貨狀態追蹤與自提驗證碼 */
-          <div className="grid gap-6 p-6 lg:grid-cols-[1fr_0.9fr]">
-            <section className="space-y-5 rounded-3xl border border-border bg-slate-50/50 p-5">
-              <div className="flex items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3">
-                <div>
-                  <p className="font-mono text-[10px] uppercase tracking-widest text-primary">
-                    {locale === "zh" ? "訂單成立" : "Order confirmed"}
-                  </p>
-                  <h3 className="text-lg font-extrabold">#{orderId || "TSM-ORDER"}</h3>
-                </div>
-                <span className="rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold text-white">
-                  {locale === "zh" ? "處理中" : "Processing"}
-                </span>
-              </div>
-
-              {/* 📱 顯示現場自提驗證碼 */}
-              <div className="p-4 border border-dashed border-emerald-300 rounded-2xl bg-emerald-50/50 text-center space-y-2">
-                <p className="text-xs font-bold text-emerald-900">📱 現場自提取貨驗證碼</p>
-                <div className="p-3 bg-white rounded-xl border font-mono text-xs font-extrabold text-emerald-700 select-all">
-                  COOP-PICKUP:{orderId}:{Date.now()}
-                </div>
-                <p className="text-[11px] text-muted-foreground">（提示：您可複製此驗證碼至後台「物流與訂單管理」輸入框進行一鍵核銷）</p>
-              </div>
-
-              <div className="space-y-4">
-                {timelineSteps.map((item, idx) => {
-                  const isDone = idx < 1;
-                  return (
-                    <div key={item.zh} className="flex gap-3">
-                      <div className="flex flex-col items-center">
-                        <div className={`grid size-8 place-items-center rounded-full ${isDone ? "bg-primary text-primary-foreground" : "bg-stone-200 text-muted-foreground"}`}>
-                          {isDone ? <CheckCircle2 className="size-4" /> : <Clock3 className="size-4" />}
-                        </div>
-                        {idx < timelineSteps.length - 1 && <div className="mt-1 h-10 w-px bg-border" />}
-                      </div>
-                      <div className="rounded-2xl border border-border bg-white px-4 py-3 flex-1">
-                        <p className="text-sm font-bold text-foreground">{item[locale]}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {idx === 0
-                            ? locale === "zh"
-                              ? "系統已收到訂單並成功寫入資料庫。"
-                              : "Order created successfully."
-                            : idx === 1
-                              ? locale === "zh"
-                                ? "廠商會依照商品屬性進行集貨與品檢。"
-                                : "Vendor is packing and quality checking."
-                              : locale === "zh"
-                                ? "抵達門市或寄出後將通知會員取貨。"
-                                : "Pickup notification will be sent once shipped."}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-
-            <aside className="space-y-4 rounded-3xl border border-border bg-slate-50/50 p-5">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
-                {locale === "zh" ? "物流資訊" : "Shipment details"}
-              </h3>
-              <div className="space-y-3 rounded-2xl border border-border bg-white p-4">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Package className="size-4 text-primary" />
-                  <span>{locale === "zh" ? "取貨方式" : "Pickup"}: {SHIPPING_LABELS[shippingType][locale]}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Truck className="size-4 text-primary" />
-                  <span>{locale === "zh" ? "付款方式" : "Payment"}: {PAYMENT_LABELS[paymentType][locale]}</span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={closeModal}
-                className="w-full rounded-full bg-foreground px-4 py-3 text-sm font-bold text-background hover:brightness-110"
-              >
-                {locale === "zh" ? "關閉視窗" : "Close window"}
-              </button>
             </aside>
           </div>
         )}
 
-        <ECPayLogisticsModal
-          open={storePickerOpen}
-          onClose={() => setStorePickerOpen(false)}
-          onSelect={(store) => {
-            setSelectedStore(store);
-            setStorePickerOpen(false);
-          }}
-        />
+        {/* 階段 2: 跳轉中轉場畫面 */}
+        {step === 2 && (
+          <div className="p-10 sm:p-16 text-center space-y-4 sm:space-y-6 animate-fade-in">
+            <div className="relative mx-auto size-16 sm:size-20 grid place-items-center rounded-full bg-emerald-50 text-emerald-600">
+              <Loader2 className="size-8 sm:size-10 animate-spin" />
+            </div>
+            <div className="space-y-1 sm:space-y-2">
+              <h3 className="text-lg sm:text-xl font-extrabold text-slate-800">安全連線中，即將跳轉至綠界 ECPay 金流頁面...</h3>
+              <p className="text-xs text-muted-foreground">正在加密傳輸訂單金額 NT${total} 與交易參數</p>
+            </div>
+          </div>
+        )}
+
+        {/* 階段 3: 綠界 ECPay 線上收銀台 RWD 畫面 */}
+        {step === 3 && (
+          <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 bg-slate-50/60 min-h-[480px]">
+            <div className="rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 p-4 sm:p-5 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-sm">
+              <div>
+                <p className="text-[9px] uppercase font-bold tracking-widest opacity-80">ECPay Payment Gateway</p>
+                <h3 className="text-base sm:text-lg font-extrabold">綠界科技金流服務 · 線上刷卡收銀台</h3>
+              </div>
+              <span className="bg-white/20 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-mono font-bold">特約商店：十圓方里合作社</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+              <div className="md:col-span-2 bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <h4 className="font-bold text-xs sm:text-sm text-slate-800 flex items-center gap-2 border-b pb-2.5">
+                  <CreditCard className="size-4 text-emerald-600" /> 請輸入信用卡資料
+                </h4>
+
+                <div className="space-y-3 text-xs">
+                  <div>
+                    <label className="block text-slate-500 font-bold mb-1">信用卡卡號 (Credit Card Number)</label>
+                    <input
+                      type="text"
+                      value={cardNumber}
+                      onChange={(e) => setCardNumber(e.target.value)}
+                      className="w-full border rounded-xl px-3 py-2 font-mono text-xs sm:text-sm outline-none focus:border-emerald-600"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-slate-500 font-bold mb-1">有效年月 (MM/YY)</label>
+                      <input
+                        type="text"
+                        value={cardExp}
+                        onChange={(e) => setCardExp(e.target.value)}
+                        className="w-full border rounded-xl px-3 py-2 font-mono text-xs sm:text-sm outline-none focus:border-emerald-600"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-500 font-bold mb-1">末三碼 (CVV)</label>
+                      <input
+                        type="text"
+                        value={cardCvc}
+                        onChange={(e) => setCardCvc(e.target.value)}
+                        className="w-full border rounded-xl px-3 py-2 font-mono text-xs sm:text-sm outline-none focus:border-emerald-600"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={handleECPayPayNow}
+                    disabled={processingEcpay}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition shadow-sm flex items-center justify-center gap-2 text-xs sm:text-sm"
+                  >
+                    {processingEcpay ? "授權驗證中..." : `立即刷卡支付 NT$ ${total.toLocaleString()}`}
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-white p-4 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-200 shadow-sm space-y-3 text-xs h-fit">
+                <h4 className="font-bold text-slate-700 border-b pb-2">綠界交易訂單明細</h4>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">合作社訂單號</span>
+                  <span className="font-mono text-slate-700 truncate max-w-[140px]">{orderId}</span>
+                </div>
+                <div className="border-t pt-2 flex justify-between items-center text-xs sm:text-sm font-bold">
+                  <span>刷卡授權總額</span>
+                  <span className="text-emerald-700 font-mono text-sm sm:text-base">NT$ {total.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 階段 4: 刷卡完成 RWD 追蹤畫面 */}
+        {step === 4 && (
+          <div className="grid gap-6 p-4 sm:p-6 lg:grid-cols-[1fr_0.9fr]">
+            <section className="space-y-4 sm:space-y-5 rounded-2xl sm:rounded-3xl border border-border bg-slate-50/50 p-4 sm:p-5">
+              <div className="flex items-center justify-between gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3.5 py-2.5">
+                <div>
+                  <p className="font-mono text-[9px] uppercase tracking-widest text-primary">Order confirmed</p>
+                  <h3 className="text-sm sm:text-lg font-extrabold truncate max-w-[180px] sm:max-w-none">#{orderId || "TSM-ORDER"}</h3>
+                </div>
+                <span className="rounded-full bg-emerald-500 px-2.5 py-0.5 text-[10px] sm:text-xs font-bold text-white shrink-0">
+                  已完成線上刷卡
+                </span>
+              </div>
+
+              <div className="p-3.5 border border-dashed border-emerald-300 rounded-xl sm:rounded-2xl bg-emerald-50/50 text-center space-y-1.5">
+                <p className="text-xs font-bold text-emerald-900">📱 現場自提取貨驗證碼</p>
+                <div className="p-2.5 bg-white rounded-lg border font-mono text-xs font-extrabold text-emerald-700 select-all truncate">
+                  COOP-PICKUP:{orderId}:{Date.now()}
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {timelineSteps.map((item, idx) => (
+                  <div key={item.zh} className="flex gap-3">
+                    <div className="grid size-7 sm:size-8 place-items-center rounded-full bg-primary text-primary-foreground text-xs font-bold shrink-0">
+                      ✓
+                    </div>
+                    <div className="rounded-xl border border-border bg-white px-3.5 py-2.5 flex-1 text-xs">
+                      <p className="font-bold text-slate-800">{item.zh}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <aside className="space-y-4 rounded-2xl sm:rounded-3xl border border-border bg-slate-50/50 p-4 sm:p-5">
+              <button
+                type="button"
+                onClick={closeModal}
+                className="w-full rounded-full bg-foreground px-4 py-3 text-xs sm:text-sm font-bold text-background hover:brightness-110"
+              >
+                關閉視窗
+              </button>
+            </aside>
+          </div>
+        )}
       </div>
     </div>
   );
