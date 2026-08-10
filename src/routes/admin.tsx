@@ -35,6 +35,7 @@ const INITIAL_NAV: NavItem[] = [
   { id: "preorders", to: "/admin/preorders", key: "admin.nav.preorders", roles: ["admin", "board"] },
   { id: "logistics", to: "/admin/logistics", key: "📦 物流與訂單管理", roles: ["admin", "board"] },
   { id: "support", to: "/admin/support", key: "💬 社員客服與工單管理", roles: ["admin", "board"], badge: 3 },
+  { id: "ai-support", to: "/admin/ai-support", key: "AI 客服通知中心", roles: ["admin", "board"] },
   { id: "forecasting", to: "/admin/forecasting", key: "admin.nav.forecasting", roles: ["admin", "board"] },
   { id: "finance", to: "/admin/finance", key: "admin.nav.finance", roles: ["admin", "board", "auditor"] },
   { id: "voting", to: "/admin/voting", key: "admin.nav.voting", roles: ["admin", "board"] },

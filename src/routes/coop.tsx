@@ -25,10 +25,12 @@ export const Route = createFileRoute("/coop")({
 
 type Stage = 1 | 2 | 3;
 type TempType = "cold" | "ambient";
+type CampaignCategory = "all" | "veg-box" | "fruit" | "healthy-meal" | "local-processed";
 type Campaign = {
   img: string;
   name: { zh: string; en: string };
   vendor: { zh: string; en: string };
+  category: CampaignCategory;
   stage: Stage;
   memberPrice: number;
   regularPrice: number;
@@ -53,6 +55,7 @@ const CAMPAIGNS: Campaign[] = [
     img: soyImg,
     name: { zh: "柴燒手工醬油", en: "Wood-Fired Soy Sauce" },
     vendor: { zh: "西螺・老欉黑豆坊", en: "Xiluo Heirloom Black Bean" },
+    category: "local-processed",
     stage: 1,
     memberPrice: 320,
     regularPrice: 420,
@@ -65,6 +68,7 @@ const CAMPAIGNS: Campaign[] = [
     img: eggsImg,
     name: { zh: "放牧土雞蛋 (12入)", en: "Pasture Brown Eggs (12ct)" },
     vendor: { zh: "南投高地小農", en: "Nantou Highland Farms" },
+    category: "healthy-meal",
     stage: 2,
     memberPrice: 180,
     regularPrice: 240,
@@ -80,6 +84,7 @@ const CAMPAIGNS: Campaign[] = [
     img: vegImg,
     name: { zh: "旬味蔬菜箱 (5kg)", en: "Seasonal Veggie Box (5kg)" },
     vendor: { zh: "宜蘭夥伴農場", en: "Yilan Partner Farms" },
+    category: "veg-box",
     stage: 3,
     memberPrice: 480,
     regularPrice: 620,
@@ -88,6 +93,14 @@ const CAMPAIGNS: Campaign[] = [
     fulfillStep: 1,
     pickupDate: "2026.07.31 (Fri)",
   },
+];
+
+const CATEGORY_TABS: Array<{ id: CampaignCategory; label: string }> = [
+  { id: "all", label: "全部" },
+  { id: "veg-box", label: "🥬蔬菜箱" },
+  { id: "fruit", label: "🍎水果" },
+  { id: "healthy-meal", label: "🍱健康餐盒" },
+  { id: "local-processed", label: "🍶在地加工品" },
 ];
 
 function StageBar({ stage, locale }: { stage: Stage; locale: "zh" | "en" }) {
@@ -173,6 +186,11 @@ function CampaignCard({ c, onAddToCart }: { c: Campaign; onAddToCart: (campaign:
       <div>
         <h3 className="text-lg font-bold">{c.name[locale]}</h3>
         <p className="text-xs text-muted-foreground">{c.vendor[locale]}</p>
+        <span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+          c.taxExempt ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+        }`}>
+          {c.taxExempt ? "免稅一級農產品" : "應稅加工食品"}
+        </span>
       </div>
       <StageBar stage={c.stage} locale={locale} />
       <div className="flex items-center justify-between rounded border border-black/5 bg-stone-50 px-3 py-2 text-xs">
@@ -531,6 +549,10 @@ function CoopPage() {
   const [checkoutMessage, setCheckoutMessage] = useState<string | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [walletBalance, setWalletBalance] = useState(1280);
+  const [activeCategory, setActiveCategory] = useState<CampaignCategory>("all");
+  const filteredCampaigns = CAMPAIGNS.filter((campaign) =>
+    activeCategory === "all" ? true : campaign.category === activeCategory,
+  );
   useEffect(() => {
     const hash = window.location.hash.replace("#", "");
     if (hash) {
@@ -603,11 +625,38 @@ function CoopPage() {
 
       <NonMemberNudge />
 
+      <section className="mb-6">
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          {CATEGORY_TABS.map((tab) => {
+            const active = tab.id === activeCategory;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveCategory(tab.id)}
+                className={`shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                  active
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-white hover:border-primary/40"
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
       <section className="mb-16 grid gap-6 md:grid-cols-3">
-        {CAMPAIGNS.map((c) => (
+        {filteredCampaigns.map((c) => (
           <CampaignCard key={c.name.en} c={c} onAddToCart={addToCart} />
         ))}
       </section>
+      {filteredCampaigns.length === 0 && (
+        <div className="mb-16 rounded-md border border-dashed border-border bg-white p-5 text-sm text-muted-foreground">
+          {locale === "zh" ? "目前此分類尚無上架商品。" : "No products in this category yet."}
+        </div>
+      )}
 
       <CartCheckoutPanel
         cart={cart}
