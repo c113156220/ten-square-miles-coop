@@ -16,6 +16,7 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MemberCenterRouteImport } from './routes/member-center'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as ImpactRouteImport } from './routes/impact'
 import { Route as GovernanceRouteImport } from './routes/governance'
 import { Route as DividendRouteImport } from './routes/dividend'
@@ -35,6 +36,10 @@ import { Route as AdminMembersRouteImport } from './routes/admin.members'
 import { Route as AdminLogisticsRouteImport } from './routes/admin.logistics'
 import { Route as AdminForecastingRouteImport } from './routes/admin.forecasting'
 import { Route as AdminFinanceRouteImport } from './routes/admin.finance'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 
 const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
@@ -69,6 +74,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const MemberCenterRoute = MemberCenterRouteImport.update({
   id: '/member-center',
   path: '/member-center',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ImpactRoute = ImpactRouteImport.update({
@@ -166,6 +176,29 @@ const AdminFinanceRoute = AdminFinanceRouteImport.update({
   path: '/finance',
   getParentRoute: () => AdminRoute,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -175,6 +208,7 @@ export interface FileRoutesByFullPath {
   '/dividend': typeof DividendRoute
   '/governance': typeof GovernanceRoute
   '/impact': typeof ImpactRoute
+  '/mcp': typeof McpRoute
   '/member-center': typeof MemberCenterRoute
   '/onboarding': typeof OnboardingRoute
   '/orders': typeof OrdersRoute
@@ -182,6 +216,8 @@ export interface FileRoutesByFullPath {
   '/trial': typeof TrialRoute
   '/verify': typeof VerifyRoute
   '/wishlist': typeof WishlistRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/finance': typeof AdminFinanceRoute
   '/admin/forecasting': typeof AdminForecastingRoute
   '/admin/logistics': typeof AdminLogisticsRoute
@@ -194,6 +230,8 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminUsersRoute
   '/admin/voting': typeof AdminVotingRoute
   '/admin/': typeof AdminIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -202,6 +240,7 @@ export interface FileRoutesByTo {
   '/dividend': typeof DividendRoute
   '/governance': typeof GovernanceRoute
   '/impact': typeof ImpactRoute
+  '/mcp': typeof McpRoute
   '/member-center': typeof MemberCenterRoute
   '/onboarding': typeof OnboardingRoute
   '/orders': typeof OrdersRoute
@@ -209,6 +248,8 @@ export interface FileRoutesByTo {
   '/trial': typeof TrialRoute
   '/verify': typeof VerifyRoute
   '/wishlist': typeof WishlistRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/finance': typeof AdminFinanceRoute
   '/admin/forecasting': typeof AdminForecastingRoute
   '/admin/logistics': typeof AdminLogisticsRoute
@@ -221,6 +262,8 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AdminUsersRoute
   '/admin/voting': typeof AdminVotingRoute
   '/admin': typeof AdminIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -231,6 +274,7 @@ export interface FileRoutesById {
   '/dividend': typeof DividendRoute
   '/governance': typeof GovernanceRoute
   '/impact': typeof ImpactRoute
+  '/mcp': typeof McpRoute
   '/member-center': typeof MemberCenterRoute
   '/onboarding': typeof OnboardingRoute
   '/orders': typeof OrdersRoute
@@ -238,6 +282,8 @@ export interface FileRoutesById {
   '/trial': typeof TrialRoute
   '/verify': typeof VerifyRoute
   '/wishlist': typeof WishlistRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/finance': typeof AdminFinanceRoute
   '/admin/forecasting': typeof AdminForecastingRoute
   '/admin/logistics': typeof AdminLogisticsRoute
@@ -250,6 +296,8 @@ export interface FileRoutesById {
   '/admin/users': typeof AdminUsersRoute
   '/admin/voting': typeof AdminVotingRoute
   '/admin/': typeof AdminIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -261,6 +309,7 @@ export interface FileRouteTypes {
     | '/dividend'
     | '/governance'
     | '/impact'
+    | '/mcp'
     | '/member-center'
     | '/onboarding'
     | '/orders'
@@ -268,6 +317,8 @@ export interface FileRouteTypes {
     | '/trial'
     | '/verify'
     | '/wishlist'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/admin/finance'
     | '/admin/forecasting'
     | '/admin/logistics'
@@ -280,6 +331,8 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/voting'
     | '/admin/'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -288,6 +341,7 @@ export interface FileRouteTypes {
     | '/dividend'
     | '/governance'
     | '/impact'
+    | '/mcp'
     | '/member-center'
     | '/onboarding'
     | '/orders'
@@ -295,6 +349,8 @@ export interface FileRouteTypes {
     | '/trial'
     | '/verify'
     | '/wishlist'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/admin/finance'
     | '/admin/forecasting'
     | '/admin/logistics'
@@ -307,6 +363,8 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/voting'
     | '/admin'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
   id:
     | '__root__'
     | '/'
@@ -316,6 +374,7 @@ export interface FileRouteTypes {
     | '/dividend'
     | '/governance'
     | '/impact'
+    | '/mcp'
     | '/member-center'
     | '/onboarding'
     | '/orders'
@@ -323,6 +382,8 @@ export interface FileRouteTypes {
     | '/trial'
     | '/verify'
     | '/wishlist'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/admin/finance'
     | '/admin/forecasting'
     | '/admin/logistics'
@@ -335,6 +396,8 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/voting'
     | '/admin/'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -345,6 +408,7 @@ export interface RootRouteChildren {
   DividendRoute: typeof DividendRoute
   GovernanceRoute: typeof GovernanceRoute
   ImpactRoute: typeof ImpactRoute
+  McpRoute: typeof McpRoute
   MemberCenterRoute: typeof MemberCenterRoute
   OnboardingRoute: typeof OnboardingRoute
   OrdersRoute: typeof OrdersRoute
@@ -352,6 +416,10 @@ export interface RootRouteChildren {
   TrialRoute: typeof TrialRoute
   VerifyRoute: typeof VerifyRoute
   WishlistRoute: typeof WishlistRoute
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -403,6 +471,13 @@ declare module '@tanstack/react-router' {
       path: '/member-center'
       fullPath: '/member-center'
       preLoaderRoute: typeof MemberCenterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/impact': {
@@ -538,6 +613,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminFinanceRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -581,6 +684,7 @@ const rootRouteChildren: RootRouteChildren = {
   DividendRoute: DividendRoute,
   GovernanceRoute: GovernanceRoute,
   ImpactRoute: ImpactRoute,
+  McpRoute: McpRoute,
   MemberCenterRoute: MemberCenterRoute,
   OnboardingRoute: OnboardingRoute,
   OrdersRoute: OrdersRoute,
@@ -588,6 +692,11 @@ const rootRouteChildren: RootRouteChildren = {
   TrialRoute: TrialRoute,
   VerifyRoute: VerifyRoute,
   WishlistRoute: WishlistRoute,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
