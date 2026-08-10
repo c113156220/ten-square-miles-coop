@@ -1,5 +1,5 @@
 ﻿import { supabase } from "@/integrations/supabase/client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CreditCard, Wallet, Truck, MapPin, X, ShieldCheck, Package, CheckCircle2, Clock3, Building2, Store, Minus, Plus } from "lucide-react";
 import { ECPayLogisticsModal, type LogisticsStore } from "@/components/ECPayLogisticsModal";
 import { useI18n } from "@/lib/i18n";
@@ -14,7 +14,7 @@ export type CheckoutItem = {
 };
 
 export type ShippingType = "COOP_PICKUP" | "EXPRESS_DELIVERY" | "UNIMARTC2C" | "FAMILY";
-export type PaymentType = "ECPAY" | "WALLET" | "BANK_TRANSFER" | "COD";
+export type PaymentType = "ECPAY" | "WALLET" | "BANK_TRANSFER" | "COD" | "COOP_COD";
 
 type CheckoutModalProps = {
   open: boolean;
@@ -35,17 +35,18 @@ const SHIPPING_FEES: Record<ShippingType, number> = {
 };
 
 const SHIPPING_LABELS: Record<ShippingType, { zh: string; en: string; desc: string }> = {
-  COOP_PICKUP: { zh: "合作社門市自取 (免費)", en: "Co-op pickup (free)", desc: "合作社現場門市自取，適合冷鏈與常溫。" },
+  COOP_PICKUP: { zh: "合作社自取 (免費)", en: "Co-op pickup (free)", desc: "合作社現場門市自取，適合冷鏈與常溫。" },
   EXPRESS_DELIVERY: { zh: "物流公司寄出 (黑貓/新竹貨運 $120)", en: "Express Delivery ($120)", desc: "全程冷鏈與常溫溫控宅配到府。" },
-  UNIMARTC2C: { zh: "7-11 賣貨便 (運費 $60)", en: "7-ELEVEN delivery ($60)", desc: "7-11 超商取貨，需先選擇門市。" },
+  UNIMARTC2C: { zh: "7-11 交貨便 (運費 $60)", en: "7-ELEVEN delivery ($60)", desc: "7-11 超商取貨，需先選擇門市。" },
   FAMILY: { zh: "全家店到店 (運費 $60)", en: "FamilyMart delivery ($60)", desc: "全家便利商店取貨。" },
 };
 
 const PAYMENT_LABELS: Record<PaymentType, { zh: string; en: string; desc: string }> = {
-  ECPAY: { zh: "綠界線上刷卡", en: "ECPay credit card", desc: "線上即時刷卡支付" },
+  ECPAY: { zh: "線上付款", en: "Online payment", desc: "線上即時刷卡支付" },
   WALLET: { zh: "儲值金扣款", en: "Stored value wallet", desc: "直接從會員儲值金扣款" },
   BANK_TRANSFER: { zh: "銀行轉帳 / 匯款", en: "Bank Transfer", desc: "轉帳後請提供帳號後五碼核對" },
-  COD: { zh: "貨到付款 / 超商取貨付款", en: "Cash on Delivery", desc: "包裹送達或到店後現場付款" },
+  COD: { zh: "超商取貨付款", en: "Convenience-store COD", desc: "超商到店取貨時付款" },
+  COOP_COD: { zh: "合作社取貨付款", en: "Co-op pickup payment", desc: "合作社現場取貨時付款" },
 };
 
 export function CheckoutModal({
@@ -68,6 +69,8 @@ export function CheckoutModal({
   const [busy, setBusy] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
   const [orderId, setOrderId] = useState<string>("");
+  const [invoiceCarrierBarcode, setInvoiceCarrierBarcode] = useState("");
+  const [businessTaxId, setBusinessTaxId] = useState("");
 
   const hasColdItems = cart.some((item) => item.tempType === "cold");
   const hasAmbientItems = cart.some((item) => item.tempType === "ambient");
@@ -92,6 +95,17 @@ export function CheckoutModal({
   const subtotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * (item.qty ?? 1), 0), [cart]);
   const shippingFee = SHIPPING_FEES[shippingType];
   const total = subtotal + shippingFee;
+  const allowedPaymentTypes = useMemo<PaymentType[]>(() => {
+    if (shippingType === "UNIMARTC2C") return ["ECPAY", "COD"];
+    if (shippingType === "COOP_PICKUP") return ["ECPAY", "WALLET", "BANK_TRANSFER", "COOP_COD"];
+    return ["ECPAY", "WALLET", "BANK_TRANSFER", "COD"];
+  }, [shippingType]);
+
+  useEffect(() => {
+    if (!allowedPaymentTypes.includes(paymentType)) {
+      setPaymentType(allowedPaymentTypes[0]);
+    }
+  }, [allowedPaymentTypes, paymentType]);
 
   if (!open) return null;
 
@@ -101,6 +115,8 @@ export function CheckoutModal({
     setOrderId("");
     setSelectedStore(null);
     setBankLastFive("");
+    setInvoiceCarrierBarcode("");
+    setBusinessTaxId("");
   }
 
   function closeModal() {
@@ -138,6 +154,8 @@ export function CheckoutModal({
       status: "已打包",
       paymentMethod: paymentType,
       deliveryMethod: SHIPPING_LABELS[shippingType].zh,
+      invoiceCarrierBarcode: invoiceCarrierBarcode.trim() || null,
+      businessTaxId: businessTaxId.trim() || null,
       pickupCode: `COOP-PICKUP:${displayOrderId}:${Date.now()}`,
       createdAt: new Date().toISOString(),
       memberId,
@@ -239,6 +257,10 @@ export function CheckoutModal({
 
   async function submit() {
     if (cart.length === 0) return;
+    if (!allowedPaymentTypes.includes(paymentType)) {
+      alert("目前物流方式與付款方式不相容，請重新選擇付款方式。");
+      return;
+    }
     if ((shippingType === "UNIMARTC2C" || shippingType === "FAMILY") && !selectedStore) {
       alert(locale === "zh" ? "請先選擇超商門市後，再進行付款。" : "Please choose a store before paying.");
       return;
@@ -261,7 +283,9 @@ export function CheckoutModal({
         const lastFive = bankLastFive.trim() || "88888";
         onPaid(locale === "zh" ? `轉帳訂單 #${nextOrderId} 已建立 (對帳碼: ${lastFive})。` : `Bank transfer order created.`);
       } else if (paymentType === "COD") {
-        onPaid(locale === "zh" ? `貨到付款 / 超商取貨付款訂單 #${nextOrderId} 已成立。` : `COD order confirmed.`);
+        onPaid(locale === "zh" ? `超商取貨付款訂單 #${nextOrderId} 已成立。` : `Store pickup COD order confirmed.`);
+      } else if (paymentType === "COOP_COD") {
+        onPaid(locale === "zh" ? `合作社取貨付款訂單 #${nextOrderId} 已成立。` : `Co-op pickup payment order confirmed.`);
       } else {
         onPaid(locale === "zh" ? `綠界線上刷卡成功！訂單 #${nextOrderId} 已成立。` : `ECPay payment successful.`);
       }
@@ -397,13 +421,19 @@ export function CheckoutModal({
                 <div className="grid gap-3 md:grid-cols-2">
                   {(Object.keys(PAYMENT_LABELS) as PaymentType[]).map((type) => {
                     const active = paymentType === type;
+                    const disabled = !allowedPaymentTypes.includes(type);
                     return (
                       <button
                         key={type}
                         type="button"
-                        onClick={() => setPaymentType(type)}
+                        onClick={() => !disabled && setPaymentType(type)}
+                        disabled={disabled}
                         className={`rounded-2xl border p-4 text-left transition ${
-                          active ? "border-primary bg-primary/5 ring-2 ring-primary/20" : "border-border bg-white hover:border-primary/40"
+                          disabled
+                            ? "cursor-not-allowed border-border bg-stone-100 opacity-50"
+                            : active
+                              ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                              : "border-border bg-white hover:border-primary/40"
                         }`}
                       >
                         <div className="flex items-center gap-2">
@@ -411,6 +441,7 @@ export function CheckoutModal({
                           {type === "WALLET" && <Wallet className="size-4 text-primary" />}
                           {type === "BANK_TRANSFER" && <Building2 className="size-4 text-primary" />}
                           {type === "COD" && <Store className="size-4 text-primary" />}
+                          {type === "COOP_COD" && <Store className="size-4 text-primary" />}
                           <p className="font-semibold text-sm">{PAYMENT_LABELS[type][locale]}</p>
                         </div>
                         <p className="mt-1 text-xs text-muted-foreground">{PAYMENT_LABELS[type].desc}</p>
@@ -418,6 +449,13 @@ export function CheckoutModal({
                     );
                   })}
                 </div>
+                <p className="mt-3 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-primary">
+                  {shippingType === "UNIMARTC2C"
+                    ? "7-11 交貨便僅支援「超商取貨付款」或「線上付款」。"
+                    : shippingType === "COOP_PICKUP"
+                      ? "合作社自取不可搭配「超商取貨付款」，請改用合作社取貨付款、線上付款、儲值金或轉帳。"
+                      : "付款方式會依物流方式自動鎖定可用選項。"}
+                </p>
 
                 {paymentType === "BANK_TRANSFER" && (
                   <div className="mt-3 rounded-2xl border border-border bg-stone-50 p-4 text-xs space-y-2 animate-fade-in">
@@ -432,6 +470,24 @@ export function CheckoutModal({
                     />
                   </div>
                 )}
+
+                <div className="rounded-2xl border border-border bg-slate-50 p-4 space-y-3">
+                  <p className="text-sm font-bold">{locale === "zh" ? "發票資訊" : "Invoice"}</p>
+                  <input
+                    type="text"
+                    value={invoiceCarrierBarcode}
+                    onChange={(e) => setInvoiceCarrierBarcode(e.target.value)}
+                    placeholder="電子發票載具條碼（例如 /1234567）"
+                    className="w-full rounded-lg border border-border bg-white px-3 py-2 text-xs outline-none focus:border-primary"
+                  />
+                  <input
+                    type="text"
+                    value={businessTaxId}
+                    onChange={(e) => setBusinessTaxId(e.target.value)}
+                    placeholder="公司統一編號（統編）"
+                    className="w-full rounded-lg border border-border bg-white px-3 py-2 text-xs outline-none focus:border-primary"
+                  />
+                </div>
               </div>
 
               {(shippingType === "UNIMARTC2C" || shippingType === "FAMILY") && (

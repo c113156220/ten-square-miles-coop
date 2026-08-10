@@ -9,101 +9,42 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WishlistRouteImport } from './routes/wishlist'
-import { Route as VerifyRouteImport } from './routes/verify'
-import { Route as TrialRouteImport } from './routes/trial'
-import { Route as RegisterRouteImport } from './routes/register'
-import { Route as OrdersRouteImport } from './routes/orders'
-import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as MemberCenterRouteImport } from './routes/member-center'
-import { Route as McpRouteImport } from './routes/mcp'
-import { Route as ImpactRouteImport } from './routes/impact'
-import { Route as GovernanceRouteImport } from './routes/governance'
-import { Route as DividendRouteImport } from './routes/dividend'
-import { Route as CoopRouteImport } from './routes/coop'
-import { Route as CalculatorRouteImport } from './routes/calculator'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as AdminVotingRouteImport } from './routes/admin.voting'
-import { Route as AdminUsersRouteImport } from './routes/admin.users'
-import { Route as AdminSurplusRouteImport } from './routes/admin.surplus'
-import { Route as AdminSupportRouteImport } from './routes/admin.support'
-import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
-import { Route as AdminRolesRouteImport } from './routes/admin.roles'
-import { Route as AdminPreordersRouteImport } from './routes/admin.preorders'
-import { Route as AdminMembersRouteImport } from './routes/admin.members'
-import { Route as AdminLogisticsRouteImport } from './routes/admin.logistics'
-import { Route as AdminForecastingRouteImport } from './routes/admin.forecasting'
-import { Route as AdminFinanceRouteImport } from './routes/admin.finance'
-import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as CalculatorRouteImport } from './routes/calculator'
+import { Route as CoopRouteImport } from './routes/coop'
+import { Route as DividendRouteImport } from './routes/dividend'
+import { Route as GovernanceRouteImport } from './routes/governance'
+import { Route as ImpactRouteImport } from './routes/impact'
+import { Route as McpRouteImport } from './routes/mcp'
+import { Route as MemberCenterRouteImport } from './routes/member-center'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as OrdersRouteImport } from './routes/orders'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as TrialRouteImport } from './routes/trial'
+import { Route as VerifyRouteImport } from './routes/verify'
+import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
-import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminAiSupportRouteImport } from './routes/admin.ai-support'
+import { Route as AdminFinanceRouteImport } from './routes/admin.finance'
+import { Route as AdminForecastingRouteImport } from './routes/admin.forecasting'
+import { Route as AdminLogisticsRouteImport } from './routes/admin.logistics'
+import { Route as AdminMembersRouteImport } from './routes/admin.members'
+import { Route as AdminPreordersRouteImport } from './routes/admin.preorders'
+import { Route as AdminRolesRouteImport } from './routes/admin.roles'
+import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
+import { Route as AdminSupportRouteImport } from './routes/admin.support'
+import { Route as AdminSurplusRouteImport } from './routes/admin.surplus'
+import { Route as AdminUsersRouteImport } from './routes/admin.users'
+import { Route as AdminVotingRouteImport } from './routes/admin.voting'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
 
-const WishlistRoute = WishlistRouteImport.update({
-  id: '/wishlist',
-  path: '/wishlist',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const VerifyRoute = VerifyRouteImport.update({
-  id: '/verify',
-  path: '/verify',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TrialRoute = TrialRouteImport.update({
-  id: '/trial',
-  path: '/trial',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OrdersRoute = OrdersRouteImport.update({
-  id: '/orders',
-  path: '/orders',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OnboardingRoute = OnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MemberCenterRoute = MemberCenterRouteImport.update({
-  id: '/member-center',
-  path: '/member-center',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const McpRoute = McpRouteImport.update({
-  id: '/mcp',
-  path: '/mcp',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ImpactRoute = ImpactRouteImport.update({
-  id: '/impact',
-  path: '/impact',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GovernanceRoute = GovernanceRouteImport.update({
-  id: '/governance',
-  path: '/governance',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DividendRoute = DividendRouteImport.update({
-  id: '/dividend',
-  path: '/dividend',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CoopRoute = CoopRouteImport.update({
-  id: '/coop',
-  path: '/coop',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CalculatorRoute = CalculatorRouteImport.update({
-  id: '/calculator',
-  path: '/calculator',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -111,64 +52,91 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const CalculatorRoute = CalculatorRouteImport.update({
+  id: '/calculator',
+  path: '/calculator',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CoopRoute = CoopRouteImport.update({
+  id: '/coop',
+  path: '/coop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DividendRoute = DividendRouteImport.update({
+  id: '/dividend',
+  path: '/dividend',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GovernanceRoute = GovernanceRouteImport.update({
+  id: '/governance',
+  path: '/governance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImpactRoute = ImpactRouteImport.update({
+  id: '/impact',
+  path: '/impact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MemberCenterRoute = MemberCenterRouteImport.update({
+  id: '/member-center',
+  path: '/member-center',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrdersRoute = OrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrialRoute = TrialRouteImport.update({
+  id: '/trial',
+  path: '/trial',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyRoute = VerifyRouteImport.update({
+  id: '/verify',
+  path: '/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WishlistRoute = WishlistRouteImport.update({
+  id: '/wishlist',
+  path: '/wishlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
-const AdminVotingRoute = AdminVotingRouteImport.update({
-  id: '/voting',
-  path: '/voting',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminUsersRoute = AdminUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminSurplusRoute = AdminSurplusRouteImport.update({
-  id: '/surplus',
-  path: '/surplus',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminSupportRoute = AdminSupportRouteImport.update({
-  id: '/support',
-  path: '/support',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminSettingsRoute = AdminSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminRolesRoute = AdminRolesRouteImport.update({
-  id: '/roles',
-  path: '/roles',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminPreordersRoute = AdminPreordersRouteImport.update({
-  id: '/preorders',
-  path: '/preorders',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminMembersRoute = AdminMembersRouteImport.update({
-  id: '/members',
-  path: '/members',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminLogisticsRoute = AdminLogisticsRouteImport.update({
-  id: '/logistics',
-  path: '/logistics',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminForecastingRoute = AdminForecastingRouteImport.update({
-  id: '/forecasting',
-  path: '/forecasting',
+const AdminAiSupportRoute = AdminAiSupportRouteImport.update({
+  id: '/ai-support',
+  path: '/ai-support',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminFinanceRoute = AdminFinanceRouteImport.update({
@@ -176,29 +144,67 @@ const AdminFinanceRoute = AdminFinanceRouteImport.update({
   path: '/finance',
   getParentRoute: () => AdminRoute,
 } as any)
-const Char91DotwellKnownChar93OauthProtectedResourceRoute =
-  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
-    id: '/.well-known/oauth-protected-resource',
-    path: '/.well-known/oauth-protected-resource',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const Char91DotmcpChar93ListToolsRoute =
-  Char91DotmcpChar93ListToolsRouteImport.update({
-    id: '/.mcp/list-tools',
-    path: '/.mcp/list-tools',
-    getParentRoute: () => rootRouteImport,
-  } as any)
+const AdminForecastingRoute = AdminForecastingRouteImport.update({
+  id: '/forecasting',
+  path: '/forecasting',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLogisticsRoute = AdminLogisticsRouteImport.update({
+  id: '/logistics',
+  path: '/logistics',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMembersRoute = AdminMembersRouteImport.update({
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPreordersRoute = AdminPreordersRouteImport.update({
+  id: '/preorders',
+  path: '/preorders',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRolesRoute = AdminRolesRouteImport.update({
+  id: '/roles',
+  path: '/roles',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSupportRoute = AdminSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSurplusRoute = AdminSurplusRouteImport.update({
+  id: '/surplus',
+  path: '/surplus',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminVotingRoute = AdminVotingRouteImport.update({
+  id: '/voting',
+  path: '/voting',
+  getParentRoute: () => AdminRoute,
+} as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const Char91DotmcpChar93InvokeToolToolRoute =
   Char91DotmcpChar93InvokeToolToolRouteImport.update({
     id: '/.mcp/invoke-tool/$tool',
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
-const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
-  id: '/.lovable/oauth/consent',
-  path: '/.lovable/oauth/consent',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -218,6 +224,7 @@ export interface FileRoutesByFullPath {
   '/wishlist': typeof WishlistRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/admin/ai-support': typeof AdminAiSupportRoute
   '/admin/finance': typeof AdminFinanceRoute
   '/admin/forecasting': typeof AdminForecastingRoute
   '/admin/logistics': typeof AdminLogisticsRoute
@@ -250,6 +257,7 @@ export interface FileRoutesByTo {
   '/wishlist': typeof WishlistRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/admin/ai-support': typeof AdminAiSupportRoute
   '/admin/finance': typeof AdminFinanceRoute
   '/admin/forecasting': typeof AdminForecastingRoute
   '/admin/logistics': typeof AdminLogisticsRoute
@@ -284,6 +292,7 @@ export interface FileRoutesById {
   '/wishlist': typeof WishlistRoute
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/admin/ai-support': typeof AdminAiSupportRoute
   '/admin/finance': typeof AdminFinanceRoute
   '/admin/forecasting': typeof AdminForecastingRoute
   '/admin/logistics': typeof AdminLogisticsRoute
@@ -319,6 +328,7 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
+    | '/admin/ai-support'
     | '/admin/finance'
     | '/admin/forecasting'
     | '/admin/logistics'
@@ -351,6 +361,7 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
+    | '/admin/ai-support'
     | '/admin/finance'
     | '/admin/forecasting'
     | '/admin/logistics'
@@ -384,6 +395,7 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
+    | '/admin/ai-support'
     | '/admin/finance'
     | '/admin/forecasting'
     | '/admin/logistics'
@@ -424,95 +436,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/wishlist': {
-      id: '/wishlist'
-      path: '/wishlist'
-      fullPath: '/wishlist'
-      preLoaderRoute: typeof WishlistRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/verify': {
-      id: '/verify'
-      path: '/verify'
-      fullPath: '/verify'
-      preLoaderRoute: typeof VerifyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/trial': {
-      id: '/trial'
-      path: '/trial'
-      fullPath: '/trial'
-      preLoaderRoute: typeof TrialRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/orders': {
-      id: '/orders'
-      path: '/orders'
-      fullPath: '/orders'
-      preLoaderRoute: typeof OrdersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/onboarding': {
-      id: '/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/member-center': {
-      id: '/member-center'
-      path: '/member-center'
-      fullPath: '/member-center'
-      preLoaderRoute: typeof MemberCenterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mcp': {
-      id: '/mcp'
-      path: '/mcp'
-      fullPath: '/mcp'
-      preLoaderRoute: typeof McpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/impact': {
-      id: '/impact'
-      path: '/impact'
-      fullPath: '/impact'
-      preLoaderRoute: typeof ImpactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/governance': {
-      id: '/governance'
-      path: '/governance'
-      fullPath: '/governance'
-      preLoaderRoute: typeof GovernanceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dividend': {
-      id: '/dividend'
-      path: '/dividend'
-      fullPath: '/dividend'
-      preLoaderRoute: typeof DividendRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/coop': {
-      id: '/coop'
-      path: '/coop'
-      fullPath: '/coop'
-      preLoaderRoute: typeof CoopRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/calculator': {
-      id: '/calculator'
-      path: '/calculator'
-      fullPath: '/calculator'
-      preLoaderRoute: typeof CalculatorRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -522,102 +450,95 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/calculator': {
+      id: '/calculator'
+      path: '/calculator'
+      fullPath: '/calculator'
+      preLoaderRoute: typeof CalculatorRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/': {
-      id: '/admin/'
-      path: '/'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof AdminRoute
+    '/coop': {
+      id: '/coop'
+      path: '/coop'
+      fullPath: '/coop'
+      preLoaderRoute: typeof CoopRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/voting': {
-      id: '/admin/voting'
-      path: '/voting'
-      fullPath: '/admin/voting'
-      preLoaderRoute: typeof AdminVotingRouteImport
-      parentRoute: typeof AdminRoute
+    '/dividend': {
+      id: '/dividend'
+      path: '/dividend'
+      fullPath: '/dividend'
+      preLoaderRoute: typeof DividendRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/users': {
-      id: '/admin/users'
-      path: '/users'
-      fullPath: '/admin/users'
-      preLoaderRoute: typeof AdminUsersRouteImport
-      parentRoute: typeof AdminRoute
+    '/governance': {
+      id: '/governance'
+      path: '/governance'
+      fullPath: '/governance'
+      preLoaderRoute: typeof GovernanceRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/surplus': {
-      id: '/admin/surplus'
-      path: '/surplus'
-      fullPath: '/admin/surplus'
-      preLoaderRoute: typeof AdminSurplusRouteImport
-      parentRoute: typeof AdminRoute
+    '/impact': {
+      id: '/impact'
+      path: '/impact'
+      fullPath: '/impact'
+      preLoaderRoute: typeof ImpactRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/support': {
-      id: '/admin/support'
-      path: '/support'
-      fullPath: '/admin/support'
-      preLoaderRoute: typeof AdminSupportRouteImport
-      parentRoute: typeof AdminRoute
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/settings': {
-      id: '/admin/settings'
-      path: '/settings'
-      fullPath: '/admin/settings'
-      preLoaderRoute: typeof AdminSettingsRouteImport
-      parentRoute: typeof AdminRoute
+    '/member-center': {
+      id: '/member-center'
+      path: '/member-center'
+      fullPath: '/member-center'
+      preLoaderRoute: typeof MemberCenterRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/roles': {
-      id: '/admin/roles'
-      path: '/roles'
-      fullPath: '/admin/roles'
-      preLoaderRoute: typeof AdminRolesRouteImport
-      parentRoute: typeof AdminRoute
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/preorders': {
-      id: '/admin/preorders'
-      path: '/preorders'
-      fullPath: '/admin/preorders'
-      preLoaderRoute: typeof AdminPreordersRouteImport
-      parentRoute: typeof AdminRoute
+    '/orders': {
+      id: '/orders'
+      path: '/orders'
+      fullPath: '/orders'
+      preLoaderRoute: typeof OrdersRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/members': {
-      id: '/admin/members'
-      path: '/members'
-      fullPath: '/admin/members'
-      preLoaderRoute: typeof AdminMembersRouteImport
-      parentRoute: typeof AdminRoute
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/logistics': {
-      id: '/admin/logistics'
-      path: '/logistics'
-      fullPath: '/admin/logistics'
-      preLoaderRoute: typeof AdminLogisticsRouteImport
-      parentRoute: typeof AdminRoute
+    '/trial': {
+      id: '/trial'
+      path: '/trial'
+      fullPath: '/trial'
+      preLoaderRoute: typeof TrialRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/forecasting': {
-      id: '/admin/forecasting'
-      path: '/forecasting'
-      fullPath: '/admin/forecasting'
-      preLoaderRoute: typeof AdminForecastingRouteImport
-      parentRoute: typeof AdminRoute
+    '/verify': {
+      id: '/verify'
+      path: '/verify'
+      fullPath: '/verify'
+      preLoaderRoute: typeof VerifyRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/finance': {
-      id: '/admin/finance'
-      path: '/finance'
-      fullPath: '/admin/finance'
-      preLoaderRoute: typeof AdminFinanceRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/.well-known/oauth-protected-resource': {
-      id: '/.well-known/oauth-protected-resource'
-      path: '/.well-known/oauth-protected-resource'
-      fullPath: '/.well-known/oauth-protected-resource'
-      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+    '/wishlist': {
+      id: '/wishlist'
+      path: '/wishlist'
+      fullPath: '/wishlist'
+      preLoaderRoute: typeof WishlistRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/.mcp/list-tools': {
@@ -627,12 +548,103 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/.mcp/invoke-tool/$tool': {
-      id: '/.mcp/invoke-tool/$tool'
-      path: '/.mcp/invoke-tool/$tool'
-      fullPath: '/.mcp/invoke-tool/$tool'
-      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/ai-support': {
+      id: '/admin/ai-support'
+      path: '/ai-support'
+      fullPath: '/admin/ai-support'
+      preLoaderRoute: typeof AdminAiSupportRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/finance': {
+      id: '/admin/finance'
+      path: '/finance'
+      fullPath: '/admin/finance'
+      preLoaderRoute: typeof AdminFinanceRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/forecasting': {
+      id: '/admin/forecasting'
+      path: '/forecasting'
+      fullPath: '/admin/forecasting'
+      preLoaderRoute: typeof AdminForecastingRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/logistics': {
+      id: '/admin/logistics'
+      path: '/logistics'
+      fullPath: '/admin/logistics'
+      preLoaderRoute: typeof AdminLogisticsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/members': {
+      id: '/admin/members'
+      path: '/members'
+      fullPath: '/admin/members'
+      preLoaderRoute: typeof AdminMembersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/preorders': {
+      id: '/admin/preorders'
+      path: '/preorders'
+      fullPath: '/admin/preorders'
+      preLoaderRoute: typeof AdminPreordersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/roles': {
+      id: '/admin/roles'
+      path: '/roles'
+      fullPath: '/admin/roles'
+      preLoaderRoute: typeof AdminRolesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/support': {
+      id: '/admin/support'
+      path: '/support'
+      fullPath: '/admin/support'
+      preLoaderRoute: typeof AdminSupportRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/surplus': {
+      id: '/admin/surplus'
+      path: '/surplus'
+      fullPath: '/admin/surplus'
+      preLoaderRoute: typeof AdminSurplusRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/voting': {
+      id: '/admin/voting'
+      path: '/voting'
+      fullPath: '/admin/voting'
+      preLoaderRoute: typeof AdminVotingRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/.lovable/oauth/consent': {
       id: '/.lovable/oauth/consent'
@@ -641,10 +653,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminAiSupportRoute: typeof AdminAiSupportRoute
   AdminFinanceRoute: typeof AdminFinanceRoute
   AdminForecastingRoute: typeof AdminForecastingRoute
   AdminLogisticsRoute: typeof AdminLogisticsRoute
@@ -660,6 +680,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAiSupportRoute: AdminAiSupportRoute,
   AdminFinanceRoute: AdminFinanceRoute,
   AdminForecastingRoute: AdminForecastingRoute,
   AdminLogisticsRoute: AdminLogisticsRoute,

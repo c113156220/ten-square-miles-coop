@@ -18,6 +18,8 @@ type NotificationItem = {
   read: boolean;
 };
 
+const ADMIN_INVOICE_STORAGE_KEY = "tsm_admin_invoice_numbers_v1";
+
 export function AdminLogisticsManager() {
   const [activeTab, setActiveTab] = useState<"orders" | "support">("orders");
 
@@ -32,6 +34,15 @@ export function AdminLogisticsManager() {
   // --- 1. 訂單與物流狀態 ---
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [issuedInvoiceByOrder, setIssuedInvoiceByOrder] = useState<Record<string, string>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      return JSON.parse(localStorage.getItem(ADMIN_INVOICE_STORAGE_KEY) || "{}");
+    } catch {
+      return {};
+    }
+  });
+  const [invoiceDraftByOrder, setInvoiceDraftByOrder] = useState<Record<string, string>>({});
 
   // 🔔 寫入 Supabase 通知表 Helper 函式
   async function sendNotification(orderId: string, statusText: string) {
@@ -72,6 +83,9 @@ export function AdminLogisticsManager() {
           payment_method: item.paymentMethod || "ECPAY",
           status: "paid",
         }],
+        invoice_carrier_barcode: item.invoiceCarrierBarcode || null,
+        business_tax_id: item.businessTaxId || null,
+        issued_e_invoice_number: item.issuedEInvoiceNumber || null,
       }));
 
       const { data, error } = await supabase
@@ -112,6 +126,9 @@ export function AdminLogisticsManager() {
           payment_method: item.paymentMethod || "ECPAY",
           status: "paid",
         }],
+        invoice_carrier_barcode: item.invoiceCarrierBarcode || null,
+        business_tax_id: item.businessTaxId || null,
+        issued_e_invoice_number: item.issuedEInvoiceNumber || null,
       })));
     } finally {
       setLoadingOrders(false);
@@ -250,6 +267,35 @@ export function AdminLogisticsManager() {
     setActiveTab("support");
     setSelectedThreadId(notif.threadId);
     setShowNotifMenu(false);
+  };
+
+  const getOrderKey = (order: any) => String(order.payments?.[0]?.invoice_number || order.id);
+  const getIssuedInvoiceNumber = (order: any) =>
+    issuedInvoiceByOrder[getOrderKey(order)] || order.issued_e_invoice_number || "";
+  const getCarrierBarcode = (order: any) => order.invoice_carrier_barcode || "未填寫";
+  const getBusinessTaxId = (order: any) => order.business_tax_id || "未填寫";
+
+  useEffect(() => {
+    const nextDrafts: Record<string, string> = {};
+    orders.forEach((order) => {
+      nextDrafts[getOrderKey(order)] = getIssuedInvoiceNumber(order);
+    });
+    setInvoiceDraftByOrder((prev) => ({ ...nextDrafts, ...prev }));
+  }, [orders, issuedInvoiceByOrder]);
+
+  const saveIssuedInvoiceNumber = (order: any) => {
+    const orderKey = getOrderKey(order);
+    const issuedInvoiceNumber = (invoiceDraftByOrder[orderKey] || "").trim();
+    const nextMap = { ...issuedInvoiceByOrder, [orderKey]: issuedInvoiceNumber };
+    setIssuedInvoiceByOrder(nextMap);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(ADMIN_INVOICE_STORAGE_KEY, JSON.stringify(nextMap));
+    }
+    setOrders((prev) =>
+      prev.map((item) =>
+        getOrderKey(item) === orderKey ? { ...item, issued_e_invoice_number: issuedInvoiceNumber } : item,
+      ),
+    );
   };
 
   const unreadNotifCount = notifications.filter((n) => !n.read).length;
@@ -417,26 +463,55 @@ export function AdminLogisticsManager() {
               <p className="p-4 text-xs text-muted-foreground text-center">目前尚無符合搜尋條件的訂單資料。</p>
             ) : (
               filteredOrders.map((o) => (
-                <div key={o.id} className="flex flex-col md:flex-row items-start md:items-center justify-between p-3 text-xs gap-2">
-                  <div>
-                    <p className="font-mono font-bold text-primary">訂單編號 #{o.payments?.[0]?.invoice_number || o.id}</p>
-                    <p className="text-muted-foreground mt-0.5">
-                      會員 ID：{o.member_id || "F0001"} | 物流：{o.delivery_method} | 門市：{o.logistics?.[0]?.store_code_711 || "未選擇"} | 收件人：{o.logistics?.[0]?.recipient_name || "張社員"}
-                    </p>
+                <div key={o.id} className="space-y-3 p-3 text-xs">
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
+                    <div>
+                      <p className="font-mono font-bold text-primary">訂單編號 #{o.payments?.[0]?.invoice_number || o.id}</p>
+                      <p className="text-muted-foreground mt-0.5">
+                        會員 ID：{o.member_id || "F0001"} | 物流：{o.delivery_method} | 門市：{o.logistics?.[0]?.store_code_711 || "未選擇"} | 收件人：{o.logistics?.[0]?.recipient_name || "張社員"}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-3 self-end md:self-auto">
+                      <span className="font-mono font-extrabold text-sm">NT${o.total_amount}</span>
+                      <select
+                        value={o.logistics?.[0]?.status || "preparing"}
+                        onChange={(e) => updateStatus(o.logistics?.[0]?.id, e.target.value, String(o.id))}
+                        className="rounded border border-border px-2.5 py-1.5 bg-stone-50 font-bold text-xs outline-none focus:ring-2 focus:ring-primary/20"
+                      >
+                        <option value="preparing">📦 備貨中</option>
+                        <option value="shipped">🚚 廠商已出貨</option>
+                        <option value="arrived">🏪 已達門市/待自取</option>
+                        <option value="completed">✅ 已完成取貨</option>
+                      </select>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-3 self-end md:self-auto">
-                    <span className="font-mono font-extrabold text-sm">NT${o.total_amount}</span>
-                    <select
-                      value={o.logistics?.[0]?.status || "preparing"}
-                      onChange={(e) => updateStatus(o.logistics?.[0]?.id, e.target.value, String(o.id))}
-                      className="rounded border border-border px-2.5 py-1.5 bg-stone-50 font-bold text-xs outline-none focus:ring-2 focus:ring-primary/20"
-                    >
-                      <option value="preparing">📦 備貨中</option>
-                      <option value="shipped">🚚 廠商已出貨</option>
-                      <option value="arrived">🏪 已達門市/待自取</option>
-                      <option value="completed">✅ 已完成取貨</option>
-                    </select>
+                  <div className="rounded-xl border border-border bg-slate-50/70 p-3 space-y-2">
+                    <p className="font-bold text-foreground">發票與稅務區塊</p>
+                    <p>電子發票載具條碼：<span className="font-mono">{getCarrierBarcode(o)}</span></p>
+                    <p>公司統一編號（統編）：<span className="font-mono">{getBusinessTaxId(o)}</span></p>
+                    <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                      <input
+                        type="text"
+                        value={invoiceDraftByOrder[getOrderKey(o)] ?? ""}
+                        onChange={(e) =>
+                          setInvoiceDraftByOrder((prev) => ({
+                            ...prev,
+                            [getOrderKey(o)]: e.target.value,
+                          }))
+                        }
+                        placeholder="輸入已開立之電子發票號碼"
+                        className="w-full rounded-lg border border-border bg-white px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary/20"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => saveIssuedInvoiceNumber(o)}
+                        className="rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground hover:brightness-110"
+                      >
+                        儲存發票號碼
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))

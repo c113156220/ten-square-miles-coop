@@ -9,7 +9,7 @@ import { AiSupportWidget } from "@/components/ai-support";
 type NavItem = { to: string; label: { zh: string; en: string } };
 
 const STORE_NAV: NavItem[] = [
-  { to: "/", label: { zh: "共同購買", en: "Shop" } },
+  { to: "/", label: { zh: "共同購買 / 市集", en: "Shop / Market" } },
   { to: "/coop", label: { zh: "共購流程", en: "Co-op Buying" } },
   { to: "/member-center", label: { zh: "會員中心", en: "Member Center" } },
   { to: "/orders", label: { zh: "訂單紀錄", en: "Orders" } },
@@ -56,7 +56,7 @@ function SystemSwitcher({ mode, locale }: { mode: "store" | "governance"; locale
         }`}
       >
         <ShoppingBag className="size-3.5" />
-        {locale === "zh" ? "共同購買" : "Store"}
+        {locale === "zh" ? "共同購買 / 市集" : "Shop / Market"}
       </Link>
       <Link
         to="/governance"
