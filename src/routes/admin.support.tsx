@@ -1,35 +1,76 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { Search } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, Send, Check } from "lucide-react";
+import {
+  listSupportThreads,
+  addAdminReply,
+  resolveSupportThread,
+  type SupportThread,
+} from "@/lib/support-chat";
 
 export const Route = createFileRoute("/admin/support")({
   component: AdminSupportPage,
 });
 
-interface Ticket {
-  id: string;
-  user: string;
-  email: string;
-  lastMessage: string;
-  status: "pending" | "resolved";
-  role: string;
-  updatedAt: string;
-}
-
-const MOCK_TICKETS: Ticket[] = [
-  { id: "1", user: "Super Admin", email: "admin@coop.tw", lastMessage: "請問如何退款？", status: "pending", role: "AI 客服", updatedAt: "10分鐘前" },
-  { id: "2", user: "Test Member", email: "member@coop.tw", lastMessage: "這週有什麼推薦好物？", status: "resolved", role: "BOT", updatedAt: "1小時前" },
-  { id: "3", user: "John Doe", email: "john@coop.tw", lastMessage: "超商取貨如何選擇門市？", status: "pending", role: "真人幹部", updatedAt: "2小時前" },
-];
-
 function AdminSupportPage() {
-  const [selectedTicket, setSelectedTicket] = useState<Ticket>(MOCK_TICKETS[0]);
+  const [threads, setThreads] = useState<SupportThread[]>([]);
+  const [selectedThreadId, setSelectedThreadId] = useState<string>("");
   const [replyText, setReplyText] = useState<string>("");
   const [search, setSearch] = useState<string>("");
 
-  const filteredTickets = MOCK_TICKETS.filter(
-    (t) => t.user.toLowerCase().includes(search.toLowerCase()) || t.lastMessage.includes(search)
+  // 🔄 同步讀取全站客服資料
+  const syncThreads = () => {
+    try {
+      const data = listSupportThreads() || [];
+      setThreads([...data]);
+      if (data.length > 0 && !selectedThreadId) {
+        setSelectedThreadId(data[0].id);
+      }
+    } catch (e) {
+      console.error("Sync threads error:", e);
+    }
+  };
+
+  useEffect(() => {
+    syncThreads();
+
+    const handleUpdate = () => syncThreads();
+    window.addEventListener("tsm-support-chat-updated", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+
+    return () => {
+      window.removeEventListener("tsm-support-chat-updated", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+    };
+  }, []);
+
+  const selectedThread = threads.find((t) => t.id === selectedThreadId) || threads[0];
+
+  const filteredThreads = threads.filter(
+    (t) =>
+      (t.userName || "").toLowerCase().includes(search.toLowerCase()) ||
+      (t.messages || []).some((m) => (m.text || "").toLowerCase().includes(search.toLowerCase()))
   );
+
+  // 🟢 1. 正式標示為已結案（寫入 LocalStorage 並廣播事件）
+  const handleResolve = (threadId: string) => {
+    if (!threadId) return;
+    resolveSupportThread(threadId);
+
+    // 全局通知，讓左側 Sidebar 的橘色徽章數字瞬間同步扣減！
+    window.dispatchEvent(new Event("tsm-support-chat-updated"));
+    syncThreads();
+  };
+
+  // 🟢 2. 正式傳送幹部回覆
+  const handleSendReply = () => {
+    if (!selectedThreadId || !replyText.trim()) return;
+    addAdminReply(selectedThreadId, replyText.trim());
+    setReplyText("");
+
+    window.dispatchEvent(new Event("tsm-support-chat-updated"));
+    syncThreads();
+  };
 
   return (
     <div className="p-2 space-y-4">
@@ -39,7 +80,7 @@ function AdminSupportPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* 左側列表 */}
+        {/* 左側對話列表 */}
         <div className="border border-slate-200 rounded-2xl bg-white p-4 space-y-3 shadow-sm">
           <div className="relative">
             <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400" />
@@ -53,85 +94,121 @@ function AdminSupportPage() {
           </div>
 
           <div className="space-y-2 max-h-[550px] overflow-y-auto pr-1">
-            {filteredTickets.map((ticket) => {
-              const isSelected = selectedTicket.id === ticket.id;
-              const isPending = ticket.status === "pending";
+            {filteredThreads.length === 0 ? (
+              <p className="text-xs text-slate-400 text-center py-8">尚無客服對話紀錄</p>
+            ) : (
+              filteredThreads.map((thread) => {
+                const isSelected = selectedThread?.id === thread.id;
+                const isPending = thread.status === "open";
+                const lastMsg = thread.messages?.[thread.messages.length - 1]?.text || "尚無訊息";
 
-              return (
-                <div
-                  key={ticket.id}
-                  onClick={() => setSelectedTicket(ticket)}
-                  className={
-                    isSelected
-                      ? "p-3 rounded-xl border cursor-pointer transition-all border-emerald-600 bg-emerald-50/50"
-                      : "p-3 rounded-xl border cursor-pointer transition-all border-slate-200 bg-white hover:bg-slate-50"
-                  }
-                >
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="font-bold text-xs text-slate-800">{ticket.user}</span>
-                    <span
-                      className={
-                        isPending
-                          ? "text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800"
-                          : "text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800"
-                      }
-                    >
-                      {isPending ? "待處理" : "已結案"}
-                    </span>
+                return (
+                  <div
+                    key={thread.id}
+                    onClick={() => setSelectedThreadId(thread.id)}
+                    className={
+                      isSelected
+                        ? "p-3 rounded-xl border cursor-pointer transition-all border-emerald-600 bg-emerald-50/50"
+                        : "p-3 rounded-xl border cursor-pointer transition-all border-slate-200 bg-white hover:bg-slate-50"
+                    }
+                  >
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="font-bold text-xs text-slate-800">{thread.userName || "社員"}</span>
+                      <span
+                        className={
+                          isPending
+                            ? "text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800"
+                            : "text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800"
+                        }
+                      >
+                        {isPending ? "待處理" : "已結案"}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 truncate">{lastMsg}</p>
+                    <div className="mt-2 flex justify-between items-center text-[10px] text-slate-400">
+                      <span className="rounded bg-slate-100 px-1.5 py-0.5">{thread.mode?.toUpperCase() || "CHAT"}</span>
+                    </div>
                   </div>
-                  <p className="text-xs text-slate-500 truncate">{ticket.lastMessage}</p>
-                  <div className="mt-2 flex justify-between items-center text-[10px] text-slate-400">
-                    <span className="rounded bg-slate-100 px-1.5 py-0.5">{ticket.role}</span>
-                    <span>{ticket.updatedAt}</span>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
 
-        {/* 右側對話區 */}
+        {/* 右側對話面板 */}
         <div className="lg:col-span-2 border border-slate-200 rounded-2xl bg-white p-5 flex flex-col justify-between min-h-[500px] shadow-sm">
-          <div className="border-b border-slate-200 pb-3 mb-4 flex justify-between items-center">
-            <div>
-              <h3 className="font-bold text-sm text-slate-800">{selectedTicket.user}</h3>
-              <p className="text-[11px] text-slate-400">{selectedTicket.email}</p>
-            </div>
-            <button
-              type="button"
-              className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-semibold bg-slate-50 hover:bg-slate-100 transition text-slate-700"
-            >
-              ✓ 標示為已結案
-            </button>
-          </div>
+          {selectedThread ? (
+            <>
+              <div>
+                <div className="border-b border-slate-200 pb-3 mb-4 flex justify-between items-center">
+                  <div>
+                    <h3 className="font-bold text-sm text-slate-800">{selectedThread.userName || "社員"}</h3>
+                    <p className="text-[11px] text-slate-400">{selectedThread.userEmail}</p>
+                  </div>
 
-          <div className="flex-1 bg-slate-50 rounded-2xl p-4 space-y-3 overflow-y-auto max-h-[400px] mb-4 border border-slate-100">
-            <div className="bg-white p-3 rounded-2xl border border-slate-200 text-xs max-w-[80%] shadow-sm space-y-1">
-              <p className="font-bold text-emerald-700 text-[10px]">{selectedTicket.user}</p>
-              <p className="text-slate-800">{selectedTicket.lastMessage}</p>
-            </div>
+                  {/* 🟢 結案按鈕：點擊後會即時同步左側選單徽章數字！ */}
+                  {selectedThread.status === "open" ? (
+                    <button
+                      type="button"
+                      onClick={() => handleResolve(selectedThread.id)}
+                      className="px-3 py-1.5 border border-slate-200 rounded-xl text-xs font-semibold bg-white hover:bg-emerald-50 hover:border-emerald-300 text-slate-700 hover:text-emerald-700 transition shadow-sm cursor-pointer active:scale-95"
+                    >
+                      ✓ 標示為已結案
+                    </button>
+                  ) : (
+                    <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1">
+                      <Check className="w-3.5 h-3.5" /> 已結案
+                    </span>
+                  )}
+                </div>
 
-            <div className="bg-emerald-50 text-emerald-950 p-3 rounded-2xl border border-emerald-200 text-xs max-w-[80%] ml-auto shadow-sm space-y-1">
-              <p className="font-bold text-emerald-700 text-[10px]">AI 客服助手</p>
-              <p>您可以至「訂單紀錄」查看詳情，或是直接在此留言由幹部為您服務。</p>
-            </div>
-          </div>
+                {/* 對話訊息歷史 */}
+                <div className="bg-slate-50 rounded-2xl p-4 space-y-3 overflow-y-auto max-h-[380px] mb-4 border border-slate-100">
+                  {(selectedThread.messages || []).map((msg) => {
+                    const isAdmin = msg.role === "admin";
+                    return (
+                      <div
+                        key={msg.id}
+                        className={`p-3 rounded-2xl border text-xs max-w-[80%] shadow-sm space-y-1 ${
+                          isAdmin
+                            ? "ml-auto bg-emerald-600 border-emerald-600 text-white"
+                            : "bg-white border-slate-200 text-slate-800"
+                        }`}
+                      >
+                        <p className={`font-bold text-[10px] ${isAdmin ? "text-emerald-100" : "text-emerald-700"}`}>
+                          {isAdmin ? "👨‍💼 真人幹部" : msg.role === "assistant" ? "🤖 AI 阿方助手" : selectedThread.userName || "社員"}
+                        </p>
+                        <p>{msg.text}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
 
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={replyText}
-              onChange={(e) => setReplyText(e.target.value)}
-              placeholder="輸入幹部回覆訊息..."
-              className="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-emerald-600 bg-slate-50 focus:bg-white transition"
-            />
-            <button
-              type="button"
-              className="bg-emerald-600 text-white font-bold text-xs px-5 py-2.5 rounded-xl hover:bg-emerald-700 shadow-sm transition"
-            >
-              傳送回覆
-            </button>
-          </div>
+              {/* 回覆輸入框 */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSendReply()}
+                  placeholder="輸入幹部回覆訊息..."
+                  className="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-emerald-600 bg-slate-50 focus:bg-white transition"
+                />
+                <button
+                  type="button"
+                  onClick={handleSendReply}
+                  className="bg-emerald-600 text-white font-bold text-xs px-5 py-2.5 rounded-xl hover:bg-emerald-700 shadow-sm transition flex items-center gap-1"
+                >
+                  <Send className="w-3.5 h-3.5" /> 傳送回覆
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="grid place-items-center h-full text-slate-400 text-xs py-12">
+              👈 請點選左側對話進行檢視與回覆
+            </div>
+          )}
         </div>
       </div>
     </div>

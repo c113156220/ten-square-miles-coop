@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n";
 import { SiteShell, PageHeader } from "@/components/site-shell";
 import { CheckoutModal } from "@/components/CheckoutModal";
+import { Heart, MapPin, Sparkles } from "lucide-react";
 import eggsImg from "@/assets/product-eggs.jpg";
 import soyImg from "@/assets/product-soysauce.jpg";
 import vegImg from "@/assets/product-veggies.jpg";
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/coop")({
 
 type Stage = 1 | 2 | 3;
 type TempType = "cold" | "ambient";
+
 type Campaign = {
   img: string;
   name: { zh: string; en: string };
@@ -34,18 +36,28 @@ type Campaign = {
   regularPrice: number;
   taxExempt: boolean;
   tempType: TempType;
-  // stage 1
   intentResponses?: number;
   intentTarget?: number;
-  // stage 2
   ordered?: number;
   threshold?: number;
   deposit?: number;
   hot?: boolean;
   daysLeft?: number;
-  // stage 3
-  fulfillStep?: 0 | 1 | 2; // sourced -> arrived -> ready
+  fulfillStep?: 0 | 1 | 2;
   pickupDate?: string;
+};
+
+type EventItem = {
+  id: string;
+  title: string;
+  category: string;
+  tag: string;
+  location: string;
+  date: string;
+  nonMemberPrice: number; // 非社員價格 (含稅)
+  registeredCount: number;
+  totalSeats: number;
+  image: string;
 };
 
 const CAMPAIGNS: Campaign[] = [
@@ -88,6 +100,59 @@ const CAMPAIGNS: Campaign[] = [
     fulfillStep: 1,
     pickupDate: "2026.07.31 (Fri)",
   },
+];
+
+// 🟢 社員專屬社務活動示範資料
+const DEMO_EVENTS: EventItem[] = [
+  {
+    id: "evt-1",
+    title: "阿里山雞農場參訪 + 現場品嚐",
+    category: "農場參訪",
+    tag: "🔥 熱門",
+    location: "嘉義 · 阿里山",
+    date: "2026-08-17",
+    nonMemberPrice: 480,
+    registeredCount: 22,
+    totalSeats: 30,
+    image: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=600&auto=format&fit=crop",
+  },
+  {
+    id: "evt-2",
+    title: "柴燒醬油品油飲工作坊",
+    category: "品味工作坊",
+    tag: "✨ 開放報名",
+    location: "台北 · 大稻埕",
+    date: "2026-08-24",
+    nonMemberPrice: 350,
+    registeredCount: 18,
+    totalSeats: 24,
+    image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&auto=format&fit=crop",
+  },
+  {
+    id: "evt-3",
+    title: "健康飲食 & 餐盒設計講座",
+    category: "線上講座",
+    tag: "⌛ 即將額滿",
+    location: "線上 · Zoom",
+    date: "2026-09-05",
+    nonMemberPrice: 200,
+    registeredCount: 87,
+    totalSeats: 200,
+    image: "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=600&auto=format&fit=crop",
+  },
+];
+
+// 🟢 許願清單固定分類下拉選單項目
+const WISHLIST_CATEGORIES = [
+  "米糧麵食",
+  "生鮮蔬果",
+  "油品醬料",
+  "蛋品乳品",
+  "水產肉品",
+  "加工零食",
+  "生活日用",
+  "社務活動/講座",
+  "其他",
 ];
 
 function StageBar({ stage, locale }: { stage: Stage; locale: "zh" | "en" }) {
@@ -156,9 +221,9 @@ function CampaignCard({ c, onAddToCart }: { c: Campaign; onAddToCart: (campaign:
 
   return (
     <article 
-  id={c.name.en.includes("Eggs") ? "product-eggs" : `product-${c.name.en.toLowerCase().replace(/\s+/g, '-')}`}
-  className="flex flex-col gap-4 rounded-md border border-border bg-white p-4 shadow-sm transition-all duration-500"
->
+      id={c.name.en.includes("Eggs") ? "product-eggs" : `product-${c.name.en.toLowerCase().replace(/\s+/g, '-')}`}
+      className="flex flex-col gap-4 rounded-md border border-border bg-white p-4 shadow-sm transition-all duration-500"
+    >
       <div className="relative overflow-hidden rounded">
         <img src={c.img} alt={c.name[locale]} className="aspect-[4/3] w-full object-cover" />
         {c.hot && (
@@ -290,11 +355,126 @@ function IntentInput() {
   );
 }
 
+// 🟢 1. 社員專屬社務活動區塊 (包含許願按鈕與免營業稅社員價)
+function CoopEventsSection() {
+  const { locale } = useI18n();
+  const [wishlist, setWishlist] = useState<string[]>([]);
+
+  const toggleWishlist = (id: string) => {
+    setWishlist((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  return (
+    <section className="mb-16 space-y-4">
+      <div>
+        <p className="font-mono text-xs font-bold uppercase tracking-widest text-primary">05 · WORKSHOPS & EVENTS</p>
+        <h2 className="text-2xl font-extrabold text-foreground">
+          {locale === "zh" ? "社員專屬社務活動" : "Member Co-op Workshops"}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          {locale === "zh"
+            ? "實名社員享合作社「免營業稅」專屬惠購價，非社員可購票體驗。"
+            : "Members enjoy tax-exempt pricing, non-members are welcome to purchase tickets."}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {DEMO_EVENTS.map((evt) => {
+          // 💡 計算社員免營業稅價格 (非社員價 ÷ 1.05)
+          const memberPrice = Math.round(evt.nonMemberPrice / 1.05);
+          const isWishlisted = wishlist.includes(evt.id);
+
+          return (
+            <div key={evt.id} className="group rounded-2xl border border-border bg-white overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+              <div>
+                <div className="relative aspect-[16/10] w-full overflow-hidden bg-stone-100">
+                  <img src={evt.image} alt={evt.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                  
+                  <div className="absolute top-3 left-3 flex gap-2">
+                    <span className="rounded-full bg-white/90 backdrop-blur-md px-3 py-1 text-xs font-bold text-slate-800 shadow-sm">
+                      🚌 {evt.category}
+                    </span>
+                  </div>
+                  
+                  <span className="absolute top-3 right-3 rounded-full bg-accent text-accent-foreground px-3 py-1 text-xs font-bold shadow-sm">
+                    {evt.tag}
+                  </span>
+
+                  <span className="absolute bottom-3 left-3 rounded-full bg-emerald-600 text-white px-3 py-1 text-xs font-bold shadow-sm">
+                    社員優惠
+                  </span>
+
+                  {/* 🟢 加入許願清單 / 愛心收藏按鈕 */}
+                  <button
+                    type="button"
+                    onClick={() => toggleWishlist(evt.id)}
+                    className="absolute bottom-3 right-3 grid size-9 place-items-center rounded-full bg-white/90 backdrop-blur-md shadow-md transition-transform active:scale-90"
+                    title={isWishlisted ? "已加入願望清單" : "加入願望清單"}
+                  >
+                    <Heart className={`size-5 transition-colors ${isWishlisted ? "fill-rose-500 text-rose-500" : "text-slate-600 hover:text-rose-500"}`} />
+                  </button>
+                </div>
+
+                <div className="p-5 space-y-2">
+                  <h3 className="font-extrabold text-base text-slate-800">{evt.title}</h3>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <MapPin className="size-3.5 text-primary" /> {evt.location}
+                  </p>
+
+                  <div className="pt-2 space-y-1">
+                    <div className="flex justify-between text-[11px] text-muted-foreground font-bold">
+                      <span>{locale === "zh" ? "報名進度" : "Seats"}</span>
+                      <span>{evt.registeredCount}/{evt.totalSeats}</span>
+                    </div>
+                    <div className="h-2 w-full bg-stone-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-primary rounded-full transition-all"
+                        style={{ width: `${(evt.registeredCount / evt.totalSeats) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 🟢 價格與報名區域：社員價格非免費，而是顯示免營業稅價格 (非社員價 / 1.05) */}
+              <div className="p-4 border-t bg-stone-50/50 space-y-3">
+                <div className="flex justify-around items-center text-center">
+                  <div>
+                    <span className="block text-[11px] font-bold text-primary">社員價 (免營業稅)</span>
+                    <span className="font-mono text-base font-extrabold text-primary">NT${memberPrice}</span>
+                  </div>
+                  <div className="h-8 w-px bg-border" />
+                  <div>
+                    <span className="block text-[11px] font-bold text-muted-foreground">非社員價</span>
+                    <span className="font-mono text-base font-extrabold text-muted-foreground">NT${evt.nonMemberPrice}</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="w-full bg-primary hover:brightness-110 text-primary-foreground font-bold py-3 rounded-xl transition text-xs shadow-sm"
+                >
+                  {locale === "zh" ? "社員報名 / 非社員體驗購票" : "Book seats"}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+// 🟢 2. 許願清單表單 (分類改為下拉選單 <select>)
 function WishlistPromo() {
   const { locale } = useI18n();
   const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("米糧麵食");
   const [vendor, setVendor] = useState("");
   const [thanks, setThanks] = useState(false);
+
   return (
     <section className="mb-16 rounded-md border border-accent/30 bg-accent/5 p-6">
       <div className="mb-3 flex items-baseline justify-between">
@@ -304,7 +484,7 @@ function WishlistPromo() {
           </h2>
           <p className="text-sm text-muted-foreground">
             {locale === "zh"
-              ? "推薦商品成團後，提案人自動獲得積點，直接提高年度結餘分紅。"
+              ? "推薦商品或活動成團後，提案人自動獲得積點，直接提高年度結餘分紅。"
               : "When your proposal becomes a campaign, you earn reward points that increase your share of the annual surplus."}
           </p>
         </div>
@@ -312,6 +492,7 @@ function WishlistPromo() {
           +1 = {locale === "zh" ? "集氣" : "Interested"}
         </span>
       </div>
+
       {thanks ? (
         <p className="rounded border border-accent bg-white p-4 text-sm font-bold text-accent">
           ✓ {locale === "zh" ? "已收到您的許願，成團後將發送 50 積點。" : "Proposal received. You'll earn 50 pts once it becomes a campaign."}
@@ -322,22 +503,38 @@ function WishlistPromo() {
             e.preventDefault();
             if (title.trim()) setThanks(true);
           }}
-          className="grid gap-3 md:grid-cols-[1fr_1fr_auto]"
+          className="grid gap-3 md:grid-cols-[1.2fr_1fr_1.2fr_auto]"
         >
           <input
-            placeholder={locale === "zh" ? "商品名稱" : "Product name"}
+            placeholder={locale === "zh" ? "許願商品/活動名稱 *" : "Product / Event name"}
             value={title}
+            required
             onChange={(e) => setTitle(e.target.value)}
-            className="rounded-sm border border-border bg-white px-3 py-2 text-sm"
+            className="rounded-sm border border-border bg-white px-3 py-2 text-sm outline-none focus:border-primary"
           />
+
+          {/* 🟢 分類下拉選單 */}
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="rounded-sm border border-border bg-white px-3 py-2 text-sm font-semibold text-slate-800 outline-none focus:border-primary"
+          >
+            {WISHLIST_CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+
           <input
             placeholder={locale === "zh" ? "廠商 / 產地連結 (選填)" : "Vendor / source URL (optional)"}
             value={vendor}
             onChange={(e) => setVendor(e.target.value)}
-            className="rounded-sm border border-border bg-white px-3 py-2 text-sm"
+            className="rounded-sm border border-border bg-white px-3 py-2 text-sm outline-none focus:border-primary"
           />
-          <button className="rounded-sm bg-accent px-4 py-2 text-sm font-bold text-accent-foreground hover:brightness-110">
-            {locale === "zh" ? "提交許願" : "Submit"}
+
+          <button className="rounded-sm bg-accent px-5 py-2 text-sm font-bold text-accent-foreground hover:brightness-110 flex items-center gap-1">
+            <Sparkles className="size-4" /> {locale === "zh" ? "提交許願" : "Submit"}
           </button>
         </form>
       )}
@@ -531,19 +728,16 @@ function CoopPage() {
   const [checkoutMessage, setCheckoutMessage] = useState<string | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [walletBalance, setWalletBalance] = useState(1280);
+
   useEffect(() => {
     const hash = window.location.hash.replace("#", "");
     if (hash) {
       const timer = setTimeout(() => {
         const targetElement = document.getElementById(hash);
         if (targetElement) {
-          // 1. 自動平滑捲動至畫面中央
           targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
-
-          // 2. 加上綠色高亮與脈衝閃爍動畫
           targetElement.classList.add("ring-4", "ring-primary", "animate-pulse");
 
-          // 3. 2.5 秒後自動停止閃爍並恢復原狀
           setTimeout(() => {
             targetElement.classList.remove("ring-4", "ring-primary", "animate-pulse");
           }, 2500);
@@ -553,7 +747,6 @@ function CoopPage() {
       return () => clearTimeout(timer);
     }
   }, []);
-
 
   function addToCart(campaign: Campaign) {
     setCart((prev) => {
@@ -609,6 +802,9 @@ function CoopPage() {
         ))}
       </section>
 
+      {/* 🟢 社員專屬社務活動卡片區塊 */}
+      <CoopEventsSection />
+
       <CartCheckoutPanel
         cart={cart}
         checkoutMessage={checkoutMessage}
@@ -631,7 +827,9 @@ function CoopPage() {
         ecpayEndpoint={import.meta.env.VITE_ECPAY_CHECKOUT_URL ?? "http://localhost:54321/functions/v1/ecpay-checkout"}
       />
 
+      {/* 🟢 集氣許願清單 (含有分類下拉選單) */}
       <WishlistPromo />
+
       <EcoCheckoutStrip />
     </SiteShell>
   );

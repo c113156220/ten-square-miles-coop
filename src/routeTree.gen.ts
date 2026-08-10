@@ -35,6 +35,7 @@ import { Route as AdminSupportRouteImport } from './routes/admin.support'
 import { Route as AdminSurplusRouteImport } from './routes/admin.surplus'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
 import { Route as AdminVotingRouteImport } from './routes/admin.voting'
+import { Route as AdminWishlistRouteImport } from './routes/admin.wishlist'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -166,6 +167,11 @@ const AdminVotingRoute = AdminVotingRouteImport.update({
   path: '/voting',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminWishlistRoute = AdminWishlistRouteImport.update({
+  id: '/wishlist',
+  path: '/wishlist',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -193,6 +199,7 @@ export interface FileRoutesByFullPath {
   '/admin/surplus': typeof AdminSurplusRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/voting': typeof AdminVotingRoute
+  '/admin/wishlist': typeof AdminWishlistRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -220,6 +227,7 @@ export interface FileRoutesByTo {
   '/admin/surplus': typeof AdminSurplusRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/voting': typeof AdminVotingRoute
+  '/admin/wishlist': typeof AdminWishlistRoute
   '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
@@ -249,6 +257,7 @@ export interface FileRoutesById {
   '/admin/surplus': typeof AdminSurplusRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/voting': typeof AdminVotingRoute
+  '/admin/wishlist': typeof AdminWishlistRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -279,6 +288,7 @@ export interface FileRouteTypes {
     | '/admin/surplus'
     | '/admin/users'
     | '/admin/voting'
+    | '/admin/wishlist'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -306,6 +316,7 @@ export interface FileRouteTypes {
     | '/admin/surplus'
     | '/admin/users'
     | '/admin/voting'
+    | '/admin/wishlist'
     | '/admin'
   id:
     | '__root__'
@@ -334,6 +345,7 @@ export interface FileRouteTypes {
     | '/admin/surplus'
     | '/admin/users'
     | '/admin/voting'
+    | '/admin/wishlist'
     | '/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -538,6 +550,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminVotingRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/wishlist': {
+      id: '/admin/wishlist'
+      path: '/wishlist'
+      fullPath: '/admin/wishlist'
+      preLoaderRoute: typeof AdminWishlistRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
@@ -553,6 +572,7 @@ interface AdminRouteChildren {
   AdminSurplusRoute: typeof AdminSurplusRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminVotingRoute: typeof AdminVotingRoute
+  AdminWishlistRoute: typeof AdminWishlistRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -568,6 +588,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminSurplusRoute: AdminSurplusRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminVotingRoute: AdminVotingRoute,
+  AdminWishlistRoute: AdminWishlistRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 

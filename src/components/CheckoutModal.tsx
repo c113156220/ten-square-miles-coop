@@ -1,6 +1,6 @@
 ﻿import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useState } from "react";
-import { CreditCard, Wallet, Truck, X, ShieldCheck, CheckCircle2, Building2, Store, Minus, Plus, Loader2, Lock } from "lucide-react";
+import { CreditCard, Wallet, Truck, X, ShieldCheck, CheckCircle2, Building2, Store, Minus, Plus, Loader2, Lock, MapPin, User, Phone } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 
@@ -32,15 +32,15 @@ const SHIPPING_FEES: Record<ShippingType, number> = {
 };
 
 const SHIPPING_LABELS: Record<ShippingType, { zh: string; en: string; desc: string }> = {
-  COOP_PICKUP: { zh: "合作社門市自取 (免費)", en: "Co-op pickup (free)", desc: "合作社現場門市自取，適合冷鏈與常溫。" },
+  COOP_PICKUP: { zh: "合作社門市自取 (免運費)", en: "Co-op pickup (free)", desc: "合作社現場門市自取，適合冷鏈與常溫。" },
   EXPRESS_DELIVERY: { zh: "物流公司寄出 (黑貓/新竹貨運 $120)", en: "Express Delivery ($120)", desc: "全程冷鏈與常溫溫控宅配到府。" },
 };
 
 const PAYMENT_LABELS: Record<PaymentType, { zh: string; en: string; desc: string }> = {
   ECPAY: { zh: "綠界線上刷卡", en: "ECPay credit card", desc: "線上即時信用卡刷卡支付" },
-  WALLET: { zh: "儲值金扣款", en: "Stored value wallet", desc: "直接從會員儲值金扣款" },
+  WALLET: { zh: "合作社儲值金扣款", en: "Stored value wallet", desc: "直接從會員儲值金扣款" },
   BANK_TRANSFER: { zh: "銀行轉帳 / 匯款", en: "Bank Transfer", desc: "轉帳後請提供帳號後五碼核對" },
-  COD: { zh: "貨到付款", en: "Cash on Delivery", desc: "包裹宅配送達時現場付款" },
+  COD: { zh: "貨到付款", en: "Cash on Delivery", desc: "包裹宅配送達或到店後現場付款" },
 };
 
 export function CheckoutModal({
@@ -60,6 +60,11 @@ export function CheckoutModal({
   const [busy, setBusy] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [orderId, setOrderId] = useState<string>("");
+
+  // 📦 宅配收件人資訊狀態 (當選擇宅配時使用)
+  const [recipientName, setRecipientName] = useState(user?.name || "");
+  const [recipientPhone, setRecipientPhone] = useState(user?.phone || "");
+  const [recipientAddress, setRecipientAddress] = useState("");
 
   const [cardNumber, setCardNumber] = useState("4311 9522 2222 2222");
   const [cardExp, setCardExp] = useState("12/28");
@@ -118,6 +123,11 @@ export function CheckoutModal({
     const ymd = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, "0")}${String(today.getDate()).padStart(2, "0")}`;
     const randomSuffix = Math.random().toString(36).slice(2, 8);
     const displayOrderId = `${memberId}-${ymd}-${randomSuffix}`;
+
+    const targetRecipientName = shippingType === "EXPRESS_DELIVERY" ? recipientName : (user?.name || "Demo 測試社員");
+    const targetRecipientPhone = shippingType === "EXPRESS_DELIVERY" ? recipientPhone : (user?.phone || "0900000000");
+    const targetAddress = shippingType === "EXPRESS_DELIVERY" ? recipientAddress : "合作社現場門市自取";
+
     const newLocalItem = {
       id: displayOrderId,
       dbOrderId: null,
@@ -130,6 +140,11 @@ export function CheckoutModal({
       pickupCode: `COOP-PICKUP:${displayOrderId}:${Date.now()}`,
       createdAt: new Date().toISOString(),
       memberId,
+      memberName: user?.name || "合作社社員",
+      memberPhone: user?.phone || "0900000000",
+      recipientName: targetRecipientName,
+      recipientPhone: targetRecipientPhone,
+      deliveryAddress: targetAddress,
     };
 
     try {
@@ -145,6 +160,7 @@ export function CheckoutModal({
         .from("orders")
         .insert({
           total_amount: total,
+          member_id: memberId,
           status: paymentType === "ECPAY" ? "pending" : "paid",
           delivery_method: SHIPPING_LABELS[shippingType].zh,
           created_at: new Date().toISOString(),
@@ -179,10 +195,12 @@ export function CheckoutModal({
         }))
       );
 
+      // 寫入物流表 (完整包含收件人、電話與地址)
       await (supabase as any).from("logistics").insert({
         order_id: createdOrderId,
-        recipient_name: user?.name ?? "Demo 測試社員",
-        recipient_phone: user?.phone ?? "0900000000",
+        recipient_name: targetRecipientName,
+        recipient_phone: targetRecipientPhone,
+        delivery_address: targetAddress,
         status: "preparing",
         temp_layer: hasColdItems ? "frozen" : "normal",
       });
@@ -195,6 +213,15 @@ export function CheckoutModal({
 
   async function submit() {
     if (cart.length === 0) return;
+
+    // 宅配基本資料校驗
+    if (shippingType === "EXPRESS_DELIVERY") {
+      if (!recipientName.trim() || !recipientPhone.trim() || !recipientAddress.trim()) {
+        alert("請完整填寫宅配收件人姓名、電話與配送住址！");
+        return;
+      }
+    }
+
     setBusy(true);
 
     try {
@@ -247,12 +274,10 @@ export function CheckoutModal({
 
   return (
     <div className="fixed inset-0 z-[110] grid place-items-center bg-black/50 p-2 sm:p-4 backdrop-blur-sm" onClick={closeModal}>
-      {/* RWD 視窗主體：手機版滿寬 (w-full)，大螢幕 max-w-[1000px] */}
       <div
         className="w-full max-w-[1000px] max-h-[92vh] sm:max-h-[88vh] overflow-y-auto rounded-2xl sm:rounded-[2rem] border border-border bg-white shadow-elevated transition-all"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* RWD 標題邊界與內距 */}
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-white/95 px-4 sm:px-6 py-3 sm:py-4 backdrop-blur-md">
           <div>
             <p className="font-mono text-[9px] sm:text-[10px] uppercase tracking-widest text-muted-foreground">Checkout / Fulfillment</p>
@@ -268,7 +293,6 @@ export function CheckoutModal({
           </button>
         </div>
 
-        {/* 階段 1: 購物車與付款選單 (RWD 改為單欄/雙欄切換) */}
         {step === 1 && (
           <div className="grid gap-6 p-4 sm:p-6 lg:grid-cols-[1.1fr_0.9fr]">
             <section className="space-y-5 sm:space-y-6">
@@ -315,7 +339,7 @@ export function CheckoutModal({
                 </div>
               </div>
 
-              {/* RWD 取貨與付款方式 (手機單欄 grid-cols-1，平板 md:grid-cols-2) */}
+              {/* 取貨方式 */}
               <div>
                 <h3 className="mb-2 sm:mb-3 text-xs sm:text-sm font-bold uppercase tracking-widest text-muted-foreground">取貨方式</h3>
                 <div className="grid gap-2.5 sm:gap-3 grid-cols-1 sm:grid-cols-2">
@@ -336,6 +360,47 @@ export function CheckoutModal({
                     </button>
                   ))}
                 </div>
+
+                {/* 🏠 選取宅配時，展開地址、姓名與電話輸入框 */}
+                {shippingType === "EXPRESS_DELIVERY" && (
+                  <div className="mt-3 p-4 border rounded-2xl bg-slate-50 space-y-3 animate-fade-in border-primary/30">
+                    <p className="font-bold text-xs text-primary flex items-center gap-1.5">
+                      <MapPin className="size-3.5" /> 請填寫宅配收件人詳細資料
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block text-[11px] text-muted-foreground font-bold mb-1">收件人姓名</label>
+                        <input
+                          type="text"
+                          placeholder="例如：王小明"
+                          value={recipientName}
+                          onChange={(e) => setRecipientName(e.target.value)}
+                          className="w-full text-xs border rounded-xl px-3 py-2 bg-white outline-none focus:border-primary"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-muted-foreground font-bold mb-1">收件人電話</label>
+                        <input
+                          type="text"
+                          placeholder="例如：0912345678"
+                          value={recipientPhone}
+                          onChange={(e) => setRecipientPhone(e.target.value)}
+                          className="w-full text-xs border rounded-xl px-3 py-2 bg-white outline-none focus:border-primary"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-muted-foreground font-bold mb-1">完整配送住址</label>
+                      <input
+                        type="text"
+                        placeholder="請輸入縣市、鄉鎮市區、路街號與樓層..."
+                        value={recipientAddress}
+                        onChange={(e) => setRecipientAddress(e.target.value)}
+                        className="w-full text-xs border rounded-xl px-3 py-2 bg-white outline-none focus:border-primary"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -374,7 +439,6 @@ export function CheckoutModal({
               </button>
             </section>
 
-            {/* 右側金額摘要 */}
             <aside className="space-y-4 rounded-2xl sm:rounded-3xl border border-border bg-slate-50/50 p-4 sm:p-5 h-fit">
               <h3 className="text-xs sm:text-sm font-bold uppercase tracking-widest text-muted-foreground">訂單摘要</h3>
               <div className="rounded-xl sm:rounded-2xl border border-border bg-white p-3.5 sm:p-4 space-y-2 text-xs sm:text-sm">
@@ -388,7 +452,6 @@ export function CheckoutModal({
           </div>
         )}
 
-        {/* 階段 2: 跳轉中轉場畫面 */}
         {step === 2 && (
           <div className="p-10 sm:p-16 text-center space-y-4 sm:space-y-6 animate-fade-in">
             <div className="relative mx-auto size-16 sm:size-20 grid place-items-center rounded-full bg-emerald-50 text-emerald-600">
@@ -401,7 +464,6 @@ export function CheckoutModal({
           </div>
         )}
 
-        {/* 階段 3: 綠界 ECPay 線上收銀台 RWD 畫面 */}
         {step === 3 && (
           <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 bg-slate-50/60 min-h-[480px]">
             <div className="rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 p-4 sm:p-5 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-sm">
@@ -478,7 +540,6 @@ export function CheckoutModal({
           </div>
         )}
 
-        {/* 階段 4: 刷卡完成 RWD 追蹤畫面 */}
         {step === 4 && (
           <div className="grid gap-6 p-4 sm:p-6 lg:grid-cols-[1fr_0.9fr]">
             <section className="space-y-4 sm:space-y-5 rounded-2xl sm:rounded-3xl border border-border bg-slate-50/50 p-4 sm:p-5">
@@ -488,14 +549,14 @@ export function CheckoutModal({
                   <h3 className="text-sm sm:text-lg font-extrabold truncate max-w-[180px] sm:max-w-none">#{orderId || "TSM-ORDER"}</h3>
                 </div>
                 <span className="rounded-full bg-emerald-500 px-2.5 py-0.5 text-[10px] sm:text-xs font-bold text-white shrink-0">
-                  已完成線上刷卡
+                  訂單已成立
                 </span>
               </div>
 
               <div className="p-3.5 border border-dashed border-emerald-300 rounded-xl sm:rounded-2xl bg-emerald-50/50 text-center space-y-1.5">
-                <p className="text-xs font-bold text-emerald-900">📱 現場自提取貨驗證碼</p>
+                <p className="text-xs font-bold text-emerald-900">📱 物流狀態</p>
                 <div className="p-2.5 bg-white rounded-lg border font-mono text-xs font-extrabold text-emerald-700 select-all truncate">
-                  COOP-PICKUP:{orderId}:{Date.now()}
+                  {shippingType === "EXPRESS_DELIVERY" ? `宅配到府：${recipientAddress}` : `合作社現場門市自取`}
                 </div>
               </div>
 

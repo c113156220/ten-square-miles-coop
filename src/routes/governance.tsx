@@ -24,6 +24,7 @@ import {
   Recycle,
   GraduationCap,
   X,
+  Heart,
 } from "lucide-react";
 
 export const Route = createFileRoute("/governance")({
@@ -227,7 +228,7 @@ type Badge = {
   name: { zh: string; en: string };
   desc: { zh: string; en: string };
   earned: boolean;
-  boost: number; // % dividend multiplier
+  boost: number;
 };
 
 const BADGES: Badge[] = [
@@ -617,8 +618,7 @@ type Event = {
   venue: { zh: string; en: string };
   seats: number;
   taken: number;
-  memberPrice: number;
-  guestPrice: number;
+  guestPrice: number; // 非社員價格 (含稅)
   tag: { zh: string; en: string };
   img: string;
   status: "open" | "hot" | "soon";
@@ -632,7 +632,6 @@ const EVENTS: Event[] = [
     venue: { zh: "嘉義 · 阿里山", en: "Chiayi · Alishan" },
     seats: 30,
     taken: 22,
-    memberPrice: 0,
     guestPrice: 480,
     tag: { zh: "🚌 農場參訪", en: "🚌 Farm Tour" },
     img: eventFarmImg,
@@ -645,7 +644,6 @@ const EVENTS: Event[] = [
     venue: { zh: "台北 · 大稻埕", en: "Taipei · Dadaocheng" },
     seats: 24,
     taken: 18,
-    memberPrice: 0,
     guestPrice: 350,
     tag: { zh: "🍶 品味工作坊", en: "🍶 Tasting" },
     img: eventTastingImg,
@@ -658,7 +656,6 @@ const EVENTS: Event[] = [
     venue: { zh: "線上 · Zoom", en: "Online · Zoom" },
     seats: 200,
     taken: 87,
-    memberPrice: 0,
     guestPrice: 200,
     tag: { zh: "🎓 線上講座", en: "🎓 Seminar" },
     img: eventSeminarImg,
@@ -666,10 +663,18 @@ const EVENTS: Event[] = [
   },
 ];
 
+// 🟢 社務活動卡片：動態計算免營業稅社員價、許願按鈕與標籤修正
 function EventsBoard() {
   const { locale } = useI18n();
   const { user } = useAuth();
   const isMember = user?.role === "member" || user?.role === "admin";
+  const [wishlist, setWishlist] = useState<string[]>([]);
+
+  const toggleWishlist = (id: string) => {
+    setWishlist((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
 
   const statusBadge = (s: Event["status"]) => {
     if (s === "hot") return { label: locale === "zh" ? "🔥 熱門" : "🔥 Hot", cls: "bg-red-500/95 text-white" };
@@ -685,7 +690,7 @@ function EventsBoard() {
           {locale === "zh" ? "社員專屬社務活動" : "Co-op Events & Tasting Workshops"}
         </h2>
         <p className="text-sm text-muted-foreground">
-          {locale === "zh" ? "實名社員免費入場，非社員可購票體驗" : "Free for verified members · Paid pass for non-members"}
+          {locale === "zh" ? "實名社員享合作社「免營業稅」專屬惠購價，非社員可購票體驗。" : "Tax-free member price · Paid pass for non-members"}
         </p>
       </div>
 
@@ -693,6 +698,10 @@ function EventsBoard() {
         {EVENTS.map((e) => {
           const pct = Math.round((e.taken / e.seats) * 100);
           const badge = statusBadge(e.status);
+          // 💡 計算社員免營業稅價格 (非社員價 ÷ 1.05)
+          const memberPrice = Math.round(e.guestPrice / 1.05);
+          const isWishlisted = wishlist.includes(e.id);
+
           return (
             <article
               key={e.id}
@@ -708,21 +717,31 @@ function EventsBoard() {
                   className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                
                 <span className="absolute left-4 top-4 rounded-full bg-white/90 px-2.5 py-1 font-mono text-[10px] font-bold backdrop-blur">
                   {e.tag[locale]}
                 </span>
+                
                 <span className={`absolute right-4 top-4 rounded-full px-2.5 py-1 font-mono text-[10px] font-bold backdrop-blur ${badge.cls}`}>
                   {badge.label}
                 </span>
-                {isMember && e.memberPrice === 0 && (
-                  <span className="absolute bottom-3 left-4 rounded-full bg-primary px-2.5 py-1 font-mono text-[10px] font-bold text-primary-foreground shadow-glow">
-                    {locale === "zh" ? "社員免費" : "Free for members"}
-                  </span>
-                )}
-                <span className="absolute bottom-3 right-4 rounded-full bg-foreground/85 px-2.5 py-1 font-mono text-[10px] font-bold text-background backdrop-blur">
-                  {e.date}
+
+                {/* 🟢 左下角標籤：改成「社員優惠」 */}
+                <span className="absolute bottom-3 left-4 rounded-full bg-emerald-600 px-2.5 py-1 font-mono text-[10px] font-bold text-white shadow-glow">
+                  {locale === "zh" ? "社員優惠" : "Member Discount"}
                 </span>
+
+                {/* 🟢 右下角愛心許願按鈕 */}
+                <button
+                  type="button"
+                  onClick={() => toggleWishlist(e.id)}
+                  className="absolute bottom-3 right-4 grid size-8 place-items-center rounded-full bg-white/90 backdrop-blur-md shadow-md transition-transform active:scale-90"
+                  title={isWishlisted ? "已加入願望清單" : "加入願望清單"}
+                >
+                  <Heart className={`size-4 transition-colors ${isWishlisted ? "fill-rose-500 text-rose-500" : "text-slate-600 hover:text-rose-500"}`} />
+                </button>
               </div>
+
               <div className="flex flex-1 flex-col p-5">
                 <h3 className="text-base font-bold leading-tight">{e.title[locale]}</h3>
                 <p className="mt-1 text-xs text-muted-foreground">📍 {e.venue[locale]}</p>
@@ -737,15 +756,16 @@ function EventsBoard() {
                   </div>
                 </div>
 
+                {/* 🟢 價格計算：顯示免營業稅社員價 (非社員價 / 1.05) */}
                 <div className="mt-4 grid grid-cols-2 gap-2 rounded-lg bg-surface/60 p-2 text-center font-mono text-[10px]">
                   <div>
-                    <p className="uppercase tracking-widest text-primary">{locale === "zh" ? "社員" : "Member"}</p>
+                    <p className="uppercase tracking-widest text-primary">{locale === "zh" ? "社員價 (免營業稅)" : "Member"}</p>
                     <p className="mt-0.5 text-sm font-bold text-primary">
-                      {e.memberPrice === 0 ? (locale === "zh" ? "免費" : "Free") : `NT$${e.memberPrice}`}
+                      NT${memberPrice}
                     </p>
                   </div>
                   <div>
-                    <p className="uppercase tracking-widest text-muted-foreground">{locale === "zh" ? "非社員" : "Guest"}</p>
+                    <p className="uppercase tracking-widest text-muted-foreground">{locale === "zh" ? "非社員價" : "Guest"}</p>
                     <p className="mt-0.5 text-sm font-bold">NT${e.guestPrice}</p>
                   </div>
                 </div>
@@ -754,8 +774,8 @@ function EventsBoard() {
                   onClick={() =>
                     alert(
                       isMember
-                        ? locale === "zh" ? "✅ 已為你保留席次！" : "✅ Seat reserved!"
-                        : locale === "zh" ? "已加入預訂，將以來賓票結帳" : "Reserved as guest ticket",
+                        ? locale === "zh" ? `✅ 已為你預約報名！(社員優惠價 NT$${memberPrice})` : "✅ Seat reserved!"
+                        : locale === "zh" ? `已加入預訂，將以來賓票價 NT$${e.guestPrice} 結帳` : "Reserved as guest ticket",
                     )
                   }
                   className={`mt-4 rounded-full py-2 text-xs font-semibold transition-all ${
@@ -764,9 +784,7 @@ function EventsBoard() {
                       : "border border-border bg-white/60 hover:border-primary/40"
                   }`}
                 >
-                  {isMember
-                    ? locale === "zh" ? "免費保留席次" : "Reserve free seat"
-                    : locale === "zh" ? "以來賓票預訂" : "Book guest ticket"}
+                  {locale === "zh" ? "社員報名 / 非社員體驗購票" : "Book seats"}
                 </button>
               </div>
             </article>

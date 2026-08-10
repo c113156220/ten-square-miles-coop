@@ -4,6 +4,7 @@ import { useI18n, type DictKey } from "@/lib/i18n";
 import { SiteNav } from "@/components/site-shell";
 import { useAuth } from "@/lib/auth";
 import { GripVertical, ArrowUp, ArrowDown } from "lucide-react";
+import { listSupportThreads } from "@/lib/support-chat";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -34,13 +35,14 @@ const INITIAL_NAV: NavItem[] = [
   { id: "users", to: "/admin/users", key: "admin.nav.users", roles: ["admin", "board", "auditor"] },
   { id: "preorders", to: "/admin/preorders", key: "admin.nav.preorders", roles: ["admin", "board"] },
   { id: "logistics", to: "/admin/logistics", key: "📦 物流與訂單管理", roles: ["admin", "board"] },
-  { id: "support", to: "/admin/support", key: "💬 社員客服與工單管理", roles: ["admin", "board"], badge: 3 },
+  { id: "support", to: "/admin/support", key: "💬 社員客服與工單管理", roles: ["admin", "board"] },
   { id: "forecasting", to: "/admin/forecasting", key: "admin.nav.forecasting", roles: ["admin", "board"] },
   { id: "finance", to: "/admin/finance", key: "admin.nav.finance", roles: ["admin", "board", "auditor"] },
   { id: "voting", to: "/admin/voting", key: "admin.nav.voting", roles: ["admin", "board"] },
   { id: "surplus", to: "/admin/surplus", key: "admin.nav.surplus", roles: ["admin", "auditor"] },
   { id: "settings", to: "/admin/settings", key: "admin.nav.settings", roles: ["admin"] },
   { id: "roles", to: "/admin/roles", key: "admin.nav.roles", roles: ["admin"] },
+  { id: "wishlist", to: "/admin/wishlist", key: "❤️ 社員願望清單", roles: ["admin", "board"] },
 ];
 
 function AccessDenied() {
@@ -84,8 +86,35 @@ function AdminLayout() {
   const [open, setOpen] = useState(true);
   const [navList, setNavList] = useState<NavItem[]>(INITIAL_NAV);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [openSupportCount, setOpenSupportCount] = useState<number>(0);
 
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  // 🟢 動態計算未結案工單數量
+  useEffect(() => {
+    const updateCount = () => {
+      try {
+        const threads = listSupportThreads() || [];
+        // 精準統計狀態非 resolved / closed 的未結案數量
+        const count = threads.filter(
+          (t) => t.status !== "resolved" && t.status !== "closed"
+        ).length;
+        setOpenSupportCount(count);
+      } catch (e) {
+        console.error("Calculate open support count error:", e);
+      }
+    };
+
+    updateCount();
+
+    window.addEventListener("tsm-support-chat-updated", updateCount);
+    window.addEventListener("storage", updateCount);
+
+    return () => {
+      window.removeEventListener("tsm-support-chat-updated", updateCount);
+      window.removeEventListener("storage", updateCount);
+    };
+  }, []);
 
   useEffect(() => {
     const savedOrder = localStorage.getItem("tsm_admin_nav_order");
@@ -195,6 +224,9 @@ function AdminLayout() {
                 const labelText = n.key.startsWith("admin.") ? t(n.key as DictKey) : n.key;
                 const isDragging = draggedIndex === index;
 
+                // 🟢 動態計算當前選單項目的 Badge 數字
+                const currentBadge = n.id === "support" ? openSupportCount : n.badge;
+
                 return (
                   <div
                     key={n.id}
@@ -220,9 +252,10 @@ function AdminLayout() {
 
                     {open && (
                       <div className="flex items-center gap-1 shrink-0">
-                        {n.badge && (
+                        {/* 🟢 只在未結案數量 > 0 時才顯示橘色徽章 */}
+                        {!!currentBadge && currentBadge > 0 && (
                           <span className="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                            {n.badge}
+                            {currentBadge}
                           </span>
                         )}
                         <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5">
