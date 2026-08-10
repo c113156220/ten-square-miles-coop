@@ -42,7 +42,7 @@ function CalculatorPage() {
   useEffect(() => {
     async function fetchTransactions() {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from("wallet_transactions")
           .select("*")
           .order("created_at", { ascending: false });

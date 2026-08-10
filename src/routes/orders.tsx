@@ -79,7 +79,7 @@ function OrdersPage() {
       }));
 
       try {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from("orders")
           .select(`
             id, member_id, total_amount, delivery_method, created_at,
