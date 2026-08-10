@@ -48,7 +48,7 @@ function DividendPage() {
           .order("created_at", { ascending: false });
 
         if (!error && data && data.length > 0) {
-          const dbTxs: Transaction[] = data.map((t) => ({
+          const dbTxs: Transaction[] = data.map((t: any) => ({
             id: t.id,
             amount: Number(t.amount),
             type: t.type,

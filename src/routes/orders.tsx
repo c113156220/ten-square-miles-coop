@@ -94,7 +94,7 @@ function OrdersPage() {
           return;
         }
 
-        const dbOrders: OrderItem[] = data.map((item) => {
+        const dbOrders: OrderItem[] = data.map((item: any) => {
           const currentStatus = item.logistics?.[0]?.status;
           let orderStatus: OrderStatus = "packed";
           if (currentStatus === "completed") orderStatus = "ready";
