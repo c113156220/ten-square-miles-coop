@@ -175,7 +175,7 @@ export function CheckoutModal({
       }
 
       const createdOrderId = String(newOrder.id);
-      newLocalItem.dbOrderId = createdOrderId;
+      (newLocalItem as any).dbOrderId = createdOrderId;
       newLocalItem.id = displayOrderId;
       newLocalItem.orderId = displayOrderId;
       const nextLocalOrders = [newLocalItem, ...readLocalOrders().filter((item: any) => item.orderId !== displayOrderId)];
