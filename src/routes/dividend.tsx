@@ -42,13 +42,13 @@ function DividendPage() {
   useEffect(() => {
     async function fetchTransactions() {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from("wallet_transactions")
           .select("*")
           .order("created_at", { ascending: false });
 
         if (!error && data && data.length > 0) {
-          const dbTxs: Transaction[] = data.map((t) => ({
+          const dbTxs: Transaction[] = data.map((t: any) => ({
             id: t.id,
             amount: Number(t.amount),
             type: t.type,
