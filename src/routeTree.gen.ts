@@ -12,7 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CalculatorRouteImport } from './routes/calculator'
-import { Route as CoopRouteImport } from './routes/coop'
+import { Route as CartRouteImport } from './routes/cart'
 import { Route as DividendRouteImport } from './routes/dividend'
 import { Route as GovernanceRouteImport } from './routes/governance'
 import { Route as ImpactRouteImport } from './routes/impact'
@@ -52,9 +52,9 @@ const CalculatorRoute = CalculatorRouteImport.update({
   path: '/calculator',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CoopRoute = CoopRouteImport.update({
-  id: '/coop',
-  path: '/coop',
+const CartRoute = CartRouteImport.update({
+  id: '/cart',
+  path: '/cart',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DividendRoute = DividendRouteImport.update({
@@ -177,7 +177,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/calculator': typeof CalculatorRoute
-  '/coop': typeof CoopRoute
+  '/cart': typeof CartRoute
   '/dividend': typeof DividendRoute
   '/governance': typeof GovernanceRoute
   '/impact': typeof ImpactRoute
@@ -205,7 +205,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/calculator': typeof CalculatorRoute
-  '/coop': typeof CoopRoute
+  '/cart': typeof CartRoute
   '/dividend': typeof DividendRoute
   '/governance': typeof GovernanceRoute
   '/impact': typeof ImpactRoute
@@ -235,7 +235,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/calculator': typeof CalculatorRoute
-  '/coop': typeof CoopRoute
+  '/cart': typeof CartRoute
   '/dividend': typeof DividendRoute
   '/governance': typeof GovernanceRoute
   '/impact': typeof ImpactRoute
@@ -266,7 +266,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/calculator'
-    | '/coop'
+    | '/cart'
     | '/dividend'
     | '/governance'
     | '/impact'
@@ -294,7 +294,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/calculator'
-    | '/coop'
+    | '/cart'
     | '/dividend'
     | '/governance'
     | '/impact'
@@ -323,7 +323,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/calculator'
-    | '/coop'
+    | '/cart'
     | '/dividend'
     | '/governance'
     | '/impact'
@@ -353,7 +353,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   CalculatorRoute: typeof CalculatorRoute
-  CoopRoute: typeof CoopRoute
+  CartRoute: typeof CartRoute
   DividendRoute: typeof DividendRoute
   GovernanceRoute: typeof GovernanceRoute
   ImpactRoute: typeof ImpactRoute
@@ -389,11 +389,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CalculatorRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/coop': {
-      id: '/coop'
-      path: '/coop'
-      fullPath: '/coop'
-      preLoaderRoute: typeof CoopRouteImport
+    '/cart': {
+      id: '/cart'
+      path: '/cart'
+      fullPath: '/cart'
+      preLoaderRoute: typeof CartRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dividend': {
@@ -598,7 +598,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   CalculatorRoute: CalculatorRoute,
-  CoopRoute: CoopRoute,
+  CartRoute: CartRoute,
   DividendRoute: DividendRoute,
   GovernanceRoute: GovernanceRoute,
   ImpactRoute: ImpactRoute,

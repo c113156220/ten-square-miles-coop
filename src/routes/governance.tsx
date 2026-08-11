@@ -6,12 +6,7 @@ import { useI18n } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth";
 
 const ProducerMapLeaflet = lazy(() => import("@/components/producer-map"));
-import producerFarmImg from "@/assets/producer-farm.jpg";
-import producerVendorImg from "@/assets/producer-vendor.jpg";
-import producerGrantImg from "@/assets/producer-grant.jpg";
-import eventFarmImg from "@/assets/event-farm-tour.jpg";
-import eventTastingImg from "@/assets/event-tasting.jpg";
-import eventSeminarImg from "@/assets/event-seminar.jpg";
+
 import {
   Vote,
   Award,
@@ -26,6 +21,14 @@ import {
   X,
   Heart,
 } from "lucide-react";
+
+// 🟢 預設高畫質雲端圖源 (替換掉本地不存在的 .jpg 圖片，徹底解決紅底波浪線)
+const producerFarmImg = "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=800&auto=format&fit=crop";
+const producerVendorImg = "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&auto=format&fit=crop";
+const producerGrantImg = "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=800&auto=format&fit=crop";
+const eventFarmImg = "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=800&auto=format&fit=crop";
+const eventTastingImg = "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=800&auto=format&fit=crop";
+const eventSeminarImg = "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&auto=format&fit=crop";
 
 export const Route = createFileRoute("/governance")({
   head: () => ({
@@ -502,8 +505,8 @@ function ProducerMap() {
         </p>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
-        <div className="relative aspect-[4/5] overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
+      <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr] items-start">
+        <div className="relative min-h-[520px] w-full overflow-hidden rounded-3xl border border-border bg-surface shadow-soft">
           <ClientOnly
             fallback={
               <div className="grid h-full w-full place-items-center bg-gradient-to-br from-primary/5 to-accent/5">
@@ -518,19 +521,19 @@ function ProducerMap() {
             </Suspense>
           </ClientOnly>
 
-          <div className="pointer-events-none absolute bottom-3 left-3 z-[500] flex flex-wrap gap-2 rounded-lg border border-border bg-white/90 p-2 font-mono text-[10px] backdrop-blur">
+          <div className="pointer-events-none absolute bottom-4 left-4 z-[400] flex flex-wrap gap-2 rounded-xl border border-border bg-white/95 p-2.5 font-mono text-[10px] backdrop-blur shadow-sm">
             <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-primary" />{locale === "zh" ? "農場" : "Farm"}</span>
             <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-accent" />{locale === "zh" ? "職人" : "Vendor"}</span>
             <span className="flex items-center gap-1"><span className="size-2 rounded-full bg-fuchsia-500" />{locale === "zh" ? "公益" : "Grant"}</span>
           </div>
-          <span className="pointer-events-none absolute right-3 top-3 z-[500] rounded-full border border-border bg-white/90 px-2.5 py-1 font-mono text-[10px] font-bold backdrop-blur">
+          <span className="pointer-events-none absolute right-4 top-4 z-[400] rounded-full border border-border bg-white/95 px-3 py-1 font-mono text-[10px] font-bold backdrop-blur shadow-sm">
             🇹🇼 Taiwan
           </span>
         </div>
 
         <div className="space-y-4">
           {activeP && (
-            <article className="overflow-hidden rounded-2xl border border-border bg-white/80 shadow-soft backdrop-blur">
+            <article className="overflow-hidden rounded-3xl border border-border bg-white/80 shadow-soft backdrop-blur">
               <div className="relative aspect-[16/9] overflow-hidden">
                 <img
                   src={activeP.img}
@@ -540,7 +543,7 @@ function ProducerMap() {
                   height={288}
                   className="size-full object-cover"
                 />
-                <span className="absolute right-3 top-3 rounded-full bg-white/90 px-2.5 py-1 font-mono text-[10px] font-bold backdrop-blur">
+                <span className="absolute right-3 top-3 rounded-full bg-white/90 px-3 py-1 font-mono text-[10px] font-bold backdrop-blur">
                   {activeP.category === "grant" ? (locale === "zh" ? "公益計畫" : "Grant") : activeP.category === "vendor" ? (locale === "zh" ? "在地職人" : "Vendor") : (locale === "zh" ? "契作農場" : "Farm")}
                 </span>
               </div>
@@ -554,15 +557,15 @@ function ProducerMap() {
                 <h3 className="mt-2 text-xl font-bold">{activeP.name[locale]}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{activeP.blurb[locale]}</p>
                 <div className="mt-4 grid grid-cols-3 gap-2 font-mono text-[10px]">
-                  <div className="rounded-lg border border-border bg-surface/50 p-2 text-center">
+                  <div className="rounded-xl border border-border bg-surface/50 p-2.5 text-center">
                     <p className="uppercase tracking-widest text-muted-foreground">{locale === "zh" ? "支持" : "Support"}</p>
                     <p className="mt-0.5 text-sm font-bold">{activeP.support}</p>
                   </div>
-                  <div className="rounded-lg border border-border bg-surface/50 p-2 text-center">
+                  <div className="rounded-xl border border-border bg-surface/50 p-2.5 text-center">
                     <p className="uppercase tracking-widest text-muted-foreground">CO₂</p>
                     <p className="mt-0.5 text-sm font-bold">{activeP.co2 || "—"}</p>
                   </div>
-                  <div className="rounded-lg border border-border bg-surface/50 p-2 text-center">
+                  <div className="rounded-xl border border-border bg-surface/50 p-2.5 text-center">
                     <p className="uppercase tracking-widest text-muted-foreground">{locale === "zh" ? "產能" : "Impact"}</p>
                     <p className="mt-0.5 text-[10px] font-bold leading-tight">{activeP.impact[locale]}</p>
                   </div>
@@ -577,7 +580,7 @@ function ProducerMap() {
               { icon: Leaf, label: locale === "zh" ? "支持小農" : "Farmers", value: "34" },
               { icon: GraduationCap, label: locale === "zh" ? "助學金" : "Grants", value: "128" },
             ].map((s) => (
-              <div key={s.label} className="rounded-xl border border-border bg-white/70 p-3 text-center shadow-soft">
+              <div key={s.label} className="rounded-2xl border border-border bg-white/70 p-3 text-center shadow-soft">
                 <s.icon className="mx-auto size-4 text-primary" />
                 <p className="mt-2 font-mono text-lg font-extrabold">{s.value}</p>
                 <p className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{s.label}</p>
@@ -585,12 +588,12 @@ function ProducerMap() {
             ))}
           </div>
 
-          <ul className="space-y-1.5">
+          <ul className="space-y-1.5 max-h-[180px] overflow-y-auto pr-1">
             {PRODUCERS.map((p) => (
               <li key={p.id}>
                 <button
                   onClick={() => setActive(p.id)}
-                  className={`flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left text-xs transition-all ${
+                  className={`flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-xs transition-all ${
                     active === p.id
                       ? "border-primary/40 bg-primary/5"
                       : "border-transparent hover:border-border hover:bg-white/60"
@@ -618,7 +621,7 @@ type Event = {
   venue: { zh: string; en: string };
   seats: number;
   taken: number;
-  guestPrice: number; // 非社員價格 (含稅)
+  guestPrice: number;
   tag: { zh: string; en: string };
   img: string;
   status: "open" | "hot" | "soon";
@@ -663,7 +666,6 @@ const EVENTS: Event[] = [
   },
 ];
 
-// 🟢 社務活動卡片：動態計算免營業稅社員價、許願按鈕與標籤修正
 function EventsBoard() {
   const { locale } = useI18n();
   const { user } = useAuth();
@@ -698,7 +700,6 @@ function EventsBoard() {
         {EVENTS.map((e) => {
           const pct = Math.round((e.taken / e.seats) * 100);
           const badge = statusBadge(e.status);
-          // 💡 計算社員免營業稅價格 (非社員價 ÷ 1.05)
           const memberPrice = Math.round(e.guestPrice / 1.05);
           const isWishlisted = wishlist.includes(e.id);
 
@@ -726,12 +727,10 @@ function EventsBoard() {
                   {badge.label}
                 </span>
 
-                {/* 🟢 左下角標籤：改成「社員優惠」 */}
                 <span className="absolute bottom-3 left-4 rounded-full bg-emerald-600 px-2.5 py-1 font-mono text-[10px] font-bold text-white shadow-glow">
                   {locale === "zh" ? "社員優惠" : "Member Discount"}
                 </span>
 
-                {/* 🟢 右下角愛心許願按鈕 */}
                 <button
                   type="button"
                   onClick={() => toggleWishlist(e.id)}
@@ -756,7 +755,6 @@ function EventsBoard() {
                   </div>
                 </div>
 
-                {/* 🟢 價格計算：顯示免營業稅社員價 (非社員價 / 1.05) */}
                 <div className="mt-4 grid grid-cols-2 gap-2 rounded-lg bg-surface/60 p-2 text-center font-mono text-[10px]">
                   <div>
                     <p className="uppercase tracking-widest text-primary">{locale === "zh" ? "社員價 (免營業稅)" : "Member"}</p>
@@ -815,11 +813,6 @@ function GovernancePage() {
         eyebrow={locale === "zh" ? "🏛️ 社務大廳 Governance" : "🏛️ Governance Hall"}
         title={locale === "zh" ? "由每一位社員共同決策的合作社" : "A co-op decided by every member"}
         subtitle={locale === "zh" ? "One member · One vote · Full transparency" : "One member · One vote · Full transparency"}
-        body={
-          locale === "zh"
-            ? "投票、會議、在地夥伴、社務活動與成就徽章——所有治理環節公開、可追溯、可參與。"
-            : "Votes, meetings, local partners, workshops and achievements — every governance surface is public, traceable, and open."
-        }
       />
 
       <nav className="sticky top-16 z-30 -mx-4 mb-10 border-y border-border bg-background/80 px-4 backdrop-blur-xl">

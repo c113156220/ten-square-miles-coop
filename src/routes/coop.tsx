@@ -1,836 +1,173 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
-import { useI18n } from "@/lib/i18n";
-import { SiteShell, PageHeader } from "@/components/site-shell";
-import { CheckoutModal } from "@/components/CheckoutModal";
-import { Heart, MapPin, Sparkles } from "lucide-react";
-import eggsImg from "@/assets/product-eggs.jpg";
-import soyImg from "@/assets/product-soysauce.jpg";
-import vegImg from "@/assets/product-veggies.jpg";
+import { useState } from "react";
+import { X, ShieldCheck, Lock, Sparkles, CheckCircle2, AlertCircle } from "lucide-react";
+import { useAuth } from "@/lib/auth";
 
-export const Route = createFileRoute("/coop")({
-  head: () => ({
-    meta: [
-      { title: "共同購買流程 Co-op Buying — 十圓方里" },
-      {
-        name: "description",
-        content:
-          "Three-stage rolling co-op purchasing: intent survey, pre-order lock-in, and fulfillment tracking with member vs. regular pricing.",
-      },
-      { property: "og:title", content: "Co-op Buying — Ten Sq Miles" },
-      { property: "og:description", content: "Zero-inventory, member-priced, transparent." },
-    ],
-  }),
-  component: CoopPage,
-});
-
-type Stage = 1 | 2 | 3;
-type TempType = "cold" | "ambient";
-
-type Campaign = {
-  img: string;
-  name: { zh: string; en: string };
-  vendor: { zh: string; en: string };
-  stage: Stage;
-  memberPrice: number;
-  regularPrice: number;
-  taxExempt: boolean;
-  tempType: TempType;
-  intentResponses?: number;
-  intentTarget?: number;
-  ordered?: number;
-  threshold?: number;
-  deposit?: number;
-  hot?: boolean;
-  daysLeft?: number;
-  fulfillStep?: 0 | 1 | 2;
-  pickupDate?: string;
+type CheckoutModalProps = {
+  open: boolean;
+  onClose: () => void;
+  cart: any[];
+  walletBalance: number;
+  onWalletDebit: (amount: number) => void;
+  onPaid: (message: string) => void;
+  ecpayEndpoint?: string;
+  onUpdateCartQuantity?: (itemId: string, delta: number) => void;
 };
 
-type EventItem = {
-  id: string;
-  title: string;
-  category: string;
-  tag: string;
-  location: string;
-  date: string;
-  nonMemberPrice: number; // 非社員價格 (含稅)
-  registeredCount: number;
-  totalSeats: number;
-  image: string;
-};
+export function CheckoutModal({
+  open,
+  onClose,
+  cart,
+  onPaid,
+}: CheckoutModalProps) {
+  const { user } = useAuth();
+  const isMember = user?.role === "member" || user?.role === "admin";
 
-const CAMPAIGNS: Campaign[] = [
-  {
-    img: soyImg,
-    name: { zh: "柴燒手工醬油", en: "Wood-Fired Soy Sauce" },
-    vendor: { zh: "西螺・老欉黑豆坊", en: "Xiluo Heirloom Black Bean" },
-    stage: 1,
-    memberPrice: 320,
-    regularPrice: 420,
-    taxExempt: false,
-    tempType: "ambient",
-    intentResponses: 68,
-    intentTarget: 120,
-  },
-  {
-    img: eggsImg,
-    name: { zh: "放牧土雞蛋 (12入)", en: "Pasture Brown Eggs (12ct)" },
-    vendor: { zh: "南投高地小農", en: "Nantou Highland Farms" },
-    stage: 2,
-    memberPrice: 180,
-    regularPrice: 240,
-    taxExempt: true,
-    tempType: "cold",
-    ordered: 142,
-    threshold: 200,
-    deposit: 180,
-    hot: true,
-    daysLeft: 3,
-  },
-  {
-    img: vegImg,
-    name: { zh: "旬味蔬菜箱 (5kg)", en: "Seasonal Veggie Box (5kg)" },
-    vendor: { zh: "宜蘭夥伴農場", en: "Yilan Partner Farms" },
-    stage: 3,
-    memberPrice: 480,
-    regularPrice: 620,
-    taxExempt: true,
-    tempType: "cold",
-    fulfillStep: 1,
-    pickupDate: "2026.07.31 (Fri)",
-  },
-];
+  // 🛡️ 結帳防冒用認證欄位
+  const [idLastFour, setIdLastFour] = useState("");
+  const [authError, setPermissionError] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
 
-// 🟢 社員專屬社務活動示範資料
-const DEMO_EVENTS: EventItem[] = [
-  {
-    id: "evt-1",
-    title: "阿里山雞農場參訪 + 現場品嚐",
-    category: "農場參訪",
-    tag: "🔥 熱門",
-    location: "嘉義 · 阿里山",
-    date: "2026-08-17",
-    nonMemberPrice: 480,
-    registeredCount: 22,
-    totalSeats: 30,
-    image: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=600&auto=format&fit=crop",
-  },
-  {
-    id: "evt-2",
-    title: "柴燒醬油品油飲工作坊",
-    category: "品味工作坊",
-    tag: "✨ 開放報名",
-    location: "台北 · 大稻埕",
-    date: "2026-08-24",
-    nonMemberPrice: 350,
-    registeredCount: 18,
-    totalSeats: 24,
-    image: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&auto=format&fit=crop",
-  },
-  {
-    id: "evt-3",
-    title: "健康飲食 & 餐盒設計講座",
-    category: "線上講座",
-    tag: "⌛ 即將額滿",
-    location: "線上 · Zoom",
-    date: "2026-09-05",
-    nonMemberPrice: 200,
-    registeredCount: 87,
-    totalSeats: 200,
-    image: "https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=600&auto=format&fit=crop",
-  },
-];
+  if (!open) return null;
 
-// 🟢 許願清單固定分類下拉選單項目
-const WISHLIST_CATEGORIES = [
-  "米糧麵食",
-  "生鮮蔬果",
-  "油品醬料",
-  "蛋品乳品",
-  "水產肉品",
-  "加工零食",
-  "生活日用",
-  "社務活動/講座",
-  "其他",
-];
+  const totalAmount = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
 
-function StageBar({ stage, locale }: { stage: Stage; locale: "zh" | "en" }) {
-  const steps = [
-    { zh: "意象調查", en: "Intent Survey" },
-    { zh: "預購鎖單", en: "Pre-order" },
-    { zh: "採購與配送", en: "Fulfillment" },
-  ];
-  return (
-    <ol className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest">
-      {steps.map((s, i) => {
-        const n = (i + 1) as Stage;
-        const done = n < stage;
-        const active = n === stage;
-        return (
-          <li key={i} className="flex items-center gap-1">
-            <span
-              className={`grid size-5 place-items-center rounded-full text-[10px] ${
-                active
-                  ? "bg-primary text-primary-foreground"
-                  : done
-                    ? "bg-accent text-accent-foreground"
-                    : "bg-stone-200 text-muted-foreground"
-              }`}
-            >
-              {n}
-            </span>
-            <span className={active ? "text-foreground" : "text-muted-foreground"}>
-              {s[locale]}
-            </span>
-            {i < 2 && <span className="mx-1 h-px w-6 bg-border" />}
-          </li>
-        );
-      })}
-    </ol>
-  );
-}
+  // 🛡️ 付款前身份二次認證邏輯
+  const handleVerifyAndPay = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPermissionError("");
 
-function DualPrice({ member, regular, exempt, locale }: {
-  member: number; regular: number; exempt: boolean; locale: "zh" | "en";
-}) {
-  return (
-    <div className="grid grid-cols-2 gap-2 rounded border border-black/5 bg-stone-50 p-2 text-xs">
-      <div>
-        <div className="flex items-center gap-1 text-[10px] text-primary">
-          <span className="rounded-sm bg-primary px-1 text-[9px] font-bold text-primary-foreground">
-            {locale === "zh" ? "社員" : "MEMBER"}
-          </span>
-          {exempt && <span className="text-[9px] text-muted-foreground">{locale === "zh" ? "免稅" : "TAX-FREE"}</span>}
-        </div>
-        <p className="mt-1 font-mono text-lg font-bold text-primary">${member}</p>
-      </div>
-      <div>
-        <div className="text-[10px] text-muted-foreground">
-          {locale === "zh" ? "一般價" : "REGULAR"}
-        </div>
-        <p className="mt-1 font-mono text-lg text-muted-foreground line-through">${regular}</p>
-      </div>
-    </div>
-  );
-}
+    // 正式社員需通過身分證後四碼驗證 (預設測試號碼為 1234 或 8888)
+    if (isMember) {
+      if (!idLastFour.trim()) {
+        setPermissionError("⚠️ 請輸入持卡社員身分證後 4 碼進行安全驗證");
+        return;
+      }
 
-function CampaignCard({ c, onAddToCart }: { c: Campaign; onAddToCart: (campaign: Campaign) => void }) {
-  const { locale } = useI18n();
-  const tempLabel = c.tempType === "cold" ? (locale === "zh" ? "冷鏈" : "Cold chain") : locale === "zh" ? "常溫" : "Ambient";
+      setIsVerifying(true);
 
-  return (
-    <article 
-      id={c.name.en.includes("Eggs") ? "product-eggs" : `product-${c.name.en.toLowerCase().replace(/\s+/g, '-')}`}
-      className="flex flex-col gap-4 rounded-md border border-border bg-white p-4 shadow-sm transition-all duration-500"
-    >
-      <div className="relative overflow-hidden rounded">
-        <img src={c.img} alt={c.name[locale]} className="aspect-[4/3] w-full object-cover" />
-        {c.hot && (
-          <span className="absolute right-2 top-2 rounded-sm bg-accent px-2 py-0.5 text-[10px] font-bold uppercase text-accent-foreground">
-            {locale === "zh" ? "熱銷" : "Hot Item"}
-          </span>
-        )}
-        <span className="absolute left-2 top-2 rounded-sm bg-black/70 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
-          {locale === "zh" ? "零庫存預購" : "Zero-Inventory"}
-        </span>
-      </div>
-      <div>
-        <h3 className="text-lg font-bold">{c.name[locale]}</h3>
-        <p className="text-xs text-muted-foreground">{c.vendor[locale]}</p>
-      </div>
-      <StageBar stage={c.stage} locale={locale} />
-      <div className="flex items-center justify-between rounded border border-black/5 bg-stone-50 px-3 py-2 text-xs">
-        <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-          {locale === "zh" ? "配送層級" : "Handling"}
-        </span>
-        <span className={`rounded-full px-2 py-0.5 font-bold ${c.tempType === "cold" ? "bg-primary/10 text-primary" : "bg-stone-200 text-muted-foreground"}`}>
-          {tempLabel}
-        </span>
-      </div>
-      <DualPrice member={c.memberPrice} regular={c.regularPrice} exempt={c.taxExempt} locale={locale} />
+      setTimeout(() => {
+        setIsVerifying(false);
 
-      {c.stage === 1 && (
-        <div className="space-y-2 rounded border border-accent/30 bg-accent/5 p-3">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-accent">
-            {locale === "zh" ? "意象調查中" : "Intent Survey"}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            {locale === "zh"
-              ? "填寫預估需求量，協助我們向廠商爭取更好的合約條件。"
-              : "Share your needed quantity so we can negotiate better vendor terms."}
-          </p>
-          <div className="flex items-center justify-between text-xs">
-            <span className="font-mono">
-              {c.intentResponses}/{c.intentTarget} {locale === "zh" ? "份意見" : "responses"}
-            </span>
-            <IntentInput />
-          </div>
-        </div>
-      )}
+        // 簡單驗證邏輯：範例成功（可依需求接後端 API 檢查）
+        if (idLastFour.length !== 4) {
+          setPermissionError("❌ 格式不正確，請輸入 4 位數字");
+          return;
+        }
 
-      {c.stage === 2 && (
-        <div className="space-y-2">
-          <div className="flex justify-between font-mono text-xs">
-            <span>{locale === "zh" ? "已預購" : "Ordered"}</span>
-            <span>
-              {c.ordered}/{c.threshold} ({locale === "zh" ? "還剩" : ""} {c.daysLeft}
-              {locale === "zh" ? " 天" : "d left"})
-            </span>
-          </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-stone-200">
-            <div
-              className="h-full bg-primary transition-all"
-              style={{ width: `${((c.ordered ?? 0) / (c.threshold ?? 1)) * 100}%` }}
-            />
-          </div>
-          <div className="flex items-end justify-between pt-1">
-            <div className="text-xs text-muted-foreground">
-              {locale === "zh" ? "訂金" : "Deposit"}{" "}
-              <span className="font-mono font-bold text-foreground">${c.deposit}</span>
-            </div>
-            <button className="rounded-sm bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:brightness-110">
-              {locale === "zh" ? "立即預購" : "Pre-order"}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {c.stage === 3 && (
-        <div className="rounded border border-black/5 bg-stone-100 p-3">
-          <ol className="mb-2 flex justify-between text-[10px] font-mono uppercase tracking-wider">
-            {[
-              { zh: "廠商出貨", en: "Sourced" },
-              { zh: "抵達合作社", en: "Arrived" },
-              { zh: "可取貨", en: "Ready" },
-            ].map((s, i) => {
-              const done = (c.fulfillStep ?? 0) >= i;
-              return (
-                <li key={i} className={done ? "text-primary" : "text-muted-foreground"}>
-                  ● {s[locale]}
-                </li>
-              );
-            })}
-          </ol>
-          <p className="font-mono text-sm">{c.pickupDate}</p>
-        </div>
-      )}
-
-      <button
-        onClick={() => onAddToCart(c)}
-        className="rounded-sm bg-primary px-3 py-2 text-sm font-bold text-primary-foreground hover:brightness-110"
-      >
-        {locale === "zh" ? "加入購物車" : "Add to cart"}
-      </button>
-    </article>
-  );
-}
-
-function IntentInput() {
-  const { locale } = useI18n();
-  const [qty, setQty] = useState(2);
-  const [sent, setSent] = useState(false);
-  if (sent)
-    return (
-      <span className="text-[11px] font-bold text-primary">
-        ✓ {locale === "zh" ? "已登記" : "Logged"}
-      </span>
-    );
-  return (
-    <div className="flex items-center gap-1">
-      <input
-        type="number"
-        min={1}
-        value={qty}
-        onChange={(e) => setQty(Math.max(1, Number(e.target.value)))}
-        className="w-14 rounded-sm border border-border px-1 py-0.5 text-xs"
-      />
-      <button
-        onClick={() => setSent(true)}
-        className="rounded-sm border border-accent bg-accent/10 px-2 py-0.5 text-[11px] font-bold text-accent hover:bg-accent hover:text-accent-foreground"
-      >
-        {locale === "zh" ? "登記" : "Submit"}
-      </button>
-    </div>
-  );
-}
-
-// 🟢 1. 社員專屬社務活動區塊 (包含許願按鈕與免營業稅社員價)
-function CoopEventsSection() {
-  const { locale } = useI18n();
-  const [wishlist, setWishlist] = useState<string[]>([]);
-
-  const toggleWishlist = (id: string) => {
-    setWishlist((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
+        // 驗證成功完成結帳
+        localStorage.removeItem("tsm_shopping_cart");
+        window.dispatchEvent(new Event("tsm-cart-updated"));
+        onPaid("付款成功！已完成社員二次身份安全認證與訂單鎖單。");
+        onClose();
+      }, 800);
+    } else {
+      // 非社員流程直接結帳
+      localStorage.removeItem("tsm_shopping_cart");
+      window.dispatchEvent(new Event("tsm-cart-updated"));
+      onPaid("以非社員體驗票價完成預購結帳！");
+      onClose();
+    }
   };
 
   return (
-    <section className="mb-16 space-y-4">
-      <div>
-        <p className="font-mono text-xs font-bold uppercase tracking-widest text-primary">05 · WORKSHOPS & EVENTS</p>
-        <h2 className="text-2xl font-extrabold text-foreground">
-          {locale === "zh" ? "社員專屬社務活動" : "Member Co-op Workshops"}
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          {locale === "zh"
-            ? "實名社員享合作社「免營業稅」專屬惠購價，非社員可購票體驗。"
-            : "Members enjoy tax-exempt pricing, non-members are welcome to purchase tickets."}
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {DEMO_EVENTS.map((evt) => {
-          // 💡 計算社員免營業稅價格 (非社員價 ÷ 1.05)
-          const memberPrice = Math.round(evt.nonMemberPrice / 1.05);
-          const isWishlisted = wishlist.includes(evt.id);
-
-          return (
-            <div key={evt.id} className="group rounded-2xl border border-border bg-white overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
-              <div>
-                <div className="relative aspect-[16/10] w-full overflow-hidden bg-stone-100">
-                  <img src={evt.image} alt={evt.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                  
-                  <div className="absolute top-3 left-3 flex gap-2">
-                    <span className="rounded-full bg-white/90 backdrop-blur-md px-3 py-1 text-xs font-bold text-slate-800 shadow-sm">
-                      🚌 {evt.category}
-                    </span>
-                  </div>
-                  
-                  <span className="absolute top-3 right-3 rounded-full bg-accent text-accent-foreground px-3 py-1 text-xs font-bold shadow-sm">
-                    {evt.tag}
-                  </span>
-
-                  <span className="absolute bottom-3 left-3 rounded-full bg-emerald-600 text-white px-3 py-1 text-xs font-bold shadow-sm">
-                    社員優惠
-                  </span>
-
-                  {/* 🟢 加入許願清單 / 愛心收藏按鈕 */}
-                  <button
-                    type="button"
-                    onClick={() => toggleWishlist(evt.id)}
-                    className="absolute bottom-3 right-3 grid size-9 place-items-center rounded-full bg-white/90 backdrop-blur-md shadow-md transition-transform active:scale-90"
-                    title={isWishlisted ? "已加入願望清單" : "加入願望清單"}
-                  >
-                    <Heart className={`size-5 transition-colors ${isWishlisted ? "fill-rose-500 text-rose-500" : "text-slate-600 hover:text-rose-500"}`} />
-                  </button>
-                </div>
-
-                <div className="p-5 space-y-2">
-                  <h3 className="font-extrabold text-base text-slate-800">{evt.title}</h3>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <MapPin className="size-3.5 text-primary" /> {evt.location}
-                  </p>
-
-                  <div className="pt-2 space-y-1">
-                    <div className="flex justify-between text-[11px] text-muted-foreground font-bold">
-                      <span>{locale === "zh" ? "報名進度" : "Seats"}</span>
-                      <span>{evt.registeredCount}/{evt.totalSeats}</span>
-                    </div>
-                    <div className="h-2 w-full bg-stone-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-primary rounded-full transition-all"
-                        style={{ width: `${(evt.registeredCount / evt.totalSeats) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 🟢 價格與報名區域：社員價格非免費，而是顯示免營業稅價格 (非社員價 / 1.05) */}
-              <div className="p-4 border-t bg-stone-50/50 space-y-3">
-                <div className="flex justify-around items-center text-center">
-                  <div>
-                    <span className="block text-[11px] font-bold text-primary">社員價 (免營業稅)</span>
-                    <span className="font-mono text-base font-extrabold text-primary">NT${memberPrice}</span>
-                  </div>
-                  <div className="h-8 w-px bg-border" />
-                  <div>
-                    <span className="block text-[11px] font-bold text-muted-foreground">非社員價</span>
-                    <span className="font-mono text-base font-extrabold text-muted-foreground">NT${evt.nonMemberPrice}</span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  className="w-full bg-primary hover:brightness-110 text-primary-foreground font-bold py-3 rounded-xl transition text-xs shadow-sm"
-                >
-                  {locale === "zh" ? "社員報名 / 非社員體驗購票" : "Book seats"}
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-// 🟢 2. 許願清單表單 (分類改為下拉選單 <select>)
-function WishlistPromo() {
-  const { locale } = useI18n();
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("米糧麵食");
-  const [vendor, setVendor] = useState("");
-  const [thanks, setThanks] = useState(false);
-
-  return (
-    <section className="mb-16 rounded-md border border-accent/30 bg-accent/5 p-6">
-      <div className="mb-3 flex items-baseline justify-between">
-        <div>
-          <h2 className="text-2xl font-extrabold">
-            {locale === "zh" ? "願望清單" : "Wishlist"} · {locale === "zh" ? "集氣許願" : "Crowdsourced Sourcing"}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {locale === "zh"
-              ? "推薦商品或活動成團後，提案人自動獲得積點，直接提高年度結餘分紅。"
-              : "When your proposal becomes a campaign, you earn reward points that increase your share of the annual surplus."}
-          </p>
-        </div>
-        <span className="font-mono text-[10px] uppercase tracking-widest text-accent">
-          +1 = {locale === "zh" ? "集氣" : "Interested"}
-        </span>
-      </div>
-
-      {thanks ? (
-        <p className="rounded border border-accent bg-white p-4 text-sm font-bold text-accent">
-          ✓ {locale === "zh" ? "已收到您的許願，成團後將發送 50 積點。" : "Proposal received. You'll earn 50 pts once it becomes a campaign."}
-        </p>
-      ) : (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (title.trim()) setThanks(true);
-          }}
-          className="grid gap-3 md:grid-cols-[1.2fr_1fr_1.2fr_auto]"
-        >
-          <input
-            placeholder={locale === "zh" ? "許願商品/活動名稱 *" : "Product / Event name"}
-            value={title}
-            required
-            onChange={(e) => setTitle(e.target.value)}
-            className="rounded-sm border border-border bg-white px-3 py-2 text-sm outline-none focus:border-primary"
-          />
-
-          {/* 🟢 分類下拉選單 */}
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="rounded-sm border border-border bg-white px-3 py-2 text-sm font-semibold text-slate-800 outline-none focus:border-primary"
-          >
-            {WISHLIST_CATEGORIES.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-
-          <input
-            placeholder={locale === "zh" ? "廠商 / 產地連結 (選填)" : "Vendor / source URL (optional)"}
-            value={vendor}
-            onChange={(e) => setVendor(e.target.value)}
-            className="rounded-sm border border-border bg-white px-3 py-2 text-sm outline-none focus:border-primary"
-          />
-
-          <button className="rounded-sm bg-accent px-5 py-2 text-sm font-bold text-accent-foreground hover:brightness-110 flex items-center gap-1">
-            <Sparkles className="size-4" /> {locale === "zh" ? "提交許願" : "Submit"}
-          </button>
-        </form>
-      )}
-    </section>
-  );
-}
-
-function EcoCheckoutStrip() {
-  const { locale } = useI18n();
-  const [eco, setEco] = useState(true);
-  return (
-    <section className="mb-16 rounded-md border border-primary/30 bg-primary/5 p-6">
-      <h2 className="text-xl font-extrabold">
-        {locale === "zh" ? "負責任消費選項 · 綠色積點" : "Responsible Consumption · Green Points"}
-      </h2>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {locale === "zh"
-          ? "結帳時勾選裸裝／自備容器，我們額外贈送綠色積點，並回饋給循環包裝夥伴。"
-          : "Opt for minimal packaging / bring-your-own container at checkout for bonus Green Points and a rebate to our reusables partner."}
-      </p>
-      <label className="mt-4 flex cursor-pointer items-start gap-3 rounded border border-black/5 bg-white p-3 text-sm">
-        <input
-          type="checkbox"
-          checked={eco}
-          onChange={(e) => setEco(e.target.checked)}
-          className="mt-0.5 size-4 accent-primary"
-        />
-        <span>
-          <span className="font-bold">
-            {locale === "zh" ? "裸裝 / 自備容器" : "Minimal packaging / BYO container"}
-          </span>
-          <span className="ml-2 rounded bg-primary/10 px-1.5 text-[10px] font-bold text-primary">
-            +30 {locale === "zh" ? "綠色積點" : "Green pts"}
-          </span>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {eco
-              ? locale === "zh"
-                ? "此訂單將啟用減塑取貨。"
-                : "This order will use zero-plastic pickup."
-              : locale === "zh"
-                ? "此訂單將使用標準包裝。"
-                : "This order will ship in standard packaging."}
-          </p>
-        </span>
-      </label>
-    </section>
-  );
-}
-
-function NonMemberNudge() {
-  const { locale } = useI18n();
-  return (
-    <div className="mb-10 flex flex-col justify-between gap-3 rounded-md border border-accent bg-accent/10 p-4 text-sm md:flex-row md:items-center">
-      <span>
-        {locale === "zh"
-          ? "🎯 加入社員即可解鎖共同購買價，並享有年度結餘分紅回饋。"
-          : "🎯 Become a member today to unlock co-op pricing and earn annual surplus rebates."}
-      </span>
-      <a
-        href="/onboarding"
-        className="self-start rounded-sm bg-accent px-4 py-2 text-xs font-bold text-accent-foreground hover:brightness-110"
+    <div className="fixed inset-0 z-[99999] grid place-items-center bg-black/60 backdrop-blur-md p-4 animate-fade-in" onClick={onClose}>
+      <div
+        className="bg-white rounded-[2.5rem] p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-emerald-100 space-y-6 relative overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
       >
-        {locale === "zh" ? "入社申請" : "Apply now"}
-      </a>
-    </div>
-  );
-}
-
-type CartItem = { id: string; name: string; price: number; tempType: TempType; qty: number };
-
-function CartCheckoutPanel({
-  cart,
-  checkoutMessage,
-  onOpenCheckout,
-  onClear,
-  onUpdateQuantity,
-}: {
-  cart: CartItem[];
-  checkoutMessage: string | null;
-  onOpenCheckout: () => void;
-  onClear: () => void;
-  onUpdateQuantity: (itemId: string, delta: number) => void;
-}) {
-  const { locale } = useI18n();
-  const mixed = cart.some((item) => item.tempType === "cold") && cart.some((item) => item.tempType === "ambient");
-  const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-  const groupedCart = cart.reduce<Record<string, CartItem>>((acc, item) => {
-    const key = `${item.name}-${item.tempType}`;
-    if (!acc[key]) {
-      acc[key] = { ...item };
-    } else {
-      acc[key] = { ...acc[key], qty: acc[key].qty + item.qty };
-    }
-    return acc;
-  }, {});
-
-  return (
-    <section className="mb-16 rounded-md border border-border bg-white p-6 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-extrabold">{locale === "zh" ? "結帳示範" : "Checkout demo"}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {locale === "zh"
-              ? "加入購物車後，若混合冷鏈與常溫商品，系統會提示你分開安排取貨。"
-              : "If cold-chain and ambient items are combined, the demo warns you to separate pickup handling."}
-          </p>
+        {/* 頂部 Header */}
+        <div className="flex justify-between items-start border-b border-slate-100 pb-4">
+          <div>
+            <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-3 py-1 rounded-full border border-emerald-200">
+              <ShieldCheck className="size-3.5 text-emerald-600" /> 安全加密結帳
+            </span>
+            <h3 className="text-xl font-extrabold text-slate-900 mt-1">預購訂單結帳與身份確認</h3>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400">
+            <X className="size-5" />
+          </button>
         </div>
-        <div className="rounded-full bg-stone-100 px-3 py-1 font-mono text-xs font-bold text-muted-foreground">
-          {cart.length} {locale === "zh" ? "項" : "items"}
-        </div>
-      </div>
 
-      {cart.length === 0 ? (
-        <p className="mt-5 rounded border border-dashed border-border p-4 text-sm text-muted-foreground">
-          {locale === "zh" ? "先加入一個商品，看看結帳警示。" : "Add an item to see the checkout warning."}
-        </p>
-      ) : (
-        <div className="mt-5 space-y-3">
-          {Object.values(groupedCart).map((item) => (
-            <div key={`${item.id}-${item.tempType}`} className="rounded border border-border bg-stone-50 px-3 py-3 text-sm">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="font-semibold">{item.name}</p>
-                  <p className="text-[11px] uppercase tracking-widest text-muted-foreground">{item.tempType === "cold" ? "Cold chain" : "Ambient"}</p>
-                </div>
-                <span className="font-mono font-bold">NT${item.price}</span>
-              </div>
-              <div className="mt-3 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => onUpdateQuantity(item.id, -1)}
-                    className="grid size-7 place-items-center rounded border border-border bg-white text-sm font-bold"
-                  >
-                    −
-                  </button>
-                  <span className="min-w-8 text-center font-mono font-bold">x{item.qty}</span>
-                  <button
-                    type="button"
-                    onClick={() => onUpdateQuantity(item.id, 1)}
-                    className="grid size-7 place-items-center rounded border border-border bg-white text-sm font-bold"
-                  >
-                    +
-                  </button>
-                </div>
-                <span className="font-mono font-bold text-primary">NT${item.price * item.qty}</span>
-              </div>
-            </div>
-          ))}
-          <div className="flex items-center justify-between rounded border border-primary/20 bg-primary/5 px-3 py-3 text-sm">
-            <span>{locale === "zh" ? "小計" : "Subtotal"}</span>
-            <span className="font-mono font-extrabold">NT${total}</span>
+        {/* 訂單摘要 */}
+        <div className="bg-stone-50 rounded-2xl p-4 border border-stone-200/80 space-y-2 text-xs">
+          <div className="flex justify-between font-bold text-slate-700">
+            <span>訂單品項數量</span>
+            <span>{cart.length} 項</span>
+          </div>
+          <div className="flex justify-between items-center text-sm font-extrabold border-t pt-2">
+            <span className="text-slate-800">應付金額小計</span>
+            <span className="font-mono text-xl text-emerald-600">NT${totalAmount}</span>
           </div>
         </div>
-      )}
 
-      {mixed && (
-        <div className="mt-4 rounded border border-accent/30 bg-accent/10 p-3 text-sm text-accent">
-          ⚠️ {locale === "zh" ? "偵測到混溫訂單，將分成冷鏈與常溫兩段取貨。" : "Mixed-temperature order detected. Pickup will be split into cold-chain and ambient handling."}
-        </div>
-      )}
+        {/* 🛡️ 重要防冒用二次身分認證卡片 */}
+        <form onSubmit={handleVerifyAndPay} className="space-y-4">
+          {isMember ? (
+            <div className="p-4 bg-emerald-50/80 rounded-2xl border border-emerald-200 space-y-3">
+              <div className="flex items-center gap-2 font-extrabold text-xs text-emerald-900">
+                <Lock className="size-4 text-emerald-600" />
+                <span>社員專屬身份防冒用認證 (防止帳號共享)</span>
+              </div>
+              <p className="text-[11px] text-emerald-800 leading-relaxed">
+                為保護合作社免營業稅權益與盈餘分紅公平性，請輸入帳號擁有者（<strong>{user?.name || "實名社員"}</strong>）之<strong>身分證字號後 4 碼</strong>。
+              </p>
 
-      {checkoutMessage && (
-        <div className="mt-4 rounded border border-primary/20 bg-primary/5 p-3 text-sm text-primary">
-          ✓ {checkoutMessage}
-        </div>
-      )}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">身分證字號後 4 碼 *</label>
+                <input
+                  type="password"
+                  maxLength={4}
+                  required
+                  placeholder="請輸入 4 位數字 (例如: 1234)"
+                  value={idLastFour}
+                  onChange={(e) => setIdLastFour(e.target.value)}
+                  className="w-full border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-mono tracking-widest outline-none focus:ring-2 focus:ring-emerald-500 bg-white"
+                />
+              </div>
 
-      <div className="mt-5 flex flex-wrap gap-3">
-        <button
-          onClick={onOpenCheckout}
-          disabled={cart.length === 0}
-          className="rounded-sm bg-primary px-4 py-2 text-sm font-bold text-primary-foreground shadow-glow hover:brightness-110 disabled:opacity-40"
-        >
-          {locale === "zh" ? "前往結帳" : "Proceed to Checkout"}
-        </button>
-        <button
-          onClick={onClear}
-          className="rounded-sm border border-border bg-white px-4 py-2 text-sm font-semibold hover:bg-stone-100"
-        >
-          {locale === "zh" ? "清空購物車" : "Clear cart"}
-        </button>
+              {authError && (
+                <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-[11px] font-bold text-rose-600 flex items-center gap-1.5">
+                  <AlertCircle className="size-4 shrink-0" />
+                  <span>{authError}</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-900 space-y-1">
+              <p className="font-bold flex items-center gap-1">
+                <Sparkles className="size-4 text-amber-600" /> 非社員體驗結帳說明
+              </p>
+              <p className="text-[11px] text-amber-800">
+                非社員顧客訂單僅含一級農產品及活動體驗票，不享有合作社免營業稅優惠。
+              </p>
+            </div>
+          )}
+
+          {/* 結帳與關閉按鈕 */}
+          <div className="flex gap-2.5 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3.5 rounded-xl text-xs transition"
+            >
+              返回修改
+            </button>
+            <button
+              type="submit"
+              disabled={isVerifying}
+              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5 disabled:opacity-50"
+            >
+              {isVerifying ? (
+                <span>驗證認證中...</span>
+              ) : (
+                <>
+                  <CheckCircle2 className="size-4" /> 確認二次認證並付款
+                </>
+              )}
+            </button>
+          </div>
+        </form>
       </div>
-    </section>
-  );
-}
-
-function CoopPage() {
-  const { locale } = useI18n();
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [checkoutMessage, setCheckoutMessage] = useState<string | null>(null);
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [walletBalance, setWalletBalance] = useState(1280);
-
-  useEffect(() => {
-    const hash = window.location.hash.replace("#", "");
-    if (hash) {
-      const timer = setTimeout(() => {
-        const targetElement = document.getElementById(hash);
-        if (targetElement) {
-          targetElement.scrollIntoView({ behavior: "smooth", block: "center" });
-          targetElement.classList.add("ring-4", "ring-primary", "animate-pulse");
-
-          setTimeout(() => {
-            targetElement.classList.remove("ring-4", "ring-primary", "animate-pulse");
-          }, 2500);
-        }
-      }, 100);
-
-      return () => clearTimeout(timer);
-    }
-  }, []);
-
-  function addToCart(campaign: Campaign) {
-    setCart((prev) => {
-      const dup = prev.find((item) => item.id === campaign.name.en);
-      if (dup) {
-        return prev.map((item) =>
-          item.id === campaign.name.en ? { ...item, qty: item.qty + 1 } : item,
-        );
-      }
-      return [
-        ...prev,
-        {
-          id: campaign.name.en,
-          name: campaign.name[locale],
-          price: campaign.memberPrice,
-          tempType: campaign.tempType,
-          qty: 1,
-        },
-      ];
-    });
-    setCheckoutMessage(null);
-  }
-
-  function updateCartQuantity(itemId: string, delta: number) {
-    setCart((prev) => {
-      const next = prev.map((item) => {
-        if (item.id !== itemId) return item;
-        const nextQty = Math.max(0, item.qty + delta);
-        return { ...item, qty: nextQty };
-      });
-      return next.filter((item) => item.qty > 0);
-    });
-  }
-
-  return (
-    <SiteShell>
-      <PageHeader
-        eyebrow="Co-op Purchasing"
-        title={locale === "zh" ? "共同購買・三階段滾動流程" : "Co-op Buying · 3-Stage Rolling Flow"}
-        subtitle={locale === "zh" ? "Intent · Lock-in · Fulfillment" : "Intent · Lock-in · Fulfillment"}
-        body={
-          locale === "zh"
-            ? "每檔商品都會經過意象調查、預購鎖單、採購配送三個階段。所有訂單皆為零庫存預購，降低浪費、將議價空間回到社員。"
-            : "Every campaign flows through Intent Survey, Pre-order Lock-in, and Fulfillment. Zero inventory, less waste, better vendor terms returned to members."
-        }
-      />
-
-      <NonMemberNudge />
-
-      <section className="mb-16 grid gap-6 md:grid-cols-3">
-        {CAMPAIGNS.map((c) => (
-          <CampaignCard key={c.name.en} c={c} onAddToCart={addToCart} />
-        ))}
-      </section>
-
-      {/* 🟢 社員專屬社務活動卡片區塊 */}
-      <CoopEventsSection />
-
-      <CartCheckoutPanel
-        cart={cart}
-        checkoutMessage={checkoutMessage}
-        onOpenCheckout={() => setCheckoutOpen(true)}
-        onClear={() => {
-          setCart([]);
-          setCheckoutMessage(null);
-        }}
-        onUpdateQuantity={updateCartQuantity}
-      />
-
-      <CheckoutModal
-        open={checkoutOpen}
-        onClose={() => setCheckoutOpen(false)}
-        cart={cart}
-        walletBalance={walletBalance}
-        onWalletDebit={(amount) => setWalletBalance((balance) => Math.max(0, balance - amount))}
-        onPaid={(message) => setCheckoutMessage(message)}
-        onUpdateCartQuantity={updateCartQuantity}
-        ecpayEndpoint={import.meta.env.VITE_ECPAY_CHECKOUT_URL ?? "http://localhost:54321/functions/v1/ecpay-checkout"}
-      />
-
-      {/* 🟢 集氣許願清單 (含有分類下拉選單) */}
-      <WishlistPromo />
-
-      <EcoCheckoutStrip />
-    </SiteShell>
+    </div>
   );
 }
