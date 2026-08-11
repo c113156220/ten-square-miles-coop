@@ -100,13 +100,13 @@
 
 ```bash
 # 1. 複製（下載）專案：將 GitHub 上的程式碼下載到本機
-git clone <本專案的 GitHub 儲存庫網址>
+git clone https://github.com/C113156235/- <專案資料夾名稱>
 
 # 2. 移動目錄：走進剛剛下載好的專案資料夾中
 cd <專案資料夾名稱>
 
 # 3. 安裝套件：一鍵下載並安裝專案所需的所有第三方依賴套件 (node_modules)
-npm i
+npm install
 
 # 4. 啟動網頁：在本地端啟動開發伺服器，讓你在瀏覽器即時預覽與測試網頁
 npm run dev
