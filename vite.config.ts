@@ -6,7 +6,13 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
+// 1. 註解掉有斜線判斷 Bug 的 AI 擴充套件引入
+// import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/tanstack/vite";
+
 export default defineConfig({
+  // 2. 將載入外掛的這行也註解掉，避免報錯
+  // plugins: [mcpPlugin()],
+  
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this

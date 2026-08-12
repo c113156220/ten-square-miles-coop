@@ -72,14 +72,14 @@ export function CheckoutModal({
   return (
     <div className="fixed inset-0 z-[99999] grid place-items-center bg-black/60 backdrop-blur-md p-4 animate-fade-in" onClick={onClose}>
       <div
-        className="bg-white rounded-[2.5rem] p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-emerald-100 space-y-6 relative overflow-hidden"
+        className="bg-white rounded-[2.5rem] p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-6 relative overflow-hidden" style={{ border: '1px solid rgba(36,122,87,0.08)' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* 頂部 Header */}
         <div className="flex justify-between items-start border-b border-slate-100 pb-4">
           <div>
-            <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-3 py-1 rounded-full border border-emerald-200">
-              <ShieldCheck className="size-3.5 text-emerald-600" /> 安全加密結帳
+            <span className="inline-flex items-center gap-1 font-extrabold px-3 py-1 rounded-full" style={{ backgroundColor: '#F1F8F5', color: '#2D3748', border: '1px solid rgba(36,122,87,0.08)' }}>
+              <ShieldCheck className="size-3.5 text-[#247A57]" /> 安全加密結帳
             </span>
             <h3 className="text-xl font-extrabold text-slate-900 mt-1">預購訂單結帳與身份確認</h3>
           </div>

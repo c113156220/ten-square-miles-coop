@@ -454,7 +454,7 @@ export function CheckoutModal({
 
         {step === 2 && (
           <div className="p-10 sm:p-16 text-center space-y-4 sm:space-y-6 animate-fade-in">
-            <div className="relative mx-auto size-16 sm:size-20 grid place-items-center rounded-full bg-emerald-50 text-emerald-600">
+            <div className="relative mx-auto size-16 sm:size-20 grid place-items-center rounded-full" style={{ backgroundColor: '#F1F8F5', color: '#247A57' }}>
               <Loader2 className="size-8 sm:size-10 animate-spin" />
             </div>
             <div className="space-y-1 sm:space-y-2">
@@ -466,7 +466,7 @@ export function CheckoutModal({
 
         {step === 3 && (
           <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 bg-slate-50/60 min-h-[480px]">
-            <div className="rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 p-4 sm:p-5 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-sm">
+            <div className="rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#247A57] to-teal-600 p-4 sm:p-5 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 shadow-sm">
               <div>
                 <p className="text-[9px] uppercase font-bold tracking-widest opacity-80">ECPay Payment Gateway</p>
                 <h3 className="text-base sm:text-lg font-extrabold">綠界科技金流服務 · 線上刷卡收銀台</h3>
@@ -477,7 +477,7 @@ export function CheckoutModal({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
               <div className="md:col-span-2 bg-white p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-slate-200 shadow-sm space-y-4">
                 <h4 className="font-bold text-xs sm:text-sm text-slate-800 flex items-center gap-2 border-b pb-2.5">
-                  <CreditCard className="size-4 text-emerald-600" /> 請輸入信用卡資料
+                  <CreditCard className="size-4 text-[#247A57]" /> 請輸入信用卡資料
                 </h4>
 
                 <div className="space-y-3 text-xs">
@@ -487,7 +487,8 @@ export function CheckoutModal({
                       type="text"
                       value={cardNumber}
                       onChange={(e) => setCardNumber(e.target.value)}
-                      className="w-full border rounded-xl px-3 py-2 font-mono text-xs sm:text-sm outline-none focus:border-emerald-600"
+                      className="w-full border rounded-2xl px-3 py-2 font-mono text-xs sm:text-sm outline-none"
+                      style={{ borderColor: 'var(--border)' }}
                     />
                   </div>
 
@@ -498,7 +499,8 @@ export function CheckoutModal({
                         type="text"
                         value={cardExp}
                         onChange={(e) => setCardExp(e.target.value)}
-                        className="w-full border rounded-xl px-3 py-2 font-mono text-xs sm:text-sm outline-none focus:border-emerald-600"
+                        className="w-full border rounded-2xl px-3 py-2 font-mono text-xs sm:text-sm outline-none"
+                        style={{ borderColor: 'var(--border)' }}
                       />
                     </div>
                     <div>
@@ -507,7 +509,8 @@ export function CheckoutModal({
                         type="text"
                         value={cardCvc}
                         onChange={(e) => setCardCvc(e.target.value)}
-                        className="w-full border rounded-xl px-3 py-2 font-mono text-xs sm:text-sm outline-none focus:border-emerald-600"
+                        className="w-full border rounded-2xl px-3 py-2 font-mono text-xs sm:text-sm outline-none"
+                        style={{ borderColor: 'var(--border)' }}
                       />
                     </div>
                   </div>
@@ -518,7 +521,7 @@ export function CheckoutModal({
                     type="button"
                     onClick={handleECPayPayNow}
                     disabled={processingEcpay}
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition shadow-sm flex items-center justify-center gap-2 text-xs sm:text-sm"
+                    className="w-full text-white font-bold py-3 rounded-2xl transition shadow-sm flex items-center justify-center gap-2 text-xs sm:text-sm" style={{ backgroundColor: '#247A57' }}
                   >
                     {processingEcpay ? "授權驗證中..." : `立即刷卡支付 NT$ ${total.toLocaleString()}`}
                   </button>
@@ -533,7 +536,7 @@ export function CheckoutModal({
                 </div>
                 <div className="border-t pt-2 flex justify-between items-center text-xs sm:text-sm font-bold">
                   <span>刷卡授權總額</span>
-                  <span className="text-emerald-700 font-mono text-sm sm:text-base">NT$ {total.toLocaleString()}</span>
+                  <span className="font-mono text-sm sm:text-base" style={{ color: '#247A57' }}>NT$ {total.toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -543,19 +546,19 @@ export function CheckoutModal({
         {step === 4 && (
           <div className="grid gap-6 p-4 sm:p-6 lg:grid-cols-[1fr_0.9fr]">
             <section className="space-y-4 sm:space-y-5 rounded-2xl sm:rounded-3xl border border-border bg-slate-50/50 p-4 sm:p-5">
-              <div className="flex items-center justify-between gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3.5 py-2.5">
+              <div className="flex items-center justify-between gap-2 rounded-xl px-3.5 py-2.5" style={{ border: '1px solid rgba(36,122,87,0.12)', backgroundColor: 'rgba(36,122,87,0.06)' }}>
                 <div>
                   <p className="font-mono text-[9px] uppercase tracking-widest text-primary">Order confirmed</p>
                   <h3 className="text-sm sm:text-lg font-extrabold truncate max-w-[180px] sm:max-w-none">#{orderId || "TSM-ORDER"}</h3>
                 </div>
-                <span className="rounded-full bg-emerald-500 px-2.5 py-0.5 text-[10px] sm:text-xs font-bold text-white shrink-0">
+                <span className="rounded-full px-2.5 py-0.5 text-[10px] sm:text-xs font-bold text-white shrink-0" style={{ backgroundColor: '#247A57' }}>
                   訂單已成立
                 </span>
               </div>
 
-              <div className="p-3.5 border border-dashed border-emerald-300 rounded-xl sm:rounded-2xl bg-emerald-50/50 text-center space-y-1.5">
-                <p className="text-xs font-bold text-emerald-900">📱 物流狀態</p>
-                <div className="p-2.5 bg-white rounded-lg border font-mono text-xs font-extrabold text-emerald-700 select-all truncate">
+              <div className="p-3.5 border rounded-xl sm:rounded-2xl bg-emerald-50/50 text-center space-y-1.5" style={{ borderStyle: 'dashed', borderColor: 'rgba(36,122,87,0.12)', backgroundColor: 'rgba(241,248,245,0.5)' }}>
+                <p className="text-xs font-bold" style={{ color: '#2D3748' }}>📱 物流狀態</p>
+                <div className="p-2.5 bg-white rounded-lg border font-mono text-xs font-extrabold select-all truncate" style={{ color: '#247A57' }}>
                   {shippingType === "EXPRESS_DELIVERY" ? `宅配到府：${recipientAddress}` : `合作社現場門市自取`}
                 </div>
               </div>

@@ -37,9 +37,9 @@ export const MOMO_CATEGORIES: CategoryGroup[] = [
       {
         title: "有機時蔬菜",
         items: [
-          { id: "cabbage", name: "有機高麗菜 (顆)", price: 65, memberPrice: 62, bgGradient: "from-emerald-100 via-teal-50 to-green-100", badgeColor: "bg-emerald-600 text-white", icon: "🥬", origin: "雲林契作有機農場", features: "低溫契作栽培，清甜脆口無農藥殘留", tempType: "ambient" },
+          { id: "cabbage", name: "有機高麗菜 (顆)", price: 65, memberPrice: 62, bgGradient: "from-[#EAF7F0] via-teal-50 to-green-100", badgeColor: "bg-[#247A57] text-white", icon: "🥬", origin: "雲林契作有機農場", features: "低溫契作栽培，清甜脆口無農藥殘留", tempType: "ambient" },
           { id: "veggie-box", name: "契作有機葉菜箱 (5kg)", price: 480, memberPrice: 457, bgGradient: "from-green-100 via-emerald-100 to-lime-100", badgeColor: "bg-green-700 text-white", icon: "🥗", origin: "宜蘭夥伴農場", features: "每週新鮮採收，包含 5 種當季有機綠葉蔬菜", tempType: "cold" },
-          { id: "root-veggie", name: "有機當季根莖組合", price: 180, memberPrice: 171, bgGradient: "from-amber-100 via-orange-50 to-yellow-100", badgeColor: "bg-amber-600 text-white", icon: "🥔", origin: "台南官田小農", features: "富含膳食纖維，包含紅蘿蔔、地瓜與馬鈴薯", tempType: "ambient" },
+          { id: "root-veggie", name: "有機當季根莖組合", price: 180, memberPrice: 171, bgGradient: "from-[#FFF7E0] via-orange-50 to-yellow-100", badgeColor: "bg-[#F59E0B] text-[#1F2937]", icon: "🥔", origin: "台南官田小農", features: "富含膳食纖維，包含紅蘿蔔、地瓜與馬鈴薯", tempType: "ambient" },
         ],
       },
       {
@@ -47,13 +47,13 @@ export const MOMO_CATEGORIES: CategoryGroup[] = [
         items: [
           { id: "guava", name: "特級紅心芭樂 (袋)", price: 120, memberPrice: 114, bgGradient: "from-rose-100 via-pink-50 to-emerald-100", badgeColor: "bg-rose-600 text-white", icon: "🍈", origin: "高雄燕巢農會", features: "果肉厚實果香濃郁，富含高維生素 C", tempType: "ambient" },
           { id: "apple", name: "阿里山高山蜜蘋果", price: 320, memberPrice: 305, bgGradient: "from-red-100 via-rose-50 to-amber-100", badgeColor: "bg-red-600 text-white", icon: "🍎", origin: "嘉義阿里山 1400m 果園", features: "高海拔日夜溫差大，自然結蜜水分飽滿", tempType: "ambient" },
-          { id: "watermelon", name: "花蓮玉里沙地西瓜", price: 250, memberPrice: 238, bgGradient: "from-emerald-100 via-green-50 to-red-100", badgeColor: "bg-emerald-700 text-white", icon: "🍉", origin: "花蓮玉里秀姑巒溪畔", features: "秀姑巒溪溪水灌溉，沙質土壤果肉沙甜", tempType: "ambient" },
+          { id: "watermelon", name: "花蓮玉里沙地西瓜", price: 250, memberPrice: 238, bgGradient: "from-[#EAF7F0] via-green-50 to-red-100", badgeColor: "bg-[#247A57] text-white", icon: "🍉", origin: "花蓮玉里秀姑巒溪畔", features: "秀姑巒溪溪水灌溉，沙質土壤果肉沙甜", tempType: "ambient" },
         ],
       },
       {
         title: "優質米糧",
         items: [
-          { id: "rice-9", name: "花蓮台梗九號米 (5kg)", price: 350, memberPrice: 333, bgGradient: "from-amber-100 via-yellow-50 to-orange-100", badgeColor: "bg-amber-700 text-white", icon: "🌾", origin: "花蓮富里契作區", features: "米粒香 Q 彈牙，冷掉後依然保持 Q 度", tempType: "ambient" },
+          { id: "rice-9", name: "花蓮台梗九號米 (5kg)", price: 350, memberPrice: 333, bgGradient: "from-[#FFF7E0] via-yellow-50 to-orange-100", badgeColor: "bg-[#F59E0B] text-[#1F2937]", icon: "🌾", origin: "花蓮富里契作區", features: "米粒香 Q 彈牙，冷掉後依然保持 Q 度", tempType: "ambient" },
           { id: "black-rice", name: "契作有機黑米 (1kg)", price: 160, memberPrice: 152, bgGradient: "from-purple-100 via-slate-100 to-indigo-100", badgeColor: "bg-purple-700 text-white", icon: "🍚", origin: "彰化二林花青素米", features: "天然花青素，未精拋保留全穀營養", tempType: "ambient" },
           { id: "quinoa", name: "紅藜藜麥雙穀包", price: 220, memberPrice: 210, bgGradient: "from-rose-100 via-orange-50 to-amber-100", badgeColor: "bg-rose-700 text-white", icon: "🥣", origin: "屏東霧台原鄉產區", features: "優質植物性蛋白，適合健康減醣飲食", tempType: "ambient" },
         ],
@@ -99,7 +99,7 @@ export const MOMO_CATEGORIES: CategoryGroup[] = [
       {
         title: "冷凍食品",
         items: [
-          { id: "dumplings", name: "手工豬肉高麗菜水餃", price: 180, memberPrice: 171, bgGradient: "from-emerald-100 via-teal-50 to-green-100", badgeColor: "bg-emerald-700 text-white", icon: "🥟", origin: "彰化合作社加工廠", features: "嚴選國產溫體豬肉與契作高麗菜，多汁鮮甜", tempType: "cold" },
+          { id: "dumplings", name: "手工豬肉高麗菜水餃", price: 180, memberPrice: 171, bgGradient: "from-[#EAF7F0] via-teal-50 to-green-100", badgeColor: "bg-[#247A57] text-white", icon: "🥟", origin: "彰化合作社加工廠", features: "嚴選國產溫體豬肉與契作高麗菜，多汁鮮甜", tempType: "cold" },
           { id: "shrimp", name: "急速冷凍履歷白蝦", price: 280, memberPrice: 266, bgGradient: "from-sky-100 via-blue-100 to-cyan-100", badgeColor: "bg-sky-700 text-white", icon: "🦐", origin: "屏東林邊海水養殖", features: "捕撈後零下 35 度急凍，肉質彈牙飽滿", tempType: "cold" },
         ],
       },
@@ -114,8 +114,8 @@ export const MOMO_CATEGORIES: CategoryGroup[] = [
       {
         title: "實地參訪",
         items: [
-          { id: "event-farm", name: "阿里山農場一日參訪", price: 480, memberPrice: 457, bgGradient: "from-emerald-100 via-green-100 to-teal-100", badgeColor: "bg-emerald-700 text-white", icon: "🚌", origin: "嘉義阿里山", features: "實地參觀高山放牧場，親體驗採蛋與雞湯品嚐", tempType: "ambient" },
-          { id: "event-tasting", name: "大稻埕品油工作坊", price: 350, memberPrice: 333, bgGradient: "from-amber-100 via-orange-100 to-yellow-100", badgeColor: "bg-amber-700 text-white", icon: "✨", origin: "台北大稻埕", features: "職人帶領品評冷壓花生油與芝麻油調味風味", tempType: "ambient" },
+          { id: "event-farm", name: "阿里山農場一日參訪", price: 480, memberPrice: 457, bgGradient: "from-[#EAF7F0] via-green-100 to-teal-100", badgeColor: "bg-[#247A57] text-white", icon: "🚌", origin: "嘉義阿里山", features: "實地參觀高山放牧場，親體驗採蛋與雞湯品嚐", tempType: "ambient" },
+          { id: "event-tasting", name: "大稻埕品油工作坊", price: 350, memberPrice: 333, bgGradient: "from-[#FFF7E0] via-orange-100 to-yellow-100", badgeColor: "bg-[#F59E0B] text-[#1F2937]", icon: "✨", origin: "台北大稻埕", features: "職人帶領品評冷壓花生油與芝麻油調味風味", tempType: "ambient" },
         ],
       },
       {
@@ -173,16 +173,17 @@ export function MomoCategoryNav({
   };
 
   return (
-    <div className="relative border-b bg-white">
+    <div className="relative border-b" style={{ backgroundColor: '#F1F8F5' }}>
       <div className="mx-auto max-w-[1400px] px-4 flex items-center justify-between h-13">
         {/* 手機漢堡 */}
         <button
           type="button"
           onClick={() => setIsMobileDrawerOpen(true)}
-          className="lg:hidden p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 transition flex items-center gap-2 text-sm font-bold text-emerald-900 border border-emerald-200"
+        className="lg:hidden p-2 rounded-2xl transition flex items-center gap-2 text-sm font-bold"
+        style={{ backgroundColor: '#F1F8F5', color: '#2D3748', border: '1px solid rgba(36,122,87,0.08)' }}
         >
-          <Menu className="size-5 text-emerald-700" />
-          <span>全站分類導覽</span>
+        <Menu className="size-5 text-[#247A57]" />
+        <span>全站分類導覽</span>
         </button>
 
         {/* 💻 桌機版 Mega Menu 主列 */}
@@ -200,16 +201,16 @@ export function MomoCategoryNav({
                 onClick={() => handleCategoryClick(cat)}
                 className={`h-full px-5 flex items-center gap-2 text-sm font-extrabold cursor-pointer transition-all border-b-2 ${
                   activeTab === cat.id && isMegaMenuOpen
-                    ? "border-emerald-600 bg-emerald-50/80 text-emerald-900"
+                    ? "border-transparent"
                     : isLocked
-                    ? "border-transparent text-slate-400 bg-slate-50/50 hover:bg-slate-100"
-                    : "border-transparent text-slate-700 hover:text-emerald-700 hover:bg-slate-50"
-                }`}
+                    ? "border-transparent text-slate-400 bg-slate-50/50"
+                    : "border-transparent text-slate-700 hover:bg-[#EAF7F0]"
+                }`} style={activeTab === cat.id && isMegaMenuOpen ? { borderColor: '#247A57', backgroundColor: '#F1F8F5', color: '#2D3748' } : undefined}
               >
                 <span className="text-base">{cat.icon}</span>
                 <span>{cat.name}</span>
                 {isLocked && (
-                  <span className="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-0.5 border border-amber-200">
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-0.5" style={{ backgroundColor: '#FFF7E0', color: '#1F2937', border: '1px solid rgba(245,158,11,0.12)' }}>
                     <Lock className="size-3" /> 社員專屬
                   </span>
                 )}
@@ -229,9 +230,9 @@ export function MomoCategoryNav({
                       // 🟢 修正：點擊標題跳轉到首頁 "/"
                       navigate({ to: "/" });
                     }}
-                    className="font-extrabold text-base text-emerald-900 border-b border-emerald-100 pb-2 flex items-center gap-1.5 hover:text-emerald-600 w-full text-left"
+                    className="font-extrabold text-base pb-2 flex items-center gap-1.5 w-full text-left" style={{ color: '#2D3748', borderBottom: '1px solid rgba(45,55,72,0.06)' }}
                   >
-                    <ChevronRight className="size-4 text-emerald-600 shrink-0" /> {sub.title}
+                    <ChevronRight className="size-4 text-[#247A57] shrink-0" /> {sub.title}
                   </button>
                   
                   <ul className="space-y-3">
@@ -239,16 +240,16 @@ export function MomoCategoryNav({
                       <li
                         key={item.id}
                         onClick={() => handleProductClick(item)}
-                        className="group/item flex items-center gap-3 p-2 rounded-2xl hover:bg-emerald-50/80 transition-all cursor-pointer border border-transparent hover:border-emerald-200"
+                        className="group/item flex items-center gap-3 p-2 rounded-2xl transition-all cursor-pointer border border-transparent hover:bg-[#EAF7F0]"
                       >
                         <div className={`size-12 rounded-xl bg-gradient-to-br ${item.bgGradient} grid place-items-center text-2xl shadow-sm border border-black/5 shrink-0 group-hover/item:scale-105 transition-transform`}>
                           {item.icon}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-bold text-slate-800 truncate group-hover/item:text-emerald-700">{item.name}</p>
+                          <p className="text-sm font-bold truncate" style={{ color: '#2D3748' }}>{item.name}</p>
                           <div className="flex items-center gap-2 text-xs font-mono mt-0.5">
-                            <span className="text-emerald-700 font-extrabold">NT${item.memberPrice} <span className="text-[10px] font-normal text-emerald-800">(社員價)</span></span>
-                            <span className="text-slate-400 line-through text-[11px]">NT${item.price}</span>
+                            <span className="font-extrabold" style={{ color: '#247A57' }}>NT${item.memberPrice} <span className="text-[10px] font-normal" style={{ color: 'rgba(45,55,72,0.7)' }}>(社員價)</span></span>
+                            <span className="line-through text-[11px]" style={{ color: 'rgba(45,55,72,0.45)' }}>NT${item.price}</span>
                           </div>
                         </div>
                       </li>
@@ -265,12 +266,12 @@ export function MomoCategoryNav({
       {permissionNoticeOpen && (
         <div className="fixed inset-0 z-[9999] grid place-items-center bg-black/60 backdrop-blur-md p-4" onClick={() => setPermissionNoticeOpen(false)}>
           <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl text-center space-y-4" onClick={(e) => e.stopPropagation()}>
-            <div className="mx-auto size-14 grid place-items-center rounded-2xl bg-amber-50 text-amber-600 border border-amber-200">
+            <div className="mx-auto size-14 grid place-items-center rounded-2xl" style={{ backgroundColor: '#FFF7E0', color: '#F59E0B', border: '1px solid rgba(245,158,11,0.12)' }}>
               <ShieldAlert className="size-8" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-lg font-extrabold text-slate-800">【{selectedLockedCategory}】為社員專屬分類</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
+              <h3 className="text-lg font-extrabold" style={{ color: '#2D3748' }}>【{selectedLockedCategory}】為社員專屬分類</h3>
+              <p className="text-xs leading-relaxed" style={{ color: 'rgba(45,55,72,0.75)' }}>
                 依據合作社法規，非社員僅可購買「一級農產品」與參與「社務活動體驗」。如需解鎖加工品、蛋品與鮮乳等完整預購權益，歡迎加入正式社員！
               </p>
             </div>
@@ -278,7 +279,8 @@ export function MomoCategoryNav({
               <button
                 type="button"
                 onClick={() => setPermissionNoticeOpen(false)}
-                className="flex-1 bg-slate-100 text-slate-700 font-bold py-2.5 rounded-xl text-xs"
+                className="flex-1 font-bold py-2.5 rounded-2xl text-xs"
+                style={{ backgroundColor: '#F1F8F5', color: '#2D3748' }}
               >
                 繼續瀏覽一級農產
               </button>
@@ -288,7 +290,8 @@ export function MomoCategoryNav({
                   setPermissionNoticeOpen(false);
                   openLogin();
                 }}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1"
+                className="flex-1 font-bold py-2.5 rounded-2xl text-xs shadow-md transition flex items-center justify-center gap-1"
+                style={{ backgroundColor: '#247A57', color: '#fff' }}
               >
                 <Sparkles className="size-3.5" /> 立即申請入社
               </button>
@@ -302,8 +305,8 @@ export function MomoCategoryNav({
         <div className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm lg:hidden" onClick={() => setIsMobileDrawerOpen(false)}>
           <div className="w-[320px] h-full bg-white p-6 space-y-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b pb-4">
-              <h3 className="font-extrabold text-base text-slate-800 flex items-center gap-2">
-                <Menu className="size-5 text-emerald-600" /> 全站商品與活動分類
+              <h3 className="font-extrabold text-base flex items-center gap-2" style={{ color: '#2D3748' }}>
+                <Menu className="size-5 text-[#247A57]" /> 全站商品與活動分類
               </h3>
               <button onClick={() => setIsMobileDrawerOpen(false)} className="p-1.5 rounded-full hover:bg-slate-100">
                 <X className="size-5" />
@@ -319,34 +322,34 @@ export function MomoCategoryNav({
                     <div
                       onClick={() => handleCategoryClick(cat)}
                       className={`font-extrabold text-sm flex items-center justify-between p-2.5 rounded-xl cursor-pointer ${
-                        isLocked ? "bg-slate-100 text-slate-400" : "bg-emerald-50 text-emerald-900"
+                        isLocked ? "bg-slate-100 text-slate-400" : "bg-[#F1F8F5] text-[#2D3748]"
                       }`}
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-lg">{cat.icon}</span>
                         <span>{cat.name}</span>
                       </div>
-                      {isLocked && <Lock className="size-4 text-amber-600" />}
+                      {isLocked && <Lock className="size-4 text-[#F59E0B]" />}
                     </div>
 
                     {!isLocked && (
                       <div className="pl-3 space-y-3">
                         {cat.subCategories.map((sub, idx) => (
                           <div key={idx} className="space-y-2">
-                            <p className="text-xs font-extrabold text-emerald-800">{sub.title}</p>
+                            <p className="text-xs font-extrabold" style={{ color: '#247A57' }}>{sub.title}</p>
                             <div className="grid grid-cols-1 gap-2">
                               {sub.items.map((item) => (
                                 <div
                                   key={item.id}
                                   onClick={() => handleProductClick(item)}
-                                  className="flex items-center gap-3 bg-stone-50 p-2 rounded-xl cursor-pointer active:bg-emerald-100 border border-stone-200/60"
+                                  className="flex items-center gap-3 bg-stone-50 p-2 rounded-xl cursor-pointer" style={{ backgroundColor: '#F7FBFA' }}
                                 >
                                   <div className={`size-10 rounded-lg bg-gradient-to-br ${item.bgGradient} grid place-items-center text-xl shrink-0`}>
                                     {item.icon}
                                   </div>
                                   <div>
                                     <p className="text-xs font-bold text-slate-800">{item.name}</p>
-                                    <p className="text-[10px] text-emerald-700 font-mono font-bold">NT${item.memberPrice}</p>
+                                    <p className="text-[10px] font-mono font-bold" style={{ color: '#247A57' }}>NT${item.memberPrice}</p>
                                   </div>
                                 </div>
                               ))}

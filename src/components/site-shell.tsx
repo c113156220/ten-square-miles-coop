@@ -80,28 +80,26 @@ export function SiteNav() {
 
   return (
     <>
-      <header className="sticky top-0 z-[50] border-b border-border bg-white/95 backdrop-blur-md">
+      <header className="sticky top-0 z-[50] border-b border-border backdrop-blur-md" style={{ backgroundColor: '#F1F8F5' }} >
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-4 h-16">
-          <Link to="/" className="flex items-center gap-2 font-bold text-slate-800 hover:opacity-80 transition">
-            <span className="grid size-8 place-items-center rounded-xl bg-emerald-600 text-white font-mono text-sm">
-              十
-            </span>
-            <div className="leading-tight">
-              <span className="block text-sm font-extrabold tracking-tight">十圓方里</span>
-              <span className="block font-mono text-[9px] text-muted-foreground uppercase">TEN SQ MILES CO-OP</span>
+          <Link to="/" className="flex items-center gap-3 font-bold hover:opacity-90 transition" style={{ color: '#2D3748' }}>
+            <img src="/logo.jpg" alt="十里方圓 logo" className="h-12 w-auto rounded-2xl shadow-sm" />
+            <div className="leading-tight" style={{ color: '#2D3748' }}>
+              <span className="block text-lg font-extrabold tracking-tight">十里方圓</span>
+              <span className="block font-mono text-[9px] text-[#2D3748]/60 uppercase">TEN SQ MILES CO-OP</span>
             </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-600">
+          <nav className="hidden md:flex items-center gap-6 text-xs font-bold" style={{ color: '#2D3748' }}>
             {/* 🟢 修正：指向首頁 "/" 避免 404 */}
-            <Link to="/" className={`hover:text-emerald-600 transition ${pathname === "/" ? "text-emerald-600 font-extrabold" : ""}`}>
+            <Link to="/" className={`hover:text-[#247A57] transition ${pathname === "/" ? "text-[#247A57] font-extrabold" : ""}`}>
               🛒 共同購買
             </Link>
-            <Link to="/governance" className={`hover:text-emerald-600 transition ${pathname === "/governance" ? "text-emerald-600 font-extrabold" : ""}`}>
+            <Link to="/governance" className={`hover:text-[#247A57] transition ${pathname === "/governance" ? "text-[#247A57] font-extrabold" : ""}`}>
               🏛️ 社務大廳
             </Link>
             {isAdmin && (
-              <Link to="/admin" className="text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-3 py-1 rounded-full font-bold transition">
+              <Link to="/admin" className="px-3 py-1 rounded-full font-bold transition" style={{ color: '#F59E0B', backgroundColor: '#FFF7E0', border: '1px solid rgba(245,158,11,0.15)' }}>
                 🛠️ 後台管理
               </Link>
             )}
@@ -110,7 +108,7 @@ export function SiteNav() {
           <div className="flex items-center gap-2">
             <Link
               to="/cart"
-              className="relative p-2 rounded-full hover:bg-slate-100 text-slate-700 transition"
+              className="relative p-2 rounded-full transition" style={{ backgroundColor: 'transparent', color: '#2D3748' }}
               title="檢視購物車"
             >
               <ShoppingCart className="size-5" />
@@ -126,16 +124,16 @@ export function SiteNav() {
               onClick={() => setGuideModalOpen(true)}
               className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-xs px-3 py-1.5 rounded-full transition flex items-center gap-1.5"
             >
-              <Sparkles className="size-3.5 text-emerald-600" />
+              <Sparkles className="size-3.5 text-[#247A57]" />
               <span>社員 vs 非社員權益</span>
             </button>
 
             {user ? (
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-full flex items-center gap-1">
-                  <ShieldCheck className="size-3.5 text-emerald-600" /> {user.name || "社員"}
+                <span className="text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1" style={{ color: '#2D3748', backgroundColor: '#F1F8F5' }}>
+                  <ShieldCheck className="size-3.5 text-[#247A57]" /> {user.name || "社員"}
                 </span>
-                <button onClick={logout} className="p-1.5 rounded-full hover:bg-slate-100 text-slate-500" title="登出">
+                <button onClick={logout} className="p-1.5 rounded-full" title="登出" style={{ color: '#2D3748', backgroundColor: 'transparent' }} >
                   <LogOut className="size-4" />
                 </button>
               </div>
@@ -143,7 +141,7 @@ export function SiteNav() {
               <button
                 type="button"
                 onClick={openLogin}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-1.5 rounded-full transition shadow-sm flex items-center gap-1"
+                className="bg-[#247A57] hover:bg-[#1f6a48] text-white font-bold text-xs px-4 py-1.5 rounded-full transition shadow-sm flex items-center gap-1"
               >
                 <LogIn className="size-3.5" /> 登入 / 註冊
               </button>
@@ -152,7 +150,7 @@ export function SiteNav() {
             <select
               value={locale}
               onChange={(e) => setLocale(e.target.value as Locale)}
-              className="text-xs border rounded-lg px-2 py-1 bg-white outline-none font-bold text-slate-600"
+              className="text-xs border rounded-lg px-2 py-1 outline-none font-bold" style={{ backgroundColor: '#F1F8F5', color: '#2D3748' }}
             >
               <option value="zh">繁中</option>
               <option value="en">EN</option>
@@ -170,12 +168,12 @@ export function SiteNav() {
           onClick={() => setSelectedProduct(null)}
         >
           <div
-            className="bg-white rounded-[2.5rem] p-8 max-w-3xl w-full shadow-2xl border border-emerald-100 animate-scale-in relative overflow-hidden"
+            className="bg-white rounded-[2.5rem] p-8 max-w-3xl w-full shadow-2xl border animate-scale-in relative overflow-hidden" style={{ borderColor: 'rgba(36,122,87,0.08)' }}
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setSelectedProduct(null)}
-              className="absolute top-6 right-6 z-10 size-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 grid place-items-center transition"
+              className="absolute top-6 right-6 z-10 size-10 rounded-full grid place-items-center transition" style={{ backgroundColor: '#F1F8F5', color: '#2D3748' }}
             >
               <X className="size-5" />
             </button>
@@ -192,23 +190,23 @@ export function SiteNav() {
 
               <div className="space-y-5 flex flex-col justify-between h-full">
                 <div className="space-y-2.5">
-                  <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 leading-tight">{selectedProduct.name}</h3>
-                  <div className="flex items-center gap-2 font-extrabold text-xs text-emerald-800 bg-emerald-50 p-3 rounded-2xl border border-emerald-100">
-                    <MapPin className="size-4 text-emerald-600 shrink-0" />
+                  <h3 className="text-2xl sm:text-3xl font-extrabold leading-tight" style={{ color: '#2D3748' }}>{selectedProduct.name}</h3>
+                  <div className="flex items-center gap-2 font-extrabold text-xs p-3 rounded-2xl" style={{ color: '#247A57', backgroundColor: '#F1F8F5', border: '1px solid rgba(36,122,87,0.08)' }}>
+                    <MapPin className="size-4 text-[#247A57] shrink-0" />
                     <span>產地來源：{selectedProduct.origin}</span>
                   </div>
                 </div>
 
                 <div className="p-4 bg-stone-50 rounded-2xl border border-stone-200/80 space-y-1.5 text-xs">
-                  <p className="font-bold text-slate-800 flex items-center gap-1">
-                    <Tag className="size-3.5 text-amber-600" /> 特色說明
+                  <p className="font-bold flex items-center gap-1" style={{ color: '#2D3748' }}>
+                    <Tag className="size-3.5 text-[#F59E0B]" /> 特色說明
                   </p>
-                  <p className="text-slate-600 leading-relaxed pl-4">{selectedProduct.features}</p>
+                  <p className="leading-relaxed pl-4" style={{ color: 'rgba(45,55,72,0.85)' }}>{selectedProduct.features}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 bg-emerald-500 text-white rounded-2xl shadow-sm">
-                    <span className="block text-[10px] font-extrabold text-emerald-100">社員惠購價 (免營業稅)</span>
+                  <div className="p-4 text-white rounded-2xl shadow-sm" style={{ backgroundColor: '#247A57' }}>
+                    <span className="block text-[10px] font-extrabold text-white">社員惠購價 (免營業稅)</span>
                     <span className="font-mono text-2xl font-extrabold">NT${selectedProduct.memberPrice}</span>
                   </div>
                   <div className="p-4 bg-amber-50 text-amber-950 rounded-2xl border border-amber-200">
@@ -221,14 +219,14 @@ export function SiteNav() {
                   <button
                     type="button"
                     onClick={() => handleAddToCart(selectedProduct)}
-                    className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5"
+                    className="flex-1 font-bold py-3.5 text-xs transition flex items-center justify-center gap-1.5 rounded-2xl" style={{ backgroundColor: '#F1F8F5', color: '#2D3748' }}
                   >
-                    <ShoppingCart className="size-4 text-slate-600" /> 加入購物車
+                    <ShoppingCart className="size-4 text-[#2D3748]" /> 加入購物車
                   </button>
                   <button
                     type="button"
                     onClick={() => handleDirectCheckout(selectedProduct)}
-                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5"
+                    className="flex-1 text-white font-bold py-3.5 rounded-2xl text-xs shadow-md transition flex items-center justify-center gap-1.5" style={{ backgroundColor: '#247A57' }}
                   >
                     去結帳 <ArrowRight className="size-4" />
                   </button>
@@ -260,9 +258,9 @@ export function PageHeader({
   return (
     <div className="border-b bg-stone-50/50 py-8 px-4 mb-8">
       <div className="mx-auto max-w-[1400px] space-y-2">
-        {eyebrow && <p className="font-mono text-xs font-bold text-emerald-600 uppercase tracking-widest">{eyebrow}</p>}
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-800">{title}</h1>
-        {subtitle && <p className="text-sm font-semibold text-slate-500">{subtitle}</p>}
+        {eyebrow && <p className="font-mono text-xs font-bold uppercase tracking-widest" style={{ color: '#247A57' }}>{eyebrow}</p>}
+        <h1 className="text-2xl sm:text-3xl font-extrabold" style={{ color: '#2D3748' }}>{title}</h1>
+        {subtitle && <p className="text-sm font-semibold" style={{ color: 'rgba(45,55,72,0.75)' }}>{subtitle}</p>}
       </div>
     </div>
   );

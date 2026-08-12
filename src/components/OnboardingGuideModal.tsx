@@ -19,7 +19,7 @@ export function OnboardingGuideModal({ open, onClose, onSelectRole }: Onboarding
       subtitle: "民主決策 · 零庫存預購 · 盈餘回饋社員",
       content: (
         <div className="space-y-4 text-center py-4">
-          <div className="mx-auto size-20 grid place-items-center rounded-3xl bg-emerald-50 text-emerald-600 shadow-inner">
+          <div className="mx-auto size-20 grid place-items-center rounded-3xl shadow-inner" style={{ backgroundColor: '#F1F8F5', color: '#247A57' }}>
             <Sparkles className="size-10" />
           </div>
           <p className="text-xs text-slate-600 leading-relaxed max-w-sm mx-auto">
@@ -56,22 +56,22 @@ export function OnboardingGuideModal({ open, onClose, onSelectRole }: Onboarding
           </div>
 
           {/* 正式社員 */}
-          <div className="border border-emerald-300 rounded-2xl p-4 bg-emerald-50/50 space-y-2 ring-2 ring-emerald-500/20">
-            <div className="flex items-center gap-1.5 font-bold text-emerald-900 border-b border-emerald-200 pb-2">
-              <ShieldCheck className="size-4 text-emerald-600" /> 正式實名社員
+          <div className="rounded-2xl p-4 bg-emerald-50/50 space-y-2" style={{ backgroundColor: 'rgba(241,248,245,0.5)', border: '1px solid rgba(36,122,87,0.12)', boxShadow: 'inset 0 1px 0 rgba(0,0,0,0.02)' }} >
+            <div className="flex items-center gap-1.5 font-bold pb-2" style={{ color: '#2D3748', borderBottom: '1px solid rgba(45,55,72,0.06)' }}>
+              <ShieldCheck className="size-4 text-[#247A57]" /> 正式實名社員
             </div>
-            <ul className="space-y-1.5 text-[11px] text-emerald-950">
+            <ul className="space-y-1.5 text-[11px]" style={{ color: '#1F2D25' }}>
               <li className="flex items-start gap-1 font-semibold">
-                <Check className="size-3.5 text-emerald-600 shrink-0 mt-0.5" /> 解鎖全站所有合作社商品預購
+                <Check className="size-3.5 text-[#247A57] shrink-0 mt-0.5" /> 解鎖全站所有合作社商品預購
               </li>
               <li className="flex items-start gap-1 font-semibold">
-                <Check className="size-3.5 text-emerald-600 shrink-0 mt-0.5" /> 享有「免營業稅 5%」專屬惠購價
+                <Check className="size-3.5 text-[#247A57] shrink-0 mt-0.5" /> 享有「免營業稅 5%」專屬惠購價
               </li>
               <li className="flex items-start gap-1 font-semibold">
-                <Check className="size-3.5 text-emerald-600 shrink-0 mt-0.5" /> 社務活動享有社員專屬折扣
+                <Check className="size-3.5 text-[#247A57] shrink-0 mt-0.5" /> 社務活動享有社員專屬折扣
               </li>
               <li className="flex items-start gap-1 font-semibold">
-                <Check className="size-3.5 text-emerald-600 shrink-0 mt-0.5" /> 參與年度結餘分紅與 1 人 1 票表決
+                <Check className="size-3.5 text-[#247A57] shrink-0 mt-0.5" /> 參與年度結餘分紅與 1 人 1 票表決
               </li>
             </ul>
           </div>
@@ -85,7 +85,7 @@ export function OnboardingGuideModal({ open, onClose, onSelectRole }: Onboarding
       content: (
         <div className="space-y-3 py-2 text-xs">
           <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 flex items-start gap-3">
-            <span className="grid size-6 place-items-center rounded-full bg-emerald-600 text-white font-bold text-xs shrink-0">1</span>
+            <span className="grid size-6 place-items-center rounded-full text-white font-bold text-xs shrink-0" style={{ backgroundColor: '#247A57' }}>1</span>
             <div>
               <p className="font-bold text-slate-800">完成實名身分認證</p>
               <p className="text-[11px] text-slate-500">填寫真實姓名、電話與身分證後四碼，確保合作社社員權益與民主投票正確性。</p>
@@ -93,7 +93,7 @@ export function OnboardingGuideModal({ open, onClose, onSelectRole }: Onboarding
           </div>
 
           <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 flex items-start gap-3">
-            <span className="grid size-6 place-items-center rounded-full bg-emerald-600 text-white font-bold text-xs shrink-0">2</span>
+            <span className="grid size-6 place-items-center rounded-full text-white font-bold text-xs shrink-0" style={{ backgroundColor: '#247A57' }}>2</span>
             <div>
               <p className="font-bold text-slate-800">認繳一次性股金 (NT$1,000)</p>
               <p className="text-[11px] text-slate-500">股金為社員共同擁有的合作社資產，退社時可全額申請退還。</p>
@@ -126,7 +126,7 @@ export function OnboardingGuideModal({ open, onClose, onSelectRole }: Onboarding
               <div
                 key={idx}
                 className={`h-1.5 rounded-full transition-all ${
-                  idx === currentSlide ? "w-8 bg-emerald-600" : "w-2 bg-slate-200"
+                  idx === currentSlide ? "w-8" : "w-2 bg-slate-200"
                 }`}
               />
             ))}
@@ -138,7 +138,7 @@ export function OnboardingGuideModal({ open, onClose, onSelectRole }: Onboarding
 
         {/* PPT Slide 標題與簡報內容 */}
         <div className="space-y-1">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-emerald-600">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-widest" style={{ color: '#247A57' }}>
             SLIDE {currentSlide + 1} OF {slides.length}
           </p>
           <h3 className="text-xl font-extrabold text-slate-800">{slides[currentSlide].title}</h3>
@@ -164,7 +164,7 @@ export function OnboardingGuideModal({ open, onClose, onSelectRole }: Onboarding
             <button
               type="button"
               onClick={nextSlide}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs flex items-center gap-1 shadow-sm transition"
+              className="text-white font-bold px-5 py-2.5 rounded-2xl text-xs flex items-center gap-1 shadow-sm transition" style={{ backgroundColor: '#247A57' }}
             >
               下一頁 <ChevronRight className="size-4" />
             </button>
@@ -186,7 +186,7 @@ export function OnboardingGuideModal({ open, onClose, onSelectRole }: Onboarding
                   onSelectRole("member");
                   onClose();
                 }}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs flex items-center gap-1 shadow-md transition"
+                className="text-white font-bold px-5 py-2.5 rounded-2xl text-xs flex items-center gap-1 shadow-md transition" style={{ backgroundColor: '#247A57' }}
               >
                 <Heart className="size-3.5 fill-white" /> 申請成為正式社員
               </button>

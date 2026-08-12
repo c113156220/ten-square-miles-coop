@@ -61,7 +61,7 @@ const LECTURE_CARDS: LectureCard[] = [
   },
   {
     icon: "🤝",
-    accent: "from-emerald-200/30 via-white to-primary/10",
+    accent: "from-primary/20 via-white to-accent/15",
     title: "夥伴廠商與公平交易",
     body:
       "合作社優先與在地小農與公平交易廠商合作，建立透明的採購條件與永續供應鏈。",
